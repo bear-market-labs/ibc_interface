@@ -1,0 +1,74 @@
+.btn {
+  border: 1px solid #682ABF;
+  background-color: #682ABF;
+  border-radius: 3px;
+  height: 2rem;
+  padding: 0.5rem;
+  margin-right: 0.25rem;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border: 1px solid rgb(132, 86, 247);
+  background-color: #8456F7;
+}
+
+.btn-sm {
+  height: 1.5rem;
+}
+
+.btn-clear {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.btn-clear:hover {
+  border-color: transparent;
+  background-color: #222;
+}
+
+.dropdown-menu {
+  display: none;
+}
+
+.dropdown-menu.shown {
+  display: block;
+}
+
+a {
+  text-decoration: none;
+}
+
+a, a:visited {
+  color: #eee;
+}
+
+a.active {
+  color: #b4aaff;
+}
+
+a:hover {
+  color: #8456F7;
+}
+
+body{
+  color: #eee;
+}
+
+.row {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.row:last-child {
+  margin-bottom: 0;
+}
+
+.card {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-head {
+  margin-bottom: 1rem;  
+}

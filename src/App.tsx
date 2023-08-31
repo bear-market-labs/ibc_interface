@@ -1,137 +1,85 @@
-import { Web3OnboardProvider, init } from '@web3-onboard/react'
-import injectedModule from '@web3-onboard/injected-wallets'
-import infinityWalletModule from '@web3-onboard/infinity-wallet'
-import fortmaticModule from '@web3-onboard/fortmatic'
-import safeModule from '@web3-onboard/gnosis'
-import keepkeyModule from '@web3-onboard/keepkey'
-import keystoneModule from '@web3-onboard/keystone'
-import ledgerModule from '@web3-onboard/ledger'
-import portisModule from '@web3-onboard/portis'
-import trezorModule from '@web3-onboard/trezor'
-import coinbaseModule from '@web3-onboard/coinbase'
-import magicModule from '@web3-onboard/magic'
-import dcentModule from '@web3-onboard/dcent'
-import sequenceModule from '@web3-onboard/sequence'
-import tahoModule from '@web3-onboard/taho'
-import trustModule from '@web3-onboard/trust'
-import frontierModule from '@web3-onboard/frontier'
-import ConnectWallet from './ConnectWallet'
+import * as React from "react"
+import {
+  ChakraProvider,
+  Box,
+  Text,
+  Link,
+  VStack,
+  Code,
+  Grid,
+  theme,
+  Button,
+} from "@chakra-ui/react"
+import { ColorModeSwitcher } from "./ColorModeSwitcher"
+import { Logo } from "./Logo"
 
-const INFURA_KEY = ''
+import { Web3OnboardProvider, init, useConnectWallet } from '@web3-onboard/react';
+import injectedModule from '@web3-onboard/injected-wallets';
+import { ethers } from 'ethers'
+import ConnectWallet from "./components/ConnectWallet";
 
-const injected = injectedModule()
-const coinbase = coinbaseModule()
-const dcent = dcentModule()
+const injected = injectedModule();
+const infuraKey = '525a0872832e464aa88f4e2c090942be'
+const rpcUrl = `https://mainnet.infura.io/v3/${infuraKey}`
+const apiKey = "24db31c6-b243-4c46-bf16-92e0a675234c"
 
-const portis = portisModule({
-  apiKey: 'apiKey'
-})
-
-const fortmatic = fortmaticModule({
-  apiKey: 'apiKey'
-})
-
-const infinityWallet = infinityWalletModule()
-const ledger = ledgerModule()
-const keystone = keystoneModule()
-const keepkey = keepkeyModule()
-const safe = safeModule()
-const sequence = sequenceModule()
-const taho = tahoModule() // Previously named Tally Ho wallet
-const trust = trustModule()
-const frontier = frontierModule()
-
-const trezorOptions = {
-  email: 'test@test.com',
-  appUrl: 'https://www.blocknative.com'
-}
-
-const trezor = trezorModule(trezorOptions)
-
-const magic = magicModule({
-  apiKey: 'apiKey'
-})
-
-const wallets = [
-  infinityWallet,
-  keepkey,
-  sequence,
-  injected,
-  trust,
-  frontier,
-  taho,
-  ledger,
-  coinbase,
-  dcent,
-  trezor,
-  safe,
-  magic,
-  fortmatic,
-  keystone,
-  portis
-]
-
-const chains = [
-  {
-    id: '0x1',
-    token: 'ETH',
-    label: 'Ethereum Mainnet',
-    rpcUrl: `https://mainnet.infura.io/v3/${INFURA_KEY}`
-  },
-  {
-    id: '0x5',
-    token: 'ETH',
-    label: 'Goerli',
-    rpcUrl: `https://goerli.infura.io/v3/${INFURA_KEY}`
-  },
-  {
-    id: '0x13881',
-    token: 'MATIC',
-    label: 'Polygon - Mumbai',
-    rpcUrl: 'https://matic-mumbai.chainstacklabs.com'
-  },
-  {
-    id: '0x38',
-    token: 'BNB',
-    label: 'Binance',
-    rpcUrl: 'https://bsc-dataseed.binance.org/'
-  },
-  {
-    id: '0xA',
-    token: 'OETH',
-    label: 'Optimism',
-    rpcUrl: 'https://mainnet.optimism.io'
-  },
-  {
-    id: '0xA4B1',
-    token: 'ARB-ETH',
-    label: 'Arbitrum',
-    rpcUrl: 'https://rpc.ankr.com/arbitrum'
-  }
-]
-
-const appMetadata = {
-  name: 'Connect Wallet Example',
-  icon: '<svg>My App Icon</svg>',
-  description: 'Example showcasing how to connect a wallet.',
-  recommendedInjectedWallets: [
-    { name: 'MetaMask', url: 'https://metamask.io' },
-    { name: 'Coinbase', url: 'https://wallet.coinbase.com/' }
+init({
+  // apiKey,
+  wallets: [injected],
+  chains: [
+    {
+      id: '0x1',
+      token: 'ETH',
+      label: 'Ethereum Mainnet',
+      rpcUrl
+    },
+    {
+      id: '0x2105',
+      token: 'ETH',
+      label: 'Base',
+      rpcUrl: 'https://mainnet.base.org'
+    }
   ]
-}
-
-const web3Onboard = init({
-  wallets,
-  chains,
-  appMetadata
 })
 
-function App() {
-  return (
-    <Web3OnboardProvider web3Onboard={web3Onboard}>
-      <ConnectWallet />
-    </Web3OnboardProvider>
-  )
-}
+export const App = () => {
+  const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
 
-export default App
+  // create an ethers provider
+  let ethersProvider
+
+  if (wallet) {
+    // if using ethers v6 this is:
+    // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
+    ethersProvider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+  }
+  return (
+  <ChakraProvider theme={theme}>
+    <Box textAlign="center" fontSize="xl">
+      <Grid minH="100vh" p={3}>
+        <ColorModeSwitcher justifySelf="flex-end" />
+        <VStack spacing={8}>
+          <Logo h="40vmin" pointerEvents="none" />
+          <Text>
+            Edit <Code fontSize="xl">src/App.tsx</Code> and save to reload.
+          </Text>
+          <Link
+            color="teal.500"
+            href="https://chakra-ui.com"
+            fontSize="2xl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn Chakra
+          </Link>
+          <ConnectWallet />
+          {/* <Button disabled={connecting} onClick={() => (wallet ? disconnect(wallet) : connect())}>
+         
+          {connecting ? 'connecting' : wallet ? 'disconnect' : 'connect'}
+
+          </Button> */}
+        </VStack>
+      </Grid>
+    </Box>
+  </ChakraProvider>
+)}

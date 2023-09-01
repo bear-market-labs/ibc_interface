@@ -34,7 +34,7 @@ export function amountToMint(reserveAmountIn: number, p0: number, x: number, s0:
   // ln(end) = (1 / q_1) * ln((R + F(start)) / m_1)
   // end = exp( (1 / q_1) * ln(F(end) / m_1) )
 
-  return  Math.exp(1/q_1 * Math.log(integralAtEndSupply / m_1))
+  return  Math.exp(1/q_1 * Math.log(integralAtEndSupply / m_1)) - x
 }
 
 export function areaUnderBondingCurve(startSupply: number, endSupply: number, p0: number, s0: number, r0: number){

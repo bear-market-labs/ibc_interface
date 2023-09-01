@@ -30,9 +30,13 @@ export default function MintTokens(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [amount, setAmount] = useState<Number>()
-  const [wethAddress, ] = useState<string>(contracts.tenderly.wethAddress)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {userBalance, currentTokenSupply, bondingCurveGenesisPrice, bondingCurveGenesisSupply, bondingCurveReserve, userIbcBalance} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
+  const [mintAmount, setMintAmount] = useState<number>(0)
+  const [resultPrice, setResultPrice] = useState<number>(price(currentTokenSupply, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply))
+
+  const currentTokenPrice = price(currentTokenSupply, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply);
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -66,20 +70,28 @@ export default function MintTokens(props: mintProps) {
         ]
         ,
         [
-          "deposit()" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          "buyTokens(address,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
         ]
       )).slice(0,4)
 
       const payloadBytes = arrayify(abiCoder.encode(
         [
+          "address",
+          "uint256"
         ], // array of types; make sure to represent complex types as tuples 
         [
+          wallet.accounts[0].address,
+          parseEther((
+            Number(amount) * Number(1 + maxSlippage / 100) 
+            / 
+            Number(mintAmount)
+            ).toString())
         ] // arg values
       ))
 
 
       const txDetails = {
-        to: wethAddress,
+        to: ibcContractAddress,
         data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
         value: parseEther(amount.toString())
       }
@@ -92,7 +104,22 @@ export default function MintTokens(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
-  }, [amount, wallet, provider, wethAddress]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
+
+  const handleAmountChange = (e: any) => {
+    const parsedAmount = e.target.value === '' ? 0 : Number(e.target.value);
+    setAmount(parsedAmount)
+    setMintAmount(              
+      amountToMint(
+        parsedAmount, 
+        bondingCurveGenesisPrice, 
+        currentTokenSupply, 
+        bondingCurveGenesisSupply, 
+        bondingCurveReserve
+      )
+    )
+    setResultPrice(price(currentTokenSupply + parsedAmount, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply))
+  }
 
   return (
     <>
@@ -105,7 +132,7 @@ export default function MintTokens(props: mintProps) {
             type="text"
             value={amount?.toString()}
             placeholder={`0`}
-            onChange={e => setAmount(Number(e.target.value))}
+            onChange={e => handleAmountChange(e)}
             width="auto"
             border="none"
           />
@@ -118,17 +145,7 @@ export default function MintTokens(props: mintProps) {
 
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
-          <Text>
-            {
-              amountToMint(
-                Number(amount), 
-                bondingCurveGenesisPrice, 
-                currentTokenSupply, 
-                bondingCurveGenesisSupply, 
-                bondingCurveReserve
-              ).toFixed(2)
-            }
-          </Text>
+          <Text>{ mintAmount.toFixed(2) }</Text>
           <Text align="right">{ibcSymbol}</Text>
         </Stack>
         <Text align="right">{`Balance: ${userIbcBalance}`}</Text>
@@ -138,43 +155,11 @@ export default function MintTokens(props: mintProps) {
           <Text align="left">Price Impact</Text>
           <Text align="right">
             {`${
-                  ((
-                    price(
-                      amountToMint(
-                        Number(amount), 
-                        bondingCurveGenesisPrice, 
-                        currentTokenSupply, 
-                        bondingCurveGenesisSupply, 
-                        bondingCurveReserve
-                      )
-                      + currentTokenSupply,
-                      bondingCurveGenesisPrice,
-                      bondingCurveReserve,
-                      bondingCurveGenesisSupply
-                    )
-
-                    -
-                    
-                    price(
-                      Number(currentTokenSupply),
-                      bondingCurveGenesisPrice,
-                      bondingCurveReserve,
-                      bondingCurveGenesisSupply
-                    )
-                  )
-
-                  *
-
-                  100
-
-                  /
-
-                  price(
-                    Number(currentTokenSupply),
-                    bondingCurveGenesisPrice,
-                    bondingCurveReserve,
-                    bondingCurveGenesisSupply
-                  )).toFixed(2)
+                  (
+                    (resultPrice - currentTokenPrice) * 100
+                    /
+                    currentTokenPrice
+                  ).toFixed(2)
               }%`
             }
           </Text> 

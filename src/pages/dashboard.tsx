@@ -1,13 +1,10 @@
 import { Code, Divider, Grid, GridItem, Link, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useRadioGroup, VStack } from "@chakra-ui/react";
-import { time } from "console";
+import { useConnectWallet } from "@web3-onboard/react";
 import { useEffect, useState } from "react";
-import { ColorModeSwitcher } from "../ColorModeSwitcher";
 import ConnectWallet from "../components/ConnectWallet";
 import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
-import CreatePool from "../components/staging/create_pool";
-import MaxTokenApprove from "../components/staging/max_token_approval";
-import WrapEth from "../components/staging/wrap_eth";
+import { ethers } from 'ethers'
 
 export function Dashboard(){
   const navOptions = [
@@ -27,7 +24,9 @@ export function Dashboard(){
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
-
+  const [{ wallet, connecting }] = useConnectWallet()
+  const [userEthBalance, setUserEthBalance] = useState<string>('0')
+  const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
 
   // data to fetch 
   // contract's current params
@@ -39,6 +38,22 @@ export function Dashboard(){
   // user's eth balance
   // user's lp balance
   // user's claimable fees 
+
+  useEffect(() => {
+
+    const fetchWalletInfo = async() => {
+      if (wallet?.provider) {
+        const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+        setProvider(provider)
+        const ethBalance = await provider.getBalance(wallet.accounts[0].address)
+        setUserEthBalance(ethBalance === undefined ? '0' : ethers.utils.formatEther(ethBalance.toString()))
+      }
+    }
+
+    fetchWalletInfo()
+      .then()
+      .catch((err) => console.log("error", err))
+  }, [wallet])
 
   // data to generate
   // curve graph plot points
@@ -145,7 +160,7 @@ export function Dashboard(){
                     <TabPanels>
                       <TabPanel>
                         <MintTokens
-                          userBalance={3}
+                          userBalance={Number(userEthBalance)}
                           currentTokenSupply={1}
                           bondingCurveGenesisPrice={1}
                           bondingCurveGenesisSupply={1}

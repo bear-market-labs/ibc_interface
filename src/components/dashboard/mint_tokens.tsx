@@ -11,12 +11,6 @@ import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetSymbol } from '../../config/constants'
 import { areaUnderBondingCurve, amountToMint, price } from '../../util/bonding_curve'
 
-interface Account {
-    address: string,
-    balance: Record<TokenSymbol, string> | null,
-    ens: {name: string|undefined, avatar: string|undefined}
-}
-
 type mintProps = {
   userBalance: any;
   currentTokenSupply: any;
@@ -139,7 +133,7 @@ export default function MintTokens(props: mintProps) {
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Stack direction="row" align="right">
-          <Text align="right">{`Balance: ${userBalance}`}</Text>
+          <Text align="right">{`Balance: ${userBalance.toFixed(1)}`}</Text>
           <Box color={colors.TEAL} onClick={() => setAmount(userBalance)}>MAX</Box>
         </Stack>
 

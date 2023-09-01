@@ -37,11 +37,14 @@ export default function ConnectWallet() {
     }
   }, [wallet])
 
+  const bal = wallet?.accounts[0]?.balance
+
   if(wallet?.provider && account) {
     return (
         <div>
             {account.ens?.avatar ? (<img src={account.ens?.avatar} alt="ENS Avatar" />) : null}
           <div>{ account.ens?.name ? account.ens.name : account.address }</div>
+          <div>{ }</div>
           <div>Connected to {wallet.label}</div>
           <Button onClick={() => { disconnect({ label: wallet.label }) }}>Disconnect</Button>
         </div>

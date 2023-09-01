@@ -1,6 +1,6 @@
 import { Code, Divider, Grid, GridItem, Link, RadioGroup, Spacer, Stack, Tab, Text, useRadioGroup, VStack } from "@chakra-ui/react";
 import { time } from "console";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ColorModeSwitcher } from "../ColorModeSwitcher";
 import ConnectWallet from "../components/ConnectWallet";
 import { RadioCard } from "../components/radio_card";
@@ -25,6 +25,7 @@ export function Dashboard(){
   ]
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
+  const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
 
 
   // data to fetch 
@@ -40,6 +41,20 @@ export function Dashboard(){
 
   // data to generate
   // curve graph plot points
+
+  // reactive hooks
+  // left nav option selected
+  useEffect(() => {
+    if (selectedNavItem === "claim"){
+      return
+    }
+
+    const headerTitle = navOptions.find(x => x.value === selectedNavItem)?.displayText
+    if (!headerTitle){
+      return
+    }
+    setHeaderTitle(headerTitle.toUpperCase())
+  }, [selectedNavItem, navOptions])
 
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'vaults',
@@ -92,14 +107,7 @@ export function Dashboard(){
 
       <GridItem area={'header'}>
         <Stack direction="row">
-          {/*
-            Mint / burn 
-
-            or
-
-            Add / remove liquidity
-
-          */}
+          <Text>{headerTitle}</Text>
           <Spacer/>
           <ConnectWallet />
         </Stack>

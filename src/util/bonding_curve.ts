@@ -10,6 +10,13 @@ export function generateCurve(p0: number, x: number, s0: number, r0: number, max
   return datapoints
 }
 
+export function price(s: number, p0: number, r0: number, s0: number){
+  const m = p0 * Math.pow(1/s0, p0*s0/r0)
+  const q = p0*s0/r0 - 1
+
+  return m * Math.pow(s, q)
+}
+
 export function amountToMint(reserveAmountIn: number, p0: number, x: number, s0: number, r0: number){
   // formulate intergral expression
   const m = p0 * Math.pow(1/s0, p0*s0/r0)

@@ -11,4 +11,5 @@ export const colors = {
   GREEN: '#3e8c5b',
   BLUE: '#506cde',
 
+  TEAL: '#2087BA'
 }

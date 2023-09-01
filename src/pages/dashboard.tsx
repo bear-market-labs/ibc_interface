@@ -1,8 +1,9 @@
-import { Code, Divider, Grid, GridItem, Link, RadioGroup, Spacer, Stack, Tab, Text, useRadioGroup, VStack } from "@chakra-ui/react";
+import { Code, Divider, Grid, GridItem, Link, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useRadioGroup, VStack } from "@chakra-ui/react";
 import { time } from "console";
 import { useEffect, useState } from "react";
 import { ColorModeSwitcher } from "../ColorModeSwitcher";
 import ConnectWallet from "../components/ConnectWallet";
+import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
 import CreatePool from "../components/staging/create_pool";
 import MaxTokenApprove from "../components/staging/max_token_approval";
@@ -131,8 +132,44 @@ export function Dashboard(){
       </GridItem>
       <GridItem area={'sideinput'}>
           <Stack>
-            <Text>input</Text>
-            {/*
+            {
+              headerTitle === "MINT / BURN" &&
+              (
+                <>
+                  <Tabs>
+                    <TabList>
+                      <Tab>Mint</Tab>
+                      <Tab>Burn</Tab>
+                    </TabList>
+
+                    <TabPanels>
+                      <TabPanel>
+                        <MintTokens
+                          userBalance={3}
+                          currentTokenSupply={1}
+                          bondingCurveGenesisPrice={1}
+                          bondingCurveGenesisSupply={1}
+                          bondingCurveReserve={2}
+                          userIbcBalance={1}
+                        />
+                      </TabPanel>
+                      <TabPanel>
+                        <MintTokens
+                          userBalance={3}
+                          currentTokenSupply={1}
+                          bondingCurveGenesisPrice={1}
+                          bondingCurveGenesisSupply={1}
+                          bondingCurveReserve={1}
+                          userIbcBalance={1}
+                        />
+                      </TabPanel>
+                    </TabPanels>
+                  </Tabs>
+                </>
+              )
+            
+            
+            /*
 
               Tabbed component
 

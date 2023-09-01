@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers } from 'ethers'
+import {  constants, ethers } from 'ethers'
 import type {
     TokenSymbol
   } from '@web3-onboard/common'
@@ -14,12 +14,12 @@ interface Account {
     ens: {name: string|undefined, avatar: string|undefined}
 }
 
-export default function WrapEth() {
+export default function MaxTokenApprove() {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [account, setAccount] = useState<Account | null>(null)
-  const [amount, setAmount] = useState<Number>()
-  const [wethAddress, ] = useState<string>(contracts.tenderly.wethAddress)
+  const [tokenAddress, setTokenAddress] = useState<string>()
+  const [guy, setGuy] = useState<string>()
 
   useEffect(() => {
     if (wallet?.provider) {
@@ -43,14 +43,8 @@ export default function WrapEth() {
 
   const sendTransaction = useCallback(async () => {
 
-    if (!wallet || !provider || !amount){
+    if (!wallet || !provider || !tokenAddress){
       return
-    }
-
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     }
 
     try {
@@ -64,22 +58,25 @@ export default function WrapEth() {
         ]
         ,
         [
-          "deposit()" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          "approve(address,uint)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
         ]
       )).slice(0,4)
 
       const payloadBytes = arrayify(abiCoder.encode(
         [
+          "address",
+          "uint",
         ], // array of types; make sure to represent complex types as tuples 
         [
+          guy,
+          constants.MaxUint256
         ] // arg values
       ))
 
 
       const txDetails = {
-        to: wethAddress,
+        to: tokenAddress,
         data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
-        value: parseEther(amount.toString())
       }
 
       const tx = await signer.sendTransaction(txDetails)
@@ -90,20 +87,28 @@ export default function WrapEth() {
     } catch (error) {
         console.log(error)
     }
-  }, [amount, wallet, provider, wethAddress]);
+  }, [tokenAddress, guy, wallet, provider]);
 
   return (
     <>
       <Stack direction="row">
         <Input
-          name="amount"
-          type="number"
-          value={amount?.toString()}
-          placeholder={`eth amount to wrap`}
-          onChange={e => setAmount(Number(e.target.value))}
+          name="tokenAddress"
+          type="text"
+          value={tokenAddress}
+          placeholder={`erc20 token address`}
+          onChange={e => setTokenAddress(e.target.value)}
           width="auto"
         />
-        <Button onClick={sendTransaction}>Wrap ETH</Button>
+        <Input
+          name="guy"
+          type="text"
+          value={guy}
+          placeholder={`address allowed to take max`}
+          onChange={e => setGuy(e.target.value)}
+          width="auto"
+        />
+        <Button onClick={sendTransaction}>Max approve</Button>
       </Stack>
     </>
   )

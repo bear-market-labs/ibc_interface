@@ -1,4 +1,4 @@
-import { Code, Grid, GridItem, Link, Spacer, Stack, Tab, Text, VStack } from "@chakra-ui/react";
+import { Code, Divider, Grid, GridItem, Link, Spacer, Stack, Tab, Text, VStack } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "../ColorModeSwitcher";
 import ConnectWallet from "../components/ConnectWallet";
 import CreatePool from "../components/staging/create_pool";
@@ -11,21 +11,36 @@ export function Dashboard(){
   return (
     <Grid
         templateAreas={`
-        "sidenav header header"
-        "sidenav main sideinput"`}
-            gridTemplateColumns={'150px 2fr 1fr'}
-            gridTemplateRows={'50px 1fr'}
-            gap='6'
+        "sidenav vertline1 header header header"
+        "sidenav vertline1 horizline horizline horizline"
+        "sidenav vertline1 main vertline2 sideinput"`}
+            gridTemplateRows={'70px 1px 1fr'}
+            gridTemplateColumns={'150px 1px 2fr 1px 1fr'}
+            gap='0'
     >
       <GridItem area={'sidenav'}>
-        <Stack>
-          <Text>Inverse Bonding Curve</Text>
+        <Stack spacing={0}>
+          <Text ml={3} align={"left"}>INVERSE</Text>
+          <Text ml={3} align={"left"}>BONDING</Text>
+          <Text ml={3} align={"left"}>CURVE</Text>
           {/*radio group
             mint/burn
             lp
             claim
           */}
         </Stack>
+      </GridItem>
+
+      <GridItem area={'horizline'} >
+        <Divider orientation={'horizontal'} colorScheme={'gray'}/>
+      </GridItem>
+
+      <GridItem area={'vertline1'} >
+        <Divider orientation={'vertical'} colorScheme={'gray'}/>
+      </GridItem>
+
+      <GridItem area={'vertline2'} >
+        <Divider orientation={'vertical'} colorScheme={'gray'}/>
       </GridItem>
 
       <GridItem area={'header'}>
@@ -44,11 +59,13 @@ export function Dashboard(){
       </GridItem>
       <GridItem area={'main'}>
         <Stack>
+          <Text>main</Text>
           {/*
 
           chart component
 
           */}
+          <Spacer/>
           {/*
 
           Calculation output text based on sideinput
@@ -59,6 +76,7 @@ export function Dashboard(){
       </GridItem>
       <GridItem area={'sideinput'}>
           <Stack>
+            <Text>input</Text>
             {/*
 
               Tabbed component
@@ -70,6 +88,7 @@ export function Dashboard(){
               Provide / Withdraw
 
             */}
+            <Spacer/>
           </Stack>
       </GridItem>
 

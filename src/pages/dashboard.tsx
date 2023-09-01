@@ -5,6 +5,8 @@ import ConnectWallet from "../components/ConnectWallet";
 import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
 import { ethers } from 'ethers'
+import { contracts } from "../config/contracts";
+import { composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
 
 export function Dashboard(){
   const navOptions = [
@@ -27,6 +29,12 @@ export function Dashboard(){
   const [{ wallet, connecting }] = useConnectWallet()
   const [userEthBalance, setUserEthBalance] = useState<string>('0')
   const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [bondingCurveParams, setBondingCurveParams] = useState<object>({})
+  const [inverseTokenAddress, setInverseTokenAddress] = useState<string>('')
+  const [userIbcTokenBalance, setUserIbcTokenBalance] = useState<string>('')
+  const [inverseTokenSupply, setInverseTokenSupply] = useState<string>('')
+  const [inverseTokenDecimals, setInverseTokenDecimals] = useState<string>('')
 
   // data to fetch 
   // contract's current params
@@ -45,15 +53,49 @@ export function Dashboard(){
       if (wallet?.provider) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         setProvider(provider)
+        const abiCoder = ethers.utils.defaultAbiCoder
+        
+        //  user balance info
         const ethBalance = await provider.getBalance(wallet.accounts[0].address)
+
         setUserEthBalance(ethBalance === undefined ? '0' : ethers.utils.formatEther(ethBalance.toString()))
+
+        // ibc contract state
+        const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])
+        const bondingCurveParamsBytes = await provider.call(bondingCurveParamsQuery)
+        const bondingCurveParams = abiCoder.decode(["int256", "uint256"], bondingCurveParamsBytes)
+        setBondingCurveParams({
+          k: bondingCurveParams[0].toString(),
+          m: bondingCurveParams[1].toString()
+        })
+
+        const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "getInverseTokenAddress", [], [])
+        const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
+        const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+        setInverseTokenAddress(inverseTokenAddress)
+
+        // ibc token info
+        const inverseTokenSupplyQuery = composeQuery(inverseTokenAddress, "totalSupply", [], [])
+        const inverseTokenSupplyBytes = await provider.call(inverseTokenSupplyQuery)
+        const inverseTokenSupply = abiCoder.decode(["uint"], inverseTokenSupplyBytes)[0]
+        setInverseTokenSupply(inverseTokenSupply.toString())
+
+        const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
+        const inverseTokenDecimalsBytes = await provider.call(inverseTokenDecimalsQuery)
+        const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+        setInverseTokenDecimals(inverseTokenDecimals.toString())
+
+        const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
+        const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
+        setUserIbcTokenBalance(userInverseTokenBalance.toString())
       }
     }
 
     fetchWalletInfo()
       .then()
       .catch((err) => console.log("error", err))
-  }, [wallet])
+  }, [wallet, ibcContractAddress])
 
   // data to generate
   // curve graph plot points

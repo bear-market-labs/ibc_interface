@@ -58,8 +58,8 @@ export default function MaxTokenApprove() {
         ]
         ,
         [
-          "approve(address,uint)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-        ]
+          "approve(address,uint)" 
+        ] // put function signature here w/ types + no spaces, ex: createPair(address,address)
       )).slice(0,4)
 
       const payloadBytes = arrayify(abiCoder.encode(
@@ -70,7 +70,7 @@ export default function MaxTokenApprove() {
         [
           guy,
           constants.MaxUint256
-        ] // arg values
+        ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
       ))
 
 

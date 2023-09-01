@@ -90,7 +90,9 @@ export default function CreatePool() {
       }
 
       const tx = await signer.sendTransaction(txDetails)
-      await tx.wait();
+      const result = await tx.wait();
+
+      console.log(result)
 
     } catch (error) {
         console.log(error)

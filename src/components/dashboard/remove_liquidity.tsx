@@ -140,7 +140,7 @@ export default function RemoveLiquidity(props: mintProps) {
         console.log(error)
     }
 
-    setIsProcessing(true)
+    setIsProcessing(false)
     forceUpdate()
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, liquidityReceived, userInverseTokenAllowance]);
 

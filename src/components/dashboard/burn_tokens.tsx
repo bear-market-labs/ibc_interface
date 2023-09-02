@@ -144,7 +144,7 @@ export default function BurnTokens(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
-    setIsProcessing(true)
+    setIsProcessing(false)
     forceUpdate()
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, liquidityReceived, userInverseTokenAllowance, inverseTokenAddress]);
 

@@ -85,7 +85,7 @@ export default function ClaimStakingRewards(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
-    setIsProcessing(true)
+    setIsProcessing(false)
     forceUpdate()
   }, [wallet, provider, ibcContractAddress]);
 

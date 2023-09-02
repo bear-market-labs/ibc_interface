@@ -110,7 +110,7 @@ export default function MintTokens(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
-    setIsProcessing(true)
+    setIsProcessing(false)
     forceUpdate()
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
 

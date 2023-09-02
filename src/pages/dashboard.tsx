@@ -47,7 +47,7 @@ export function Dashboard(){
   const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
 
-  const [dashboardDataSet, setDashboardDataSet] = useState<object>({})
+  const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   const [updated, updateState] = React.useState<any>();
@@ -74,6 +74,10 @@ export function Dashboard(){
         const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "getInverseTokenAddress", [], [])
         const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+
+        const feeQuery = composeQuery(ibcContractAddress, "getFeeConfig", [], [])
+        const feeBytes = await provider.call(feeQuery)
+        const fees = abiCoder.decode(["uint256", "uint256", "uint256"], feeBytes)
 
         // ibc token info
         const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
@@ -142,6 +146,11 @@ export function Dashboard(){
           userClaimableLpRewards: userClaimableLpRewards.toString(),
           forceUpdate: forceUpdate,
           userStakingBalance: userStakingBalance.toString(),
+          fees:{
+            lpFee: fees[0].toString(),
+            stakingFee: fees[1].toString(),
+            protocolFee: fees[2].toString(),
+          }
         })
       }
     }
@@ -306,7 +315,26 @@ export function Dashboard(){
 
       <GridItem area={'main'}>
         <Stack>
-          <Text>main</Text>
+          {
+              headerTitle === "MINT / BURN" &&
+              <>
+                <Text ml={7} mt={7} align="left">MARKET PRICE</Text>
+                <Text ml={7} align="left">{`${Number(ethers.utils.formatEther("bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams.currentTokenPrice : 0)).toFixed(3)} ETH`}</Text>
+
+                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+
+                
+              </>
+          }
+
+          {
+              headerTitle === "ADD / REMOVE LIQUIDITY" &&
+              <>
+                <Text ml={7} mt={7} align="left">RESERVE</Text>
+              </>
+          }
+
+
           {/*
 
           chart component

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
 import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, parseUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, parseUnits, formatUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
@@ -31,6 +31,7 @@ export default function BurnTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y], inverseTokenDecimals)) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -206,7 +207,7 @@ export default function BurnTokens(props: mintProps) {
 
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
-          <Text>{ Number(formatEther(liquidityReceived).toString()).toFixed(2) }</Text>
+          <Text>{ (Number(formatEther(liquidityReceived).toString()) * (1 - totalFeePercent)).toFixed(2) }</Text>
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Text align="right">{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>

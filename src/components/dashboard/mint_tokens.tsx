@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import type {
-    TokenSymbol
-  } from '@web3-onboard/common'
 import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
-import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
 import { composeQuery } from '../../util/ethers_utils'
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -33,6 +29,7 @@ export default function MintTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y], inverseTokenDecimals)) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -81,7 +78,7 @@ export default function MintTokens(props: mintProps) {
         )
         .dividedBy(
           bignumber(
-            mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()
+            formatUnits(mintAmount, inverseTokenDecimals).toString()
           )
         ).toFixed(reserveAssetDecimals)
         
@@ -187,7 +184,7 @@ export default function MintTokens(props: mintProps) {
 
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
-          <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(inverseTokenDecimals).toString()).toString()).toFixed(2) }</Text>
+          <Text>{ (Number(formatUnits(mintAmount, inverseTokenDecimals)) * (1-totalFeePercent)).toFixed(2) }</Text>
           <Text align="right">{ibcSymbol}</Text>
         </Stack>
         <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>

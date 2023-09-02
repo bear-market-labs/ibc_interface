@@ -80,7 +80,7 @@ export default function MintTokens(props: mintProps) {
           bignumber(
             mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()
           )
-        ).toString()
+        ).toFixed(reserveAssetDecimals)
         
       const payloadBytes = arrayify(abiCoder.encode(
         [

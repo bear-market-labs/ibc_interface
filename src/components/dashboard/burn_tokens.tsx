@@ -173,19 +173,6 @@ export default function BurnTokens(props: mintProps) {
       }
     }
 
-    /*
-    setLiquidityReceived(              
-      amountToMint2(
-        decimaledParsedAmount,
-        BigNumber.from(bondingCurveParams.m),
-        BigNumber.from(bondingCurveParams.k), 
-        BigNumber.from(bondingCurveParams.inverseTokenSupply), 
-      )
-    )
-
-    setResultPrice(price2(BigNumber.from(bondingCurveParams.m), BigNumber.from(bondingCurveParams.k), BigNumber.from(bondingCurveParams.inverseTokenSupply).add(decimaledParsedAmount)))
-    */
-
     if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams){
       calcBurnAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
       .then()

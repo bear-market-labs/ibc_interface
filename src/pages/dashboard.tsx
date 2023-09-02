@@ -50,6 +50,11 @@ export function Dashboard(){
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
 
+  const [newPrice, setNewPrice] = useState<any>()
+  const [newIbcIssuance, setNewIbcIssuance] = useState<any>()
+  const [newReserve, setNewReserve] = useState<any>()
+  const [newLpIssuance, setNewLpIssuance] = useState<any>()
+
   const [updated, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
@@ -321,6 +326,8 @@ export function Dashboard(){
                 <Text ml={7} mt={7} align="left">MARKET PRICE</Text>
                 <Text ml={7} align="left">{`${Number(ethers.utils.formatEther("bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams.currentTokenPrice : 0)).toFixed(3)} ETH`}</Text>
 
+                <Text ml={7} align="left">{`${newPrice ? Number(ethers.utils.formatEther(newPrice)).toFixed(3) : 0} ETH`}</Text>
+
                 <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
 
                 
@@ -365,11 +372,23 @@ export function Dashboard(){
                       <TabPanel>
                         <MintTokens
                           dashboardDataSet={dashboardDataSet}
+                          parentSetters={{
+                            setNewIbcIssuance: setNewIbcIssuance,
+                            setNewPrice: setNewPrice,
+                            setNewLpIssuance: setNewIbcIssuance,
+                            setNewReserve: setNewReserve
+                          }}
                         />
                       </TabPanel>
                       <TabPanel>
                         <BurnTokens
                             dashboardDataSet={dashboardDataSet}
+                            parentSetters={{
+                              setNewIbcIssuance: setNewIbcIssuance,
+                              setNewPrice: setNewPrice,
+                              setNewLpIssuance: setNewIbcIssuance,
+                              setNewReserve: setNewReserve
+                            }}
                           />
                       </TabPanel>
                     </TabPanels>

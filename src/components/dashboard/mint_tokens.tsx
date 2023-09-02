@@ -14,6 +14,7 @@ import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
+  parentSetters: any;
 }
 
 export default function MintTokens(props: mintProps) {
@@ -21,7 +22,7 @@ export default function MintTokens(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [amount, setAmount] = useState<Number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const {dashboardDataSet} = props
+  const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
@@ -136,6 +137,11 @@ export default function MintTokens(props: mintProps) {
         const resultPriceInWei = parseEther(resultPriceInEth)
         setResultPrice(bignumber(resultPriceInWei.toString()))
         setMintAmount(mintAmount)
+
+        parentSetters?.setNewPrice(resultPriceInWei.toString())
+        parentSetters?.setNewIbcIssuance(newSupply.toString())
+        parentSetters?.setNewReserve(reserveAmount.add(decimaledParsedAmount).toString())
+        
       }
     }
 

@@ -20,6 +20,7 @@ import ConnectWallet from "./components/ConnectWallet";
 import { Route, Routes } from "react-router-dom";
 import { CraPage } from "./pages/cra_ok";
 import { StagingPage } from "./pages/staging";
+import { Dashboard } from "./pages/dashboard";
 
 const injected = injectedModule();
 const rpcUrl = `https://rpc.tenderly.co/fork/cc2b5331-1bfa-4756-84ab-e2f2f63a91d5`
@@ -59,6 +60,7 @@ export const App = () => {
     <Box textAlign="center" fontSize="xl">
       <Routes>
         <Route path="/" element={<CraPage />} />
+        <Route path="/app" element={<Dashboard />} />
         <Route path="/staging" element={<StagingPage/>}/>
       </Routes>
     </Box>

@@ -72,6 +72,16 @@ export default function MintTokens(props: mintProps) {
         ]
       )).slice(0,4)
 
+      const maxPriceLimit = 
+        bignumber(
+          Number(amount.toString()) * (1 + maxSlippage / 100)
+        )
+        .dividedBy(
+          bignumber(
+            mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()
+          )
+        ).toString()
+        
       const payloadBytes = arrayify(abiCoder.encode(
         [
           "address",
@@ -79,8 +89,7 @@ export default function MintTokens(props: mintProps) {
         ], // array of types; make sure to represent complex types as tuples 
         [
           wallet.accounts[0].address,
-          parseEther(amount.toString())
-          //BigNumber.from(Math.ceil(bignumber(parseEther(amount.toString()).toString()).multipliedBy(bignumber(1 + maxSlippage / 100)).dividedBy(mintAmount.toString()).toNumber()))
+          parseEther(maxPriceLimit)
         ] // arg values
       ))
 

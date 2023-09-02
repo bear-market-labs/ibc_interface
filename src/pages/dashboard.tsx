@@ -116,6 +116,15 @@ export function Dashboard(){
         const userLpTokenAllowanceBytes = await provider.call(userLpTokenAllowanceQuery)
         const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
 
+        // fetch rewards data
+        const userClaimableLpRewardsQuery = composeQuery(ibcContractAddress, "getReward", ["address", "uint8"], [wallet.accounts[0].address, 0])
+        const userClaimableLpRewardsBytes = await provider.call(userClaimableLpRewardsQuery)
+        const userClaimableLpRewards = abiCoder.decode(["uint256"], userClaimableLpRewardsBytes)[0]
+
+        const userClaimableStakingRewardsQuery = composeQuery(ibcContractAddress, "getReward", ["address", "uint8"], [wallet.accounts[0].address, 0])
+        const userClaimableStakingRewardsBytes = await provider.call(userClaimableStakingRewardsQuery)
+        const userClaimableStakingRewards = abiCoder.decode(["uint256"], userClaimableStakingRewardsBytes)[0]
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -133,6 +142,8 @@ export function Dashboard(){
           userLpTokenBalance: userLpTokenBalance.toString(),
           userLpTokenAllowance: userLpTokenAllowance.toString(),
           lpTokenSupply: lpTokenSupply.toString(),
+          userClaimableStakingRewards: userClaimableStakingRewards.toString(),
+          userClaimableLpRewards: userClaimableLpRewards.toString()
         })
       }
     }

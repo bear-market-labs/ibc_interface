@@ -7,6 +7,7 @@ import { RadioCard } from "../components/radio_card";
 import { ethers } from 'ethers'
 import { contracts } from "../config/contracts";
 import { composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
+import BurnTokens from "../components/dashboard/burn_tokens";
 
 export function Dashboard(){
   const navOptions = [
@@ -210,6 +211,9 @@ export function Dashboard(){
                         />
                       </TabPanel>
                       <TabPanel>
+                        <BurnTokens
+                            dashboardDataSet={dashboardDataSet}
+                          />
                       </TabPanel>
                     </TabPanels>
                   </Tabs>

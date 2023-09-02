@@ -11,6 +11,8 @@ import BurnTokens from "../components/dashboard/burn_tokens";
 import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
 import { colors } from "../config/style";
+import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
+import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
 
 export function Dashboard(){
   const navOptions = [
@@ -182,6 +184,7 @@ export function Dashboard(){
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'vaults',
     onChange: (val) => handleRadioChange(val),
+    
   })
   const group = getRootProps()
 
@@ -264,10 +267,10 @@ export function Dashboard(){
                           </TabList>
                           <TabPanels>
                             <TabPanel>
-                              lp
+                              <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
                             </TabPanel>
                             <TabPanel>
-                              staking
+                              <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
                             </TabPanel>
                           </TabPanels>
                         </Tabs>
@@ -299,7 +302,7 @@ export function Dashboard(){
             <ConnectWallet />
           </Stack>
           <Stack direction="row">
-            <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
+            <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
           </Stack>
         </Stack>
 

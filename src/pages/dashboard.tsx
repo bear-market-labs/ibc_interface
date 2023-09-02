@@ -15,6 +15,8 @@ import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
 import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
 import StakeIbc from "../components/dashboard/stake_ibc";
 import UnstakeIbc from "../components/dashboard/unstake_ibc";
+import MintBurnPrice from "../components/dashboard/mint_burn_price";
+import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
 
 export function Dashboard(){
   const navOptions = [
@@ -323,14 +325,27 @@ export function Dashboard(){
           {
               headerTitle === "MINT / BURN" &&
               <>
-                <Text ml={7} mt={7} align="left">MARKET PRICE</Text>
-                <Text ml={7} align="left">{`${Number(ethers.utils.formatEther("bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams.currentTokenPrice : 0)).toFixed(3)} ETH`}</Text>
-
-                <Text ml={7} align="left">{`${newPrice ? Number(ethers.utils.formatEther(newPrice)).toFixed(3) : 0} ETH`}</Text>
+                <MintBurnPrice
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
 
                 <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
 
-                
+                <MintBurnIssuance
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
               </>
           }
 

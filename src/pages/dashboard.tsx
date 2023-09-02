@@ -15,6 +15,10 @@ import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
 import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
 import StakeIbc from "../components/dashboard/stake_ibc";
 import UnstakeIbc from "../components/dashboard/unstake_ibc";
+import MintBurnPrice from "../components/dashboard/mint_burn_price";
+import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
+import LpingReserve from "../components/dashboard/lping_reserve";
+import LpingIssuance from "../components/dashboard/lping_issuance";
 
 export function Dashboard(){
   const navOptions = [
@@ -47,8 +51,13 @@ export function Dashboard(){
   const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
 
-  const [dashboardDataSet, setDashboardDataSet] = useState<object>({})
+  const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const [newPrice, setNewPrice] = useState<any>()
+  const [newIbcIssuance, setNewIbcIssuance] = useState<any>()
+  const [newReserve, setNewReserve] = useState<any>()
+  const [newLpIssuance, setNewLpIssuance] = useState<any>()
 
   const [updated, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
@@ -74,6 +83,10 @@ export function Dashboard(){
         const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "getInverseTokenAddress", [], [])
         const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+
+        const feeQuery = composeQuery(ibcContractAddress, "getFeeConfig", [], [])
+        const feeBytes = await provider.call(feeQuery)
+        const fees = abiCoder.decode(["uint256", "uint256", "uint256"], feeBytes)
 
         // ibc token info
         const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
@@ -142,6 +155,11 @@ export function Dashboard(){
           userClaimableLpRewards: userClaimableLpRewards.toString(),
           forceUpdate: forceUpdate,
           userStakingBalance: userStakingBalance.toString(),
+          fees:{
+            lpFee: fees[0].toString(),
+            stakingFee: fees[1].toString(),
+            protocolFee: fees[2].toString(),
+          }
         })
       }
     }
@@ -306,7 +324,61 @@ export function Dashboard(){
 
       <GridItem area={'main'}>
         <Stack>
-          <Text>main</Text>
+          {
+              headerTitle === "MINT / BURN" &&
+              <>
+                <MintBurnPrice
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
+
+                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+
+                <MintBurnIssuance
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
+              </>
+          }
+
+          {
+              headerTitle === "ADD / REMOVE LIQUIDITY" &&
+              <>
+                <LpingReserve
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
+
+                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+
+                <LpingIssuance
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
+              </>
+          }
+
+
           {/*
 
           chart component
@@ -337,11 +409,23 @@ export function Dashboard(){
                       <TabPanel>
                         <MintTokens
                           dashboardDataSet={dashboardDataSet}
+                          parentSetters={{
+                            setNewIbcIssuance: setNewIbcIssuance,
+                            setNewPrice: setNewPrice,
+                            setNewLpIssuance: setNewLpIssuance,
+                            setNewReserve: setNewReserve
+                          }}
                         />
                       </TabPanel>
                       <TabPanel>
                         <BurnTokens
                             dashboardDataSet={dashboardDataSet}
+                            parentSetters={{
+                              setNewIbcIssuance: setNewIbcIssuance,
+                              setNewPrice: setNewPrice,
+                              setNewLpIssuance: setNewLpIssuance,
+                              setNewReserve: setNewReserve
+                            }}
                           />
                       </TabPanel>
                     </TabPanels>
@@ -364,11 +448,23 @@ export function Dashboard(){
                       <TabPanel>
                         <AddLiquidity
                           dashboardDataSet={dashboardDataSet}
+                          parentSetters={{
+                            setNewIbcIssuance: setNewIbcIssuance,
+                            setNewPrice: setNewPrice,
+                            setNewLpIssuance: setNewLpIssuance,
+                            setNewReserve: setNewReserve
+                          }}
                         />
                       </TabPanel>
                       <TabPanel>
                         <RemoveLiquidity
                             dashboardDataSet={dashboardDataSet}
+                            parentSetters={{
+                              setNewIbcIssuance: setNewIbcIssuance,
+                              setNewPrice: setNewPrice,
+                              setNewLpIssuance: setNewLpIssuance,
+                              setNewReserve: setNewReserve
+                            }}
                           />
                       </TabPanel>
                     </TabPanels>

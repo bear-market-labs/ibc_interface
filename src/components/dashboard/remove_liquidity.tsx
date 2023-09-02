@@ -18,6 +18,7 @@ import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
+  parentSetters: any;
 }
 
 export default function RemoveLiquidity(props: mintProps) {
@@ -25,7 +26,7 @@ export default function RemoveLiquidity(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [amount, setAmount] = useState<Number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const {dashboardDataSet} = props
+  const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
@@ -153,6 +154,9 @@ export default function RemoveLiquidity(props: mintProps) {
     const liquidityRetrieved = bignumber(decimaledParsedAmount.mul(bondingCurveParams.reserveAmount).toString()).dividedBy(bignumber(lpTokenSupply.toString())).toFixed(0)
 
     setLiquidityReceived(BigNumber.from(liquidityRetrieved))
+
+    parentSetters?.setNewLpIssuance(lpTokenSupply.sub(decimaledParsedAmount).toString())
+    parentSetters?.setNewReserve(BigNumber.from(bondingCurveParams.reserveAmount).sub(BigNumber.from(liquidityRetrieved)).toString())
   }
 
   return (

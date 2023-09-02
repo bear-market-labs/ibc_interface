@@ -31,10 +31,10 @@ export default function MintTokens(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
-  const userIbcBalance = BigNumber.from("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
+  const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
-  const [resultPrice, setResultPrice] = useState<string>(currentTokenPrice.toString())
+  const [resultPrice, setResultPrice] = useState<bignumber>(bignumber(currentTokenPrice.toString()))
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -93,7 +93,6 @@ export default function MintTokens(props: mintProps) {
         ] // arg values
       ))
 
-
       const txDetails = {
         to: ibcContractAddress,
         data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
@@ -131,7 +130,9 @@ export default function MintTokens(props: mintProps) {
 
         // calculate resulting price
         //setResultPrice((decimaledParsedAmount.toString() / mintAmount.toString()).toString())
-        setResultPrice(bignumber(decimaledParsedAmount.toString()).dividedBy(bignumber(mintAmount.toString())).toString())
+        const resultPriceInEth = bignumber(decimaledParsedAmount.toString()).dividedBy(bignumber(mintAmount.toString())).toFixed(reserveAssetDecimals)
+        const resultPriceInWei = parseEther(resultPriceInEth)
+        setResultPrice(bignumber(resultPriceInWei.toString()))
         setMintAmount(mintAmount)
       }
     }
@@ -184,7 +185,7 @@ export default function MintTokens(props: mintProps) {
           <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(inverseTokenDecimals).toString()).toString()).toFixed(2) }</Text>
           <Text align="right">{ibcSymbol}</Text>
         </Stack>
-        <Text align="right">{`Balance: ${userIbcBalance.div(BigNumber.from(10).pow(inverseTokenDecimals))}`}</Text>
+        <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>
         <Spacer/>
 
         <Stack direction="row">
@@ -192,7 +193,7 @@ export default function MintTokens(props: mintProps) {
           <Text align="right">
             {`${
                   currentTokenPrice.toString() === '0' ? 0 :
-                    bignumber(resultPrice).minus(bignumber(currentTokenPrice.toString())).multipliedBy(100).dividedBy(bignumber(currentTokenPrice.toString())).toFixed(2)
+                    resultPrice.minus(bignumber(currentTokenPrice.toString())).multipliedBy(100).dividedBy(bignumber(currentTokenPrice.toString())).toFixed(2)
               }%`
             }
           </Text> 

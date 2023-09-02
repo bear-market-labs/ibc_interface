@@ -1,6 +1,6 @@
-import { Code, Divider, Grid, GridItem, Link, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useRadioGroup, VStack } from "@chakra-ui/react";
+import { Code, Divider, Grid, GridItem, Link, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, VStack } from "@chakra-ui/react";
 import { useConnectWallet } from "@web3-onboard/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ConnectWallet from "../components/ConnectWallet";
 import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
@@ -10,20 +10,33 @@ import { composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
 import BurnTokens from "../components/dashboard/burn_tokens";
 import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
+import { colors } from "../config/style";
+import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
+import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
+import StakeIbc from "../components/dashboard/stake_ibc";
+import UnstakeIbc from "../components/dashboard/unstake_ibc";
 
 export function Dashboard(){
   const navOptions = [
     {
       value: 'mintBurn',
-      displayText: 'Mint / Burn'
+      displayText: 'Mint / Burn',
+      description: 'Mint tokens with inversed market properties, first of its kind'
     },
     {
       value: 'lp',
-      displayText: 'Add / Remove Liquidity'
+      displayText: 'Add / Remove Liquidity',
+      description: 'Provide liquidity and earn trading fees'
+    },
+    {
+      value: 'stake',
+      displayText: 'Stake / Unstake',
+      description: 'Earn trading fees by staking'
     },
     {
       value: 'claim',
-      displayText: 'Claim'
+      displayText: 'Claim',
+      description: 'Claim trading fees'
     }
   ]
 
@@ -33,24 +46,12 @@ export function Dashboard(){
   const [userEthBalance, setUserEthBalance] = useState<string>('0')
   const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const [bondingCurveParams, setBondingCurveParams] = useState<object>({})
-  const [inverseTokenAddress, setInverseTokenAddress] = useState<string>('')
-  const [userIbcTokenBalance, setUserIbcTokenBalance] = useState<string>('')
-  const [inverseTokenSupply, setInverseTokenSupply] = useState<string>('')
-  const [inverseTokenDecimals, setInverseTokenDecimals] = useState<string>('')
 
   const [dashboardDataSet, setDashboardDataSet] = useState<object>({})
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
-  // data to fetch 
-  // contract's current params
-  // contract's current reserves
-  // contract's current supply
-
-  // data to fetch if wallet connected
-  // user's token balance
-  // user's eth balance
-  // user's lp balance
-  // user's claimable fees 
+  const [updated, updateState] = React.useState<any>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
 
   useEffect(() => {
 
@@ -106,6 +107,20 @@ export function Dashboard(){
         const userLpTokenAllowanceBytes = await provider.call(userLpTokenAllowanceQuery)
         const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
 
+        // fetch rewards data
+        const userClaimableLpRewardsQuery = composeQuery(ibcContractAddress, "getReward", ["address", "uint8"], [wallet.accounts[0].address, 0])
+        const userClaimableLpRewardsBytes = await provider.call(userClaimableLpRewardsQuery)
+        const userClaimableLpRewards = abiCoder.decode(["uint256"], userClaimableLpRewardsBytes)[0]
+
+        const userClaimableStakingRewardsQuery = composeQuery(ibcContractAddress, "getReward", ["address", "uint8"], [wallet.accounts[0].address, 0])
+        const userClaimableStakingRewardsBytes = await provider.call(userClaimableStakingRewardsQuery)
+        const userClaimableStakingRewards = abiCoder.decode(["uint256"], userClaimableStakingRewardsBytes)[0]
+
+        // fetch staking balance
+        const userStakingBalanceQuery = composeQuery(ibcContractAddress, "getStakingBalance", ["address"], [wallet.accounts[0].address])
+        const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
+        const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -123,6 +138,10 @@ export function Dashboard(){
           userLpTokenBalance: userLpTokenBalance.toString(),
           userLpTokenAllowance: userLpTokenAllowance.toString(),
           lpTokenSupply: lpTokenSupply.toString(),
+          userClaimableStakingRewards: userClaimableStakingRewards.toString(),
+          userClaimableLpRewards: userClaimableLpRewards.toString(),
+          forceUpdate: forceUpdate,
+          userStakingBalance: userStakingBalance.toString(),
         })
       }
     }
@@ -130,7 +149,7 @@ export function Dashboard(){
     fetchWalletInfo()
       .then()
       .catch((err) => console.log("error", err))
-  }, [wallet, ibcContractAddress])
+  }, [wallet, ibcContractAddress, forceUpdate, updated])
 
   // data to generate
   // curve graph plot points
@@ -138,7 +157,7 @@ export function Dashboard(){
   // reactive hooks
   // left nav option selected
   useEffect(() => {
-    if (selectedNavItem === "claim"){
+    if (selectedNavItem === "claim" || selectedNavItem === "stake"){
       return
     }
 
@@ -149,11 +168,22 @@ export function Dashboard(){
     setHeaderTitle(headerTitle.toUpperCase())
   }, [selectedNavItem, navOptions])
 
+  const handleRadioChange = async (val: any) => {
+        
+    if (val === "claim" || val === "stake"){
+      onOpen()
+    }
+
+    setSelectedNavItem(val)
+  };
+
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'vaults',
-    onChange: (val) => setSelectedNavItem(val),
+    onChange: (val) => handleRadioChange(val),
+    
   })
   const group = getRootProps()
+
 
   return (
     <Grid
@@ -161,7 +191,7 @@ export function Dashboard(){
         "sidenav vertline1 header header header"
         "sidenav vertline1 horizline horizline horizline"
         "sidenav vertline1 main vertline2 sideinput"`}
-            gridTemplateRows={'70px 1px 1fr'}
+            gridTemplateRows={'100px 1px 1fr'}
             gridTemplateColumns={'200px 1px 2fr 1px 1fr'}
             gap='0'
     >
@@ -183,6 +213,68 @@ export function Dashboard(){
               )
             })}
           </Stack>
+
+
+          <Modal
+              isOpen={isOpen}
+              onClose={onClose}
+              scrollBehavior='inside'
+              isCentered
+              size='sm'>
+              <ModalOverlay
+                  backdropFilter='blur(20px)' />
+              <ModalContent
+                  backgroundColor={colors.ROYAL}
+                  boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
+                  <ModalHeader>
+                    <Stack>
+                      <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
+                      <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
+                    </Stack>
+                  </ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody pb={6}>
+                    {
+                      selectedNavItem === "stake" &&
+                      <>
+                        <Tabs>
+                          <TabList>
+                            <Tab>Stake</Tab>
+                            <Tab>Unstake</Tab>
+                          </TabList>
+                          <TabPanels>
+                            <TabPanel>
+                              <StakeIbc dashboardDataSet={dashboardDataSet} />
+                            </TabPanel>
+                            <TabPanel>
+                              <UnstakeIbc dashboardDataSet={dashboardDataSet} />
+                            </TabPanel>
+                          </TabPanels>
+                        </Tabs>
+                      </>
+                    }
+                    {
+                      selectedNavItem === "claim" &&
+                      <>
+                        <Tabs>
+                          <TabList>
+                            <Tab>LP</Tab>
+                            <Tab>Staking</Tab>
+                          </TabList>
+                          <TabPanels>
+                            <TabPanel>
+                              <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
+                            </TabPanel>
+                            <TabPanel>
+                              <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
+                            </TabPanel>
+                          </TabPanels>
+                        </Tabs>
+                      </>
+                    }
+                  </ModalBody>
+              </ModalContent>
+          </Modal>
         </Stack>
       </GridItem>
 
@@ -199,12 +291,19 @@ export function Dashboard(){
       </GridItem>
 
       <GridItem area={'header'}>
-        <Stack direction="row">
-          <Text>{headerTitle}</Text>
-          <Spacer/>
-          <ConnectWallet />
+        <Stack ml={7} mt={3} spacing={0}>
+          <Stack direction="row">
+            <Text fontSize={'l'}>{headerTitle}</Text>
+            <Spacer/>
+            <ConnectWallet />
+          </Stack>
+          <Stack direction="row">
+            <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
+          </Stack>
         </Stack>
+
       </GridItem>
+
       <GridItem area={'main'}>
         <Stack>
           <Text>main</Text>

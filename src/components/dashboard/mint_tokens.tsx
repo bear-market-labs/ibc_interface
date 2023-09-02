@@ -11,6 +11,9 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
+import { composeQuery } from '../../util/ethers_utils'
+
+import { BigNumber as bignumber } from 'bignumber.js'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -31,7 +34,7 @@ export default function MintTokens(props: mintProps) {
   const userIbcBalance = BigNumber.from("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
-  const [resultPrice, setResultPrice] = useState<BigNumber>(currentTokenPrice)
+  const [resultPrice, setResultPrice] = useState<string>(currentTokenPrice.toString())
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -107,6 +110,27 @@ export default function MintTokens(props: mintProps) {
 
     const decimaledParsedAmount = parseEther(val)
 
+    const calcMintAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber) => {
+      if (wallet?.provider) {
+        const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+        const abiCoder = ethers.utils.defaultAbiCoder
+
+        // calculate supply with new liquidity added in
+
+        const supplyQuery = composeQuery(ibcContractAddress, "getSupplyFromLiquidity", ["uint256"], [reserveAmount.add(decimaledParsedAmount)])
+        const supplyBytes = await provider.call(supplyQuery)
+        const newSupply = BigNumber.from(abiCoder.decode(["uint256"], supplyBytes)[0].toString())
+
+        const mintAmount = newSupply.sub(inverseTokenSupply)
+
+        // calculate resulting price
+        //setResultPrice((decimaledParsedAmount.toString() / mintAmount.toString()).toString())
+        setResultPrice(bignumber(decimaledParsedAmount.toString()).dividedBy(bignumber(mintAmount.toString())).toString())
+        setMintAmount(mintAmount)
+      }
+    }
+
+    /*
     setMintAmount(              
       amountToMint2(
         decimaledParsedAmount,
@@ -117,6 +141,11 @@ export default function MintTokens(props: mintProps) {
     )
 
     setResultPrice(price2(BigNumber.from(bondingCurveParams.m), BigNumber.from(bondingCurveParams.k), BigNumber.from(bondingCurveParams.inverseTokenSupply).add(decimaledParsedAmount)))
+    */
+
+    calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
+    .then()
+    .catch((err) => console.log(err))
   }
 
   return (
@@ -143,7 +172,7 @@ export default function MintTokens(props: mintProps) {
 
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
-          <Text>{ Number(mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()).toFixed(2) }</Text>
+          <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(inverseTokenDecimals).toString()).toString()).toFixed(2) }</Text>
           <Text align="right">{ibcSymbol}</Text>
         </Stack>
         <Text align="right">{`Balance: ${userIbcBalance.div(BigNumber.from(10).pow(inverseTokenDecimals))}`}</Text>
@@ -154,9 +183,7 @@ export default function MintTokens(props: mintProps) {
           <Text align="right">
             {`${
                   currentTokenPrice.toString() === '0' ? 0 :
-                  Number(
-                    resultPrice.sub(currentTokenPrice).mul(100).div(currentTokenPrice).toString()
-                  ).toFixed(2)
+                    bignumber(resultPrice).minus(bignumber(currentTokenPrice.toString())).multipliedBy(100).dividedBy(bignumber(currentTokenPrice.toString())).toFixed(2)
               }%`
             }
           </Text> 

@@ -17,6 +17,8 @@ import StakeIbc from "../components/dashboard/stake_ibc";
 import UnstakeIbc from "../components/dashboard/unstake_ibc";
 import MintBurnPrice from "../components/dashboard/mint_burn_price";
 import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
+import LpingReserve from "../components/dashboard/lping_reserve";
+import LpingIssuance from "../components/dashboard/lping_issuance";
 
 export function Dashboard(){
   const navOptions = [
@@ -352,7 +354,27 @@ export function Dashboard(){
           {
               headerTitle === "ADD / REMOVE LIQUIDITY" &&
               <>
-                <Text ml={7} mt={7} align="left">RESERVE</Text>
+                <LpingReserve
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
+
+                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+
+                <LpingIssuance
+                  dashboardDataSet={dashboardDataSet}
+                  parentInputDynamicData={{
+                    newPrice: newPrice,
+                    newIbcIssuance: newIbcIssuance,
+                    newLpIssuance: newLpIssuance,
+                    newReserve: newReserve
+                  }}
+                />
               </>
           }
 
@@ -390,7 +412,7 @@ export function Dashboard(){
                           parentSetters={{
                             setNewIbcIssuance: setNewIbcIssuance,
                             setNewPrice: setNewPrice,
-                            setNewLpIssuance: setNewIbcIssuance,
+                            setNewLpIssuance: setNewLpIssuance,
                             setNewReserve: setNewReserve
                           }}
                         />
@@ -401,7 +423,7 @@ export function Dashboard(){
                             parentSetters={{
                               setNewIbcIssuance: setNewIbcIssuance,
                               setNewPrice: setNewPrice,
-                              setNewLpIssuance: setNewIbcIssuance,
+                              setNewLpIssuance: setNewLpIssuance,
                               setNewReserve: setNewReserve
                             }}
                           />
@@ -429,7 +451,7 @@ export function Dashboard(){
                           parentSetters={{
                             setNewIbcIssuance: setNewIbcIssuance,
                             setNewPrice: setNewPrice,
-                            setNewLpIssuance: setNewIbcIssuance,
+                            setNewLpIssuance: setNewLpIssuance,
                             setNewReserve: setNewReserve
                           }}
                         />
@@ -440,7 +462,7 @@ export function Dashboard(){
                             parentSetters={{
                               setNewIbcIssuance: setNewIbcIssuance,
                               setNewPrice: setNewPrice,
-                              setNewLpIssuance: setNewIbcIssuance,
+                              setNewLpIssuance: setNewLpIssuance,
                               setNewReserve: setNewReserve
                             }}
                           />

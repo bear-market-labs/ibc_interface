@@ -411,11 +411,23 @@ export function Dashboard(){
                       <TabPanel>
                         <AddLiquidity
                           dashboardDataSet={dashboardDataSet}
+                          parentSetters={{
+                            setNewIbcIssuance: setNewIbcIssuance,
+                            setNewPrice: setNewPrice,
+                            setNewLpIssuance: setNewIbcIssuance,
+                            setNewReserve: setNewReserve
+                          }}
                         />
                       </TabPanel>
                       <TabPanel>
                         <RemoveLiquidity
                             dashboardDataSet={dashboardDataSet}
+                            parentSetters={{
+                              setNewIbcIssuance: setNewIbcIssuance,
+                              setNewPrice: setNewPrice,
+                              setNewLpIssuance: setNewIbcIssuance,
+                              setNewReserve: setNewReserve
+                            }}
                           />
                       </TabPanel>
                     </TabPanels>

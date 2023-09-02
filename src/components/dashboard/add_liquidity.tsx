@@ -12,6 +12,7 @@ import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
+  parentSetters: any;
 }
 
 export default function AddLiquidity(props: mintProps) {
@@ -19,7 +20,7 @@ export default function AddLiquidity(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [amount, setAmount] = useState<Number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const {dashboardDataSet} = props
+  const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
@@ -110,6 +111,9 @@ export default function AddLiquidity(props: mintProps) {
     const mintAmount = BigNumber.from(bignumber(lpTokenSupply.mul(decimaledParsedAmount).toString()).dividedBy(bignumber(bondingCurveParams.reserveAmount.toString())).toFixed(0))
 
     setMintAmount(mintAmount)
+
+    parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
+    parentSetters?.setNewReserve(decimaledParsedAmount.add(bondingCurveParams.reserveAmount).toString())
   }
 
   return (

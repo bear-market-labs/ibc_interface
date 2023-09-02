@@ -13,6 +13,8 @@ import RemoveLiquidity from "../components/dashboard/remove_liquidity";
 import { colors } from "../config/style";
 import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
 import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
+import StakeIbc from "../components/dashboard/stake_ibc";
+import UnstakeIbc from "../components/dashboard/unstake_ibc";
 
 export function Dashboard(){
   const navOptions = [
@@ -114,6 +116,11 @@ export function Dashboard(){
         const userClaimableStakingRewardsBytes = await provider.call(userClaimableStakingRewardsQuery)
         const userClaimableStakingRewards = abiCoder.decode(["uint256"], userClaimableStakingRewardsBytes)[0]
 
+        // fetch staking balance
+        const userStakingBalanceQuery = composeQuery(ibcContractAddress, "getStakingBalance", ["address"], [wallet.accounts[0].address])
+        const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
+        const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -134,6 +141,7 @@ export function Dashboard(){
           userClaimableStakingRewards: userClaimableStakingRewards.toString(),
           userClaimableLpRewards: userClaimableLpRewards.toString(),
           forceUpdate: forceUpdate,
+          userStakingBalance: userStakingBalance.toString(),
         })
       }
     }
@@ -236,10 +244,10 @@ export function Dashboard(){
                           </TabList>
                           <TabPanels>
                             <TabPanel>
-                              stake
+                              <StakeIbc dashboardDataSet={dashboardDataSet} />
                             </TabPanel>
                             <TabPanel>
-                              unstake
+                              <UnstakeIbc dashboardDataSet={dashboardDataSet} />
                             </TabPanel>
                           </TabPanels>
                         </Tabs>

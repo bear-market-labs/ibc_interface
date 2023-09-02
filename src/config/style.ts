@@ -11,5 +11,6 @@ export const colors = {
   GREEN: '#3e8c5b',
   BLUE: '#506cde',
 
-  TEAL: '#2087BA'
+  TEAL: '#2087BA',
+  ROYAL: '#1C1931'
 }

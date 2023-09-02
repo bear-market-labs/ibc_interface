@@ -8,6 +8,8 @@ import { ethers } from 'ethers'
 import { contracts } from "../config/contracts";
 import { composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
 import BurnTokens from "../components/dashboard/burn_tokens";
+import AddLiquidity from "../components/dashboard/add_liquidity";
+import RemoveLiquidity from "../components/dashboard/remove_liquidity";
 
 export function Dashboard(){
   const navOptions = [
@@ -86,6 +88,24 @@ export function Dashboard(){
         const userInverseTokenAllowanceBytes = await provider.call(userInverseTokenAllowanceQuery)
         const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
 
+        // lp token info
+        const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
+        const lpTokenDecimalsBytes = await provider.call(lpTokenDecimalsQuery)
+        const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
+
+        const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
+        const lpTokenSupplyBytes = await provider.call(lpTokenSupplyQuery)
+        const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
+
+        const userLpTokenBalanceQuery = composeQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        const userLpTokenBalanceBytes = await provider.call(userLpTokenBalanceQuery)
+        const userLpTokenBalance = abiCoder.decode(["uint"], userLpTokenBalanceBytes)[0]
+
+        // lp approval state
+        const userLpTokenAllowanceQuery = composeQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        const userLpTokenAllowanceBytes = await provider.call(userLpTokenAllowanceQuery)
+        const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -99,6 +119,10 @@ export function Dashboard(){
             m: bondingCurveParams[0][4].toString()
           },
           userInverseTokenAllowance: userInverseTokenAllowance.toString(),
+          lpTokenDecimals: lpTokenDecimals.toString(),
+          userLpTokenBalance: userLpTokenBalance.toString(),
+          userLpTokenAllowance: userLpTokenAllowance.toString(),
+          lpTokenSupply: lpTokenSupply.toString(),
         })
       }
     }
@@ -225,6 +249,33 @@ export function Dashboard(){
                   </Tabs>
                 </>
               )
+            }
+
+            {
+              headerTitle === "ADD / REMOVE LIQUIDITY" &&
+              (
+                <>
+                  <Tabs>
+                    <TabList>
+                      <Tab>Add</Tab>
+                      <Tab>Remove</Tab>
+                    </TabList>
+
+                    <TabPanels>
+                      <TabPanel>
+                        <AddLiquidity
+                          dashboardDataSet={dashboardDataSet}
+                        />
+                      </TabPanel>
+                      <TabPanel>
+                        <RemoveLiquidity
+                            dashboardDataSet={dashboardDataSet}
+                          />
+                      </TabPanel>
+                    </TabPanels>
+                  </Tabs>
+                </>
+              )
             
             
             /*
@@ -238,6 +289,7 @@ export function Dashboard(){
               Provide / Withdraw
 
             */}
+
             <Spacer/>
           </Stack>
       </GridItem>

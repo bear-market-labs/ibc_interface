@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers } from 'ethers'
+import {  ethers, constants } from 'ethers'
 import type {
     TokenSymbol
   } from '@web3-onboard/common'
@@ -28,6 +28,8 @@ export default function BurnTokens(props: mintProps) {
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
+  const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
+  const userInverseTokenAllowance = BigNumber.from("userInverseTokenAllowance" in dashboardDataSet ? dashboardDataSet.userInverseTokenAllowance : '0');
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
@@ -47,7 +49,7 @@ export default function BurnTokens(props: mintProps) {
 
   const sendTransaction = useCallback(async () => {
 
-    if (!wallet || !provider || !amount){
+    if (!wallet || !provider){
       return
     }
 
@@ -61,42 +63,78 @@ export default function BurnTokens(props: mintProps) {
     
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
+      let txDetails;
 
-      const functionDescriptorBytes = arrayify(solidityKeccak256(
-        [
-          "string"
-        ]
-        ,
-        [
-          "buyTokens(address,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-        ]
-      )).slice(0,4)
+      if (userInverseTokenAllowance.gt(0)){
 
-      const maxPriceLimit = 
-        bignumber(
-          Number(amount.toString()) * (1 + maxSlippage / 100)
-        )
-        .dividedBy(
-          bignumber(
-            mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()
-          )
-        ).toString()
-        
-      const payloadBytes = arrayify(abiCoder.encode(
-        [
-          "address",
-          "uint256"
-        ], // array of types; make sure to represent complex types as tuples 
-        [
-          wallet.accounts[0].address,
-          parseEther(maxPriceLimit)
-        ] // arg values
-      ))
+        if (!amount){
+          return
+        }
 
-      const txDetails = {
-        to: ibcContractAddress,
-        data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
-        value: parseEther(amount.toString())
+        const functionDescriptorBytes = arrayify(solidityKeccak256(
+          [
+            "string"
+          ]
+          ,
+          [
+            "sellTokens(address,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          ]
+        )).slice(0,4)
+  
+        let decimaledAmount = parseUnits(amount.toString(), inverseTokenDecimals.toNumber())
+
+        const minPriceLimit = 
+          bignumber(mintAmount.toString()).multipliedBy((1 - maxSlippage / 100))
+          .dividedBy(
+            bignumber(
+              decimaledAmount.toString()
+            )
+          ).toFixed(reserveAssetDecimals)
+          
+        const payloadBytes = arrayify(abiCoder.encode(
+          [
+            "address",
+            "uint256",
+            "uint256"
+          ], // array of types; make sure to represent complex types as tuples 
+          [
+            wallet.accounts[0].address,
+            decimaledAmount,
+            parseEther(minPriceLimit)
+          ] // arg values
+        ))
+  
+        txDetails = {
+          to: ibcContractAddress,
+          data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+        }
+  
+      } else {
+        const functionDescriptorBytes = arrayify(solidityKeccak256(
+          [
+            "string"
+          ]
+          ,
+          [
+            "approve(address,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          ]
+        )).slice(0,4)
+  
+        const payloadBytes = arrayify(abiCoder.encode(
+          [
+            "address",
+            "uint",
+          ], // array of types; make sure to represent complex types as tuples 
+          [
+            ibcContractAddress,
+            constants.MaxUint256
+          ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+        ))
+
+        txDetails = {
+          to: inverseTokenAddress,
+          data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+        }
       }
 
       const tx = await signer.sendTransaction(txDetails)
@@ -107,7 +145,7 @@ export default function BurnTokens(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
-  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, userInverseTokenAllowance, inverseTokenAddress]);
 
   const handleAmountChange = (val: any) => {
     const parsedAmount = val === '' ? 0 : Number(val);
@@ -200,7 +238,11 @@ export default function BurnTokens(props: mintProps) {
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
         </Stack>
-        <Button onClick={sendTransaction}>MINT</Button>
+          <Button onClick={sendTransaction}>
+            {
+              userInverseTokenAllowance.gt(0) ? "Burn" : "Approve IBC"
+            }
+          </Button>
       </Stack>
     </>
   )

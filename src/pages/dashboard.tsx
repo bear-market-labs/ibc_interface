@@ -81,6 +81,11 @@ export function Dashboard(){
         const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
         const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
 
+        // ibc approval state
+        const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        const userInverseTokenAllowanceBytes = await provider.call(userInverseTokenAllowanceQuery)
+        const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -92,7 +97,8 @@ export function Dashboard(){
             currentTokenPrice: bondingCurveParams[0][2].toString(),
             k: bondingCurveParams[0][3].toString(),
             m: bondingCurveParams[0][4].toString()
-          }
+          },
+          userInverseTokenAllowance: userInverseTokenAllowance.toString(),
         })
       }
     }

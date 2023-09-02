@@ -14,6 +14,7 @@ import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } fro
 import { composeQuery } from '../../util/ethers_utils'
 
 import { BigNumber as bignumber } from 'bignumber.js'
+import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -32,9 +33,11 @@ export default function MintTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
+  const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const [resultPrice, setResultPrice] = useState<bignumber>(bignumber(currentTokenPrice.toString()))
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -58,7 +61,7 @@ export default function MintTokens(props: mintProps) {
     }
 
     try {
-    
+      setIsProcessing(true)
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
@@ -107,6 +110,8 @@ export default function MintTokens(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
+    setIsProcessing(true)
+    forceUpdate()
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
 
   const handleAmountChange = (val: any) => {
@@ -202,6 +207,10 @@ export default function MintTokens(props: mintProps) {
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
         </Stack>
+        {
+          isProcessing &&
+          <DefaultSpinner />
+        }
         <Button onClick={sendTransaction}>MINT</Button>
       </Stack>
     </>

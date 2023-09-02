@@ -7,7 +7,7 @@ import {
   VStack,
   Code,
   Grid,
-  theme,
+  //theme,
   Button,
 } from "@chakra-ui/react"
 import { ColorModeSwitcher } from "./ColorModeSwitcher"
@@ -56,7 +56,7 @@ export const App = () => {
     ethersProvider = new ethers.providers.Web3Provider(wallet.provider, 'any')
   }
   return (
-  <ChakraProvider theme={theme}>
+  <ChakraProvider >
     <Box textAlign="center" fontSize="xl">
       <Routes>
         <Route path="/" element={<CraPage />} />

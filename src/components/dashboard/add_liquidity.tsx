@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers } from 'ethers'
-import type {
-    TokenSymbol
-  } from '@web3-onboard/common'
+import {  ethers, BigNumber } from 'ethers'
 import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
-import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
-import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
-import { composeQuery } from '../../util/ethers_utils'
 
 import { BigNumber as bignumber } from 'bignumber.js'
+import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -33,9 +28,11 @@ export default function AddLiquidity(props: mintProps) {
   const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
+  const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const [resultPrice, setResultPrice] = useState<bignumber>(bignumber(currentTokenPrice.toString()))
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -59,7 +56,7 @@ export default function AddLiquidity(props: mintProps) {
     }
 
     try {
-    
+      setIsProcessing(true)
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
@@ -100,6 +97,8 @@ export default function AddLiquidity(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
+    setIsProcessing(false)
+    forceUpdate();
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, currentTokenPrice]);
 
   const handleAmountChange = (val: any) => {
@@ -153,6 +152,10 @@ export default function AddLiquidity(props: mintProps) {
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
         </Stack>
+        {
+          isProcessing &&
+          <DefaultSpinner />
+        }
         <Button onClick={sendTransaction}>Add Liquidity</Button>
       </Stack>
     </>

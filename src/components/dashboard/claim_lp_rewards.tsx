@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import type {
-    TokenSymbol
-  } from '@web3-onboard/common'
 import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
-import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
-import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
-import { composeQuery } from '../../util/ethers_utils'
+
 
 import { BigNumber as bignumber } from 'bignumber.js'
+import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -26,8 +21,9 @@ export default function ClaimLpRewards(props: mintProps) {
   const {dashboardDataSet} = props
 
   const userClaimableLpRewards = BigNumber.from("userClaimableLpRewards" in dashboardDataSet ? dashboardDataSet.userClaimableLpRewards : '0')
-
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+  const forceUpdate = dashboardDataSet.forceUpdate;
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -51,7 +47,7 @@ export default function ClaimLpRewards(props: mintProps) {
     }
 
     try {
-    
+      setIsProcessing(true)
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
@@ -89,6 +85,8 @@ export default function ClaimLpRewards(props: mintProps) {
     } catch (error) {
         console.log(error)
     }
+    setIsProcessing(true)
+    forceUpdate()
   }, [wallet, provider, ibcContractAddress]);
 
   return (
@@ -96,7 +94,10 @@ export default function ClaimLpRewards(props: mintProps) {
       <Stack>
         <Text align="left">YOU HAVE ACCRUED</Text>
         <Text fontSize={'2xl'}>{`${Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)).toFixed(4)} IBC`}</Text>
-         
+        {
+          isProcessing &&
+          <DefaultSpinner />
+        }
         <Button onClick={sendTransaction}>Claim</Button>
       </Stack>
     </>

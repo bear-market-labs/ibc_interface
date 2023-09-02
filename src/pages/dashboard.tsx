@@ -1,6 +1,6 @@
 import { Code, Divider, Grid, GridItem, Link, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, VStack } from "@chakra-ui/react";
 import { useConnectWallet } from "@web3-onboard/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ConnectWallet from "../components/ConnectWallet";
 import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
@@ -44,25 +44,12 @@ export function Dashboard(){
   const [userEthBalance, setUserEthBalance] = useState<string>('0')
   const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const [bondingCurveParams, setBondingCurveParams] = useState<object>({})
-  const [inverseTokenAddress, setInverseTokenAddress] = useState<string>('')
-  const [userIbcTokenBalance, setUserIbcTokenBalance] = useState<string>('')
-  const [inverseTokenSupply, setInverseTokenSupply] = useState<string>('')
-  const [inverseTokenDecimals, setInverseTokenDecimals] = useState<string>('')
 
   const [dashboardDataSet, setDashboardDataSet] = useState<object>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  // data to fetch 
-  // contract's current params
-  // contract's current reserves
-  // contract's current supply
-
-  // data to fetch if wallet connected
-  // user's token balance
-  // user's eth balance
-  // user's lp balance
-  // user's claimable fees 
+  const [updated, updateState] = React.useState<any>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
 
   useEffect(() => {
 
@@ -145,7 +132,8 @@ export function Dashboard(){
           userLpTokenAllowance: userLpTokenAllowance.toString(),
           lpTokenSupply: lpTokenSupply.toString(),
           userClaimableStakingRewards: userClaimableStakingRewards.toString(),
-          userClaimableLpRewards: userClaimableLpRewards.toString()
+          userClaimableLpRewards: userClaimableLpRewards.toString(),
+          forceUpdate: forceUpdate,
         })
       }
     }
@@ -153,7 +141,7 @@ export function Dashboard(){
     fetchWalletInfo()
       .then()
       .catch((err) => console.log("error", err))
-  }, [wallet, ibcContractAddress])
+  }, [wallet, ibcContractAddress, forceUpdate, updated])
 
   // data to generate
   // curve graph plot points

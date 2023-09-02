@@ -108,7 +108,7 @@ export default function MintTokens(props: mintProps) {
     const parsedAmount = val === '' ? 0 : Number(val);
     setAmount(parsedAmount)
 
-    const decimaledParsedAmount = parseEther(val)
+    const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
 
     const calcMintAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber) => {
       if (wallet?.provider) {
@@ -143,9 +143,12 @@ export default function MintTokens(props: mintProps) {
     setResultPrice(price2(BigNumber.from(bondingCurveParams.m), BigNumber.from(bondingCurveParams.k), BigNumber.from(bondingCurveParams.inverseTokenSupply).add(decimaledParsedAmount)))
     */
 
-    calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
-    .then()
-    .catch((err) => console.log(err))
+    if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams){
+      calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
+      .then()
+      .catch((err) => console.log(err))
+    }
+
   }
 
   return (

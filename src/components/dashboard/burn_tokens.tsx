@@ -217,7 +217,7 @@ export default function BurnTokens(props: mintProps) {
           <Text align="left">Price Impact</Text>
           <Text align="right">
             {`${
-                  currentTokenPrice.toString() === '0' ? 0 :
+                  currentTokenPrice.toString() === '0' || resultPrice.toString() === '0'? 0 :
                     resultPrice.minus(bignumber(currentTokenPrice.toString())).multipliedBy(100).dividedBy(bignumber(currentTokenPrice.toString())).toFixed(2)
               }%`
             }

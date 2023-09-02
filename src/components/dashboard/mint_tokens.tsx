@@ -5,19 +5,15 @@ import type {
     TokenSymbol
   } from '@web3-onboard/common'
 import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, Interface, parseEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetSymbol } from '../../config/constants'
-import { areaUnderBondingCurve, amountToMint, price } from '../../util/bonding_curve'
+import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
 
 type mintProps = {
-  userBalance: any;
-  currentTokenSupply: any;
-  bondingCurveGenesisPrice: any;
-  bondingCurveGenesisSupply: any;
-  bondingCurveReserve: any;
-  userIbcBalance: any;
+  dashboardDataSet: any;
 }
 
 export default function MintTokens(props: mintProps) {
@@ -25,12 +21,17 @@ export default function MintTokens(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [amount, setAmount] = useState<Number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const {userBalance, currentTokenSupply, bondingCurveGenesisPrice, bondingCurveGenesisSupply, bondingCurveReserve, userIbcBalance} = props
+  const {dashboardDataSet} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
-  const [mintAmount, setMintAmount] = useState<number>(0)
-  const [resultPrice, setResultPrice] = useState<number>(price(currentTokenSupply, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply))
+  const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
-  const currentTokenPrice = price(currentTokenSupply, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply);
+  const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
+  const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
+  const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
+  const userIbcBalance = BigNumber.from("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
+
+  const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
+  const [resultPrice, setResultPrice] = useState<BigNumber>(currentTokenPrice)
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -100,19 +101,22 @@ export default function MintTokens(props: mintProps) {
     }
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
 
-  const handleAmountChange = (e: any) => {
-    const parsedAmount = e.target.value === '' ? 0 : Number(e.target.value);
+  const handleAmountChange = (val: any) => {
+    const parsedAmount = val === '' ? 0 : Number(val);
     setAmount(parsedAmount)
+
+    const decimaledParsedAmount = parseEther(val)
+
     setMintAmount(              
-      amountToMint(
-        parsedAmount, 
-        bondingCurveGenesisPrice, 
-        currentTokenSupply, 
-        bondingCurveGenesisSupply, 
-        bondingCurveReserve
+      amountToMint2(
+        decimaledParsedAmount,
+        BigNumber.from(bondingCurveParams.m),
+        BigNumber.from(bondingCurveParams.k), 
+        BigNumber.from(bondingCurveParams.inverseTokenSupply), 
       )
     )
-    setResultPrice(price(currentTokenSupply + parsedAmount, bondingCurveGenesisPrice, bondingCurveReserve, bondingCurveGenesisSupply))
+
+    setResultPrice(price2(BigNumber.from(bondingCurveParams.m), BigNumber.from(bondingCurveParams.k), BigNumber.from(bondingCurveParams.inverseTokenSupply).add(decimaledParsedAmount)))
   }
 
   return (
@@ -126,33 +130,32 @@ export default function MintTokens(props: mintProps) {
             type="text"
             value={amount?.toString()}
             placeholder={`0`}
-            onChange={e => handleAmountChange(e)}
+            onChange={e => handleAmountChange(e.target.value)}
             width="auto"
             border="none"
           />
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Stack direction="row" align="right">
-          <Text align="right">{`Balance: ${userBalance.toFixed(1)}`}</Text>
-          <Box color={colors.TEAL} onClick={() => setAmount(userBalance)}>MAX</Box>
+          <Text align="right">{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
+          <Box color={colors.TEAL} onClick={() => handleAmountChange(formatEther(userBalance).toString())}>MAX</Box>
         </Stack>
 
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
-          <Text>{ mintAmount.toFixed(2) }</Text>
+          <Text>{ Number(mintAmount.div(BigNumber.from(10).pow(inverseTokenDecimals)).toString()).toFixed(2) }</Text>
           <Text align="right">{ibcSymbol}</Text>
         </Stack>
-        <Text align="right">{`Balance: ${userIbcBalance}`}</Text>
+        <Text align="right">{`Balance: ${userIbcBalance.div(BigNumber.from(10).pow(inverseTokenDecimals))}`}</Text>
         <Spacer/>
 
         <Stack direction="row">
           <Text align="left">Price Impact</Text>
           <Text align="right">
             {`${
-                  (
-                    (resultPrice - currentTokenPrice) * 100
-                    /
-                    currentTokenPrice
+                  currentTokenPrice.toString() === '0' ? 0 :
+                  Number(
+                    resultPrice.sub(currentTokenPrice).mul(100).div(currentTokenPrice).toString()
                   ).toFixed(2)
               }%`
             }

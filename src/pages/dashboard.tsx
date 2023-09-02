@@ -36,6 +36,8 @@ export function Dashboard(){
   const [inverseTokenSupply, setInverseTokenSupply] = useState<string>('')
   const [inverseTokenDecimals, setInverseTokenDecimals] = useState<string>('')
 
+  const [dashboardDataSet, setDashboardDataSet] = useState<object>({})
+
   // data to fetch 
   // contract's current params
   // contract's current reserves
@@ -63,32 +65,34 @@ export function Dashboard(){
         // ibc contract state
         const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])
         const bondingCurveParamsBytes = await provider.call(bondingCurveParamsQuery)
-        const bondingCurveParams = abiCoder.decode(["int256", "uint256"], bondingCurveParamsBytes)
-        setBondingCurveParams({
-          k: bondingCurveParams[0].toString(),
-          m: bondingCurveParams[1].toString()
-        })
+        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
 
         const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "getInverseTokenAddress", [], [])
         const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
-        setInverseTokenAddress(inverseTokenAddress)
 
         // ibc token info
-        const inverseTokenSupplyQuery = composeQuery(inverseTokenAddress, "totalSupply", [], [])
-        const inverseTokenSupplyBytes = await provider.call(inverseTokenSupplyQuery)
-        const inverseTokenSupply = abiCoder.decode(["uint"], inverseTokenSupplyBytes)[0]
-        setInverseTokenSupply(inverseTokenSupply.toString())
-
         const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
         const inverseTokenDecimalsBytes = await provider.call(inverseTokenDecimalsQuery)
         const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
-        setInverseTokenDecimals(inverseTokenDecimals.toString())
 
         const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
         const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
         const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
-        setUserIbcTokenBalance(userInverseTokenBalance.toString())
+
+        setDashboardDataSet({
+          userEthBalance: ethBalance.toString(),
+          userIbcTokenBalance: userInverseTokenBalance.toString(),
+          inverseTokenDecimals: inverseTokenDecimals.toString(),
+          inverseTokenAddress: inverseTokenAddress.toString(),
+          bondingCurveParams: {
+            reserveAmount: bondingCurveParams[0][0].toString(),
+            inverseTokenSupply: bondingCurveParams[0][1].toString(),
+            currentTokenPrice: bondingCurveParams[0][2].toString(),
+            k: bondingCurveParams[0][3].toString(),
+            m: bondingCurveParams[0][4].toString()
+          }
+        })
       }
     }
 
@@ -202,23 +206,10 @@ export function Dashboard(){
                     <TabPanels>
                       <TabPanel>
                         <MintTokens
-                          userBalance={Number(userEthBalance)}
-                          currentTokenSupply={1}
-                          bondingCurveGenesisPrice={1}
-                          bondingCurveGenesisSupply={1}
-                          bondingCurveReserve={2}
-                          userIbcBalance={1}
+                          dashboardDataSet={dashboardDataSet}
                         />
                       </TabPanel>
                       <TabPanel>
-                        <MintTokens
-                          userBalance={3}
-                          currentTokenSupply={1}
-                          bondingCurveGenesisPrice={1}
-                          bondingCurveGenesisSupply={1}
-                          bondingCurveReserve={1}
-                          userIbcBalance={1}
-                        />
                       </TabPanel>
                     </TabPanels>
                   </Tabs>

@@ -7,7 +7,6 @@ import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { ethers } from 'ethers'
 import { Route, Routes } from "react-router-dom";
-import { CraPage } from "./pages/cra_ok";
 import { StagingPage } from "./pages/staging";
 import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
@@ -49,8 +48,7 @@ export const App = () => {
   <ChakraProvider theme={theme}>
     <Box textAlign="center" fontSize="xl">
       <Routes>
-        <Route path="/" element={<CraPage />} />
-        <Route path="/app" element={<Dashboard />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="/staging" element={<StagingPage/>}/>
       </Routes>
     </Box>

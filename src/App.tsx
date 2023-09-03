@@ -1,22 +1,11 @@
-import * as React from "react"
 import {
   ChakraProvider,
   Box,
-  Text,
-  Link,
-  VStack,
-  Code,
-  Grid,
-  //theme,
-  Button,
 } from "@chakra-ui/react"
-import { ColorModeSwitcher } from "./ColorModeSwitcher"
-import { Logo } from "./Logo"
 
-import { Web3OnboardProvider, init, useConnectWallet } from '@web3-onboard/react';
+import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { ethers } from 'ethers'
-import ConnectWallet from "./components/ConnectWallet";
 import { Route, Routes } from "react-router-dom";
 import { CraPage } from "./pages/cra_ok";
 import { StagingPage } from "./pages/staging";

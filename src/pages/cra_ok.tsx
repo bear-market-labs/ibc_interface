@@ -12,16 +12,19 @@ export function CraPage(){
       parameterM: 1
     },
     targetSupply: 2,
-    newCurveParam: {
-      parameterK: 0.75,
-      parameterM: 1
-    }
+    // newCurveParam: {
+    //   parameterK: 0.75,
+    //   parameterM: 1
+    // }
   }
   return (
     <Grid minH="100vh" p={3}>
     <ColorModeSwitcher justifySelf="flex-end" />
     <VStack spacing={8}>
+      <div style={{"width" : "800px", "height":"400px"}}>
       <BondingCurveChart chartParam={chartParam}></BondingCurveChart>
+      </div>
+      
       <Logo h="40vmin" pointerEvents="none" />
       <Text>
         Edit <Code fontSize="xl">src/App.tsx</Code> and save to reload.

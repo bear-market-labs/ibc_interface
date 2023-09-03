@@ -28,6 +28,9 @@ class BondingCurveChart extends React.Component<IProps, IState> {
     innerWidth = 0;
     innerHeight = 0;
 
+    MAX_SUPPLY_FACTOR = 10;
+    MIN_SUPPLY_FACTOE = 0.2;
+
     constructor(props: IProps) {
         super(props);
         this.chartParam = props.chartParam;
@@ -35,23 +38,52 @@ class BondingCurveChart extends React.Component<IProps, IState> {
 
     private buildGraph() {
 
-        let xDomain = [0, 10];
-        let yDomain = [0, 10];
+        let currentSupply = this.chartParam.currentSupply;
+        if(this.chartParam.targetSupply && this.chartParam.targetSupply > currentSupply){
+            currentSupply = this.chartParam.targetSupply
+        }
+
+
+
+        let xDomain = [0, currentSupply * 10];
+        let yDomain = [0, 1000];
 
         // Dimensions
-        const width = 600;
-        const height = 300;
+        let width = this.ref?.parentElement?.clientWidth || 400; // Get the width of the parent container
+        let height = this.ref?.parentElement?.clientHeight || 300;
         const margin = { top: 20, right: 20, bottom: 30, left: 40 };
         this.innerWidth = width - margin.left - margin.right;
         this.innerHeight = height - margin.top - margin.bottom;
 
-
-        let dataRange = d3.range(0, 1, 0.01);
+        let beginSupply = 0;
+        let endSupply = xDomain[1] * 0.005;
+        let dataRange = d3.range(beginSupply, endSupply, endSupply/100);
         dataRange = dataRange.slice(1);
-        dataRange = dataRange.concat(d3.range(1, 10, 0.1));
-        console.log(dataRange)
+        beginSupply = endSupply;
+        endSupply = xDomain[1] *0.1;
+        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply)/100));
+        beginSupply = endSupply;
+        endSupply = xDomain[1];
+        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply)/100));
 
-        const xScale = d3.scaleLinear().domain([0, 10]).range([0, this.innerWidth]);
+
+        const currentPrice = this.chartParam.curveParameter.parameterM / (currentSupply ** this.chartParam.curveParameter.parameterK)
+        const maxY = currentPrice * this.MAX_SUPPLY_FACTOR;
+        const minY = currentPrice * this.MIN_SUPPLY_FACTOE;
+
+        yDomain[1] = maxY;
+
+        let beginIndex = _.findIndex(dataRange, supply =>{
+            return (this.chartParam.curveParameter.parameterM / (supply ** this.chartParam.curveParameter.parameterK)) <= maxY;
+        });
+        let endIndex = _.findIndex(dataRange, supply =>{
+            return (this.chartParam.curveParameter.parameterM / (supply ** this.chartParam.curveParameter.parameterK)) <= minY;
+        });
+
+        dataRange = _.slice(dataRange, beginIndex, endIndex);
+        xDomain[1] = dataRange[dataRange.length -1];
+
+        const xScale = d3.scaleLinear().domain(xDomain).range([0, this.innerWidth]);
         const yScale = d3.scaleLinear().domain(yDomain).range([this.innerHeight, 0]);
 
         d3
@@ -70,28 +102,7 @@ class BondingCurveChart extends React.Component<IProps, IState> {
         const chart = svg
             .append('g')
             .attr('transform', `translate(${margin.left},${margin.top})`);
-
-        // X-axis
-        // chart
-        //   .append('g')
-        //   .attr('transform', `translate(0,${innerHeight})`)
-        //   .call(d3.axisBottom(xScale));
-
-        // // Y-axis
-        // chart.append('g').call(d3.axisLeft(yScale));
-
-        // Horizontal grid lines
-        // chart
-        //   .append('g')
-        //   .attr('class', 'grid')
-        //   .call(
-        //     d3
-        //       .axisLeft(yScale)
-        //       .tickSize(-innerWidth)
-        //       .tickFormat(null)
-        //       .ticks(9)
-        //   );
-
+        
         const numGridLines = 7;
         let xGridValues = d3.range(yDomain[0], yDomain[1], yDomain[1] / numGridLines);
         xGridValues.push(yDomain[1]);
@@ -106,24 +117,23 @@ class BondingCurveChart extends React.Component<IProps, IState> {
         // Remove ticks and default vertical grid line
         chart.selectAll('.domain').remove();
         chart.selectAll('.grid text').remove();
-        // chart.selectAll('.tick line').remove();
 
         this.drawCurve(chart, xScale, yScale, this.chartParam.curveParameter, dataRange, 'line');
 
-        if(this.chartParam.newCurveParam){
+        if (this.chartParam.newCurveParam) {
             this.drawCurve(chart, xScale, yScale, this.chartParam.newCurveParam, dataRange, 'target-line');
         }
 
-        if(this.chartParam.targetSupply){
+        if (this.chartParam.targetSupply) {
             let minSupply = 0, maxSupply = 0;
-            if(this.chartParam.currentSupply < this.chartParam.targetSupply){
+            if (this.chartParam.currentSupply < this.chartParam.targetSupply) {
                 minSupply = this.chartParam.currentSupply;
                 maxSupply = this.chartParam.targetSupply;
-            }else{
+            } else {
                 minSupply = this.chartParam.targetSupply;
                 maxSupply = this.chartParam.currentSupply;
             }
-            
+
             let beginIndex = _.findIndex(dataRange, item => {
                 return item >= minSupply;
             });
@@ -132,11 +142,11 @@ class BondingCurveChart extends React.Component<IProps, IState> {
                 return item >= maxSupply;
             });
 
-            if(beginIndex < 0){
+            if (beginIndex < 0) {
                 beginIndex = 0;
             }
 
-            if(endIndex < 0){
+            if (endIndex < 0) {
                 endIndex = dataRange.length;
             }
 
@@ -144,18 +154,13 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             areaDataRange.splice(0, 0, minSupply);
             areaDataRange.push(maxSupply);
 
-            
-
             this.drawArea(chart, xScale, yScale, this.chartParam, areaDataRange);
             this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.targetSupply, 'dot-target');
             this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.currentSupply, 'dot-from');
 
-        }else{
+        } else {
             this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.currentSupply, 'dot-target');
         }
-        
-
-
 
         chart
             .append('text')
@@ -168,10 +173,10 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             .text('ISSUANCE');
     }
 
-    drawDot(chart: any, xScale: any, yScale: any, param: ICurveParam, supply: number, className: string){
+    drawDot(chart: any, xScale: any, yScale: any, param: ICurveParam, supply: number, className: string) {
         const parameterK = param.parameterK;
         const parameterM = param.parameterM;
-        
+
 
         const y = parameterM / (supply ** parameterK);
 
@@ -179,41 +184,41 @@ class BondingCurveChart extends React.Component<IProps, IState> {
         const posY = yScale(y);
 
         chart
-        .append('circle')
-        .attr('cx', posX)
-        .attr('cy', posY)
-        .attr('r', 5)
-        .attr('class', className);
+            .append('circle')
+            .attr('cx', posX)
+            .attr('cy', posY)
+            .attr('r', 5)
+            .attr('class', className);
     }
 
-    drawCurve(chart: any, xScale: any, yScale: any, param: ICurveParam, supplyRange: number[], className: string){
+    drawCurve(chart: any, xScale: any, yScale: any, param: ICurveParam, supplyRange: number[], className: string) {
 
         const parameterK = param.parameterK;
-        const parameterM = param.parameterM;       
+        const parameterM = param.parameterM;
 
         // Data
         const data = supplyRange.map((d) => ({
             x: d,
             y: parameterM / (d ** parameterK)
         }));
- 
-         // Line generator
-         const line = d3
-             .line<{ x: number; y: number }>()
-             .x((d) => xScale(d.x))
-             .y((d) => yScale(d.y));
+
+        // Line generator
+        const line = d3
+            .line<{ x: number; y: number }>()
+            .x((d) => xScale(d.x))
+            .y((d) => yScale(d.y));
         // Line
         chart
             .append('path')
             .datum(data)
             .attr('class', className)
-            .attr('d', line);             
+            .attr('d', line);
     }
 
-    drawArea(chart: any, xScale: any, yScale: any, param: IChartParam, supplyRange: number[]){
+    drawArea(chart: any, xScale: any, yScale: any, param: IChartParam, supplyRange: number[]) {
 
         const parameterK = param.curveParameter.parameterK;
-        const parameterM = param.curveParameter.parameterM;  
+        const parameterM = param.curveParameter.parameterM;
 
         // Data
         const data = supplyRange.map((d) => ({
@@ -223,33 +228,55 @@ class BondingCurveChart extends React.Component<IProps, IState> {
 
         // Scales
         const area = d3.area<{ x: number; y: number }>()
-         .x(d => xScale(d.x))
-         .y0(yScale(0))
-         .y1(d => yScale(d.y));
-   
-       chart.append('path')
-         .datum(data)
-         .attr('d', area)
-         .attr('class', 'area')
-         .on('mouseover', handleMouseOver)
-        //  .on('mouseout', handleMouseOut);
-   
-       function handleMouseOver(event: any) {
-         const [x, y] = d3.pointer(event);
-         const value = xScale.invert(x).toFixed(2);
-         chart.append('g')
-         .attr('class', 'tooltip-area')
-            .append('text')
-           .attr('x', x)
-           .attr('y', y - 10)
-           .attr('class', 'tooltip')
-           .text(value);
-       }
-   
-       function handleMouseOut() {
-         chart.select('.tooltip').remove();
-       }
-           
+            .x(d => xScale(d.x))
+            .y0(yScale(0))
+            .y1(d => yScale(d.y));
+
+        chart.append('path')
+            .datum(data)
+            .attr('d', area)
+            .attr('class', 'area')
+            .on('mouseover', handleMouseOver)
+            .on('mouseout', handleMouseOut);
+
+        function handleMouseOver(event: any) {
+            const [x, y] = d3.pointer(event);
+            const value = xScale.invert(x).toFixed(2);
+
+            const tooltipGroup = chart.append('g')
+                .attr('class', 'tooltip-group')
+                .style('pointer-events', 'none');
+
+            tooltipGroup.append('rect')
+                .attr('class', 'tooltip-bg')
+                .attr('x', x - 30)
+                .attr('y', y - 60)
+                .attr('width', 100)
+                .attr('height', 20)
+
+            // TODO: What to show on tooltip?
+            tooltipGroup.append('text')
+                .attr('class', 'tooltip-text')
+                .attr('x', x - 25)
+                .attr('y', y - 45)
+                .attr('text-anchor', 'left')
+                .style('font-size', '10px')
+                .style('white-space', 'pre')
+                .text(`Supply   : ${param.currentSupply} -> ${param.targetSupply}`);
+            // tooltipGroup.append('text')
+            //     .attr('class', 'tooltip-text')
+            //     .attr('x', x - 25)
+            //     .attr('y', y - 30)
+            //     .attr('text-anchor', 'left')
+            //     .style('font-size', '10px')
+            //     .style('white-space', 'pre')
+            //     .text("Reserve : 178.56 -> 192.39");
+        }
+
+        function handleMouseOut() {
+            chart.select('.tooltip-group').remove();
+        }
+
     }
 
     componentDidMount() {
@@ -260,14 +287,16 @@ class BondingCurveChart extends React.Component<IProps, IState> {
     render() {
         return (<div className="svg">
             <div className="text-price">PRICE</div>
-            <svg className="chart-container" ref={(ref: SVGSVGElement) => this.ref = ref} width='600' height='300'></svg>
+            <svg className="chart-container" ref={(ref: SVGSVGElement) => this.ref = ref}></svg>
             <style>{`
         .svg{
             position: relative;
+            width: 100%;
+            height: 100%;
         }
         .chart-container {
-            width: 600px;
-            height: 300px;
+            width: 100%;
+            height: 100%;
             background-color: #1C1931;
         }
 
@@ -328,11 +357,18 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             writing-mode: vertical-rl;
             text-orientation: upright;
         }
-        .tooltip-area{
-            background-color: #DDE2EA;
+        .tooltip-bg{
+            fill: #DDE2EA;
         }
-        .tooltip{
-            font-size: small;
+        .tooltip-text{
+            color: #DDE2EA;
+            // text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+            font-family: Roboto Mono;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 25px; /* 156.25% */
+            letter-spacing: -0.32px;
         }
       `}</style>
         </div>);

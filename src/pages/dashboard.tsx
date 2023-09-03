@@ -220,12 +220,12 @@ export function Dashboard(){
             <Logo/>
           </Stack>
 
-          <Stack {...group} spacing={3}>
+          <Stack {...group} spacing='5' mt='5'>
             {navOptions.map((item) => {
               const radio = getRadioProps({ value: item.value })
               return(
                 <RadioCard key={item.value} {...radio}>
-                  <Text align="left">{item.displayText}</Text>
+                  <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                 </RadioCard>
               )
             })}

@@ -1,7 +1,7 @@
 import React from 'react';
 import * as d3 from 'd3';
 import * as _ from "lodash";
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import './bonding_curve_chart.css';
 
 interface ICurveParam {
@@ -9,136 +9,274 @@ interface ICurveParam {
     parameterM: number;
 }
 
-interface IChartParam {
+export interface IChartParam {
     currentSupply: number;
     curveParameter: ICurveParam;
-    targetSupply?: number;
-    newCurveParam?: ICurveParam;
+    targetSupply?: number | null;
+    newCurveParam?: ICurveParam | null;
 }
 interface IProps {
     chartParam: IChartParam
 }
 
-interface IState {
-
+interface IChartState {
+    xDomain: number[];
+    yDomain: number[];
+    supplyRange: number[];
+    chart?: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xScale: d3.ScaleLinear<number, number, never>;
+    yScale: d3.ScaleLinear<number, number, never>;
 }
-class BondingCurveChart extends React.Component<IProps, IState> {
-    ref!: SVGSVGElement;
-    chartParam: IChartParam;
-    innerWidth = 0;
-    innerHeight = 0;
 
-    MAX_SUPPLY_FACTOR = 10;
-    MIN_SUPPLY_FACTOE = 0.2;
+export default function BondingCurveChart(props: IProps) {
+    const chartRef = useRef<SVGSVGElement | null>(null);
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+    const [initialized, setInitialized] = useState<Boolean>(false);
+    const [chartState, setChartState] = useState<IChartState | null>(null);
+    const [chartParam, setChartParam] = useState<IChartParam>({
+        currentSupply: 1,
+        curveParameter: {
+          parameterK: 0.5,
+          parameterM: 1
+        },
+    });
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    let innerWidth = 0;
+    let innerHeight = 0;
+    let width = 0;
+    let height = 0;
 
-    constructor(props: IProps) {
-        super(props);
-        this.chartParam = props.chartParam;
-    }
+    const MAX_SUPPLY_FACTOR = 10;
+    const MIN_SUPPLY_FACTOE = 0.2;
+    const GRID_LINE_COUNT = 7;
 
-    private buildGraph() {
+    useEffect(() => {
 
-        let currentSupply = this.chartParam.currentSupply;
-        if(this.chartParam.targetSupply && this.chartParam.targetSupply > currentSupply){
-            currentSupply = this.chartParam.targetSupply
+        console.log('<-------parameter change:');
+        console.log(props);
+
+        if (props && props.chartParam && props.chartParam.currentSupply) {
+            console.log(props);
+            let forceRefresh = false, refreshCurve = false, refreshArea = false, refreshNewCurve = false;
+            if(chartParam){
+                if (chartParam.currentSupply != props.chartParam.currentSupply ||
+                    _.isEqual(chartParam.curveParameter, props.chartParam.curveParameter)) {
+                    refreshCurve = true;
+                }
+    
+                refreshArea = chartParam.targetSupply != props.chartParam.targetSupply;
+    
+                refreshNewCurve = !_.isEqual(chartParam.newCurveParam, props.chartParam.newCurveParam);
+            }else{
+                forceRefresh = true;
+            }
+
+            setChartParam(props.chartParam)
+
+            buildGraph(forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
         }
 
+        const resizeObserver = new ResizeObserver(entries => {
+            if (chartParam && chartParam.currentSupply) {
+                buildGraph(true);
+            }
+        });
 
+        if (chartContainerRef.current) {
+            resizeObserver.observe(chartContainerRef.current);
+        }
+    }, [props, props.chartParam.currentSupply, props.chartParam.targetSupply, props.chartParam.newCurveParam]);
+
+    function getRectRange() {
+        width = chartRef.current?.parentElement?.clientWidth || 400;
+        height = chartRef.current?.parentElement?.clientHeight || 300;
+        innerWidth = width - margin.left - margin.right;
+        innerHeight = height - margin.top - margin.bottom;
+    }
+
+    function updateChartData() {
+        if(chartParam){
+
+        }
+        let currentSupply = chartParam.currentSupply;
+        if (chartParam.targetSupply && chartParam.targetSupply > currentSupply) {
+            currentSupply = chartParam.targetSupply
+        }
 
         let xDomain = [0, currentSupply * 10];
         let yDomain = [0, 1000];
 
-        // Dimensions
-        let width = this.ref?.parentElement?.clientWidth || 400; // Get the width of the parent container
-        let height = this.ref?.parentElement?.clientHeight || 300;
-        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-        this.innerWidth = width - margin.left - margin.right;
-        this.innerHeight = height - margin.top - margin.bottom;
-
+        // Need to draw more points when supply is quite small
         let beginSupply = 0;
         let endSupply = xDomain[1] * 0.005;
-        let dataRange = d3.range(beginSupply, endSupply, endSupply/100);
+        let dataRange = d3.range(beginSupply, endSupply, endSupply / 100);
         dataRange = dataRange.slice(1);
         beginSupply = endSupply;
-        endSupply = xDomain[1] *0.1;
-        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply)/100));
+        endSupply = xDomain[1] * 0.1;
+        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply) / 100));
         beginSupply = endSupply;
         endSupply = xDomain[1];
-        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply)/100));
+        dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply) / 100));
 
 
-        const currentPrice = this.chartParam.curveParameter.parameterM / (currentSupply ** this.chartParam.curveParameter.parameterK)
-        const maxY = currentPrice * this.MAX_SUPPLY_FACTOR;
-        const minY = currentPrice * this.MIN_SUPPLY_FACTOE;
+        const currentPrice = chartParam.curveParameter.parameterM / (currentSupply ** chartParam.curveParameter.parameterK)
+        const maxY = currentPrice * MAX_SUPPLY_FACTOR;
+        const minY = currentPrice * MIN_SUPPLY_FACTOE;
 
         yDomain[1] = maxY;
 
-        let beginIndex = _.findIndex(dataRange, supply =>{
-            return (this.chartParam.curveParameter.parameterM / (supply ** this.chartParam.curveParameter.parameterK)) <= maxY;
+        let beginIndex = _.findIndex(dataRange, supply => {
+            return (chartParam.curveParameter.parameterM / (supply ** chartParam.curveParameter.parameterK)) <= maxY;
         });
-        let endIndex = _.findIndex(dataRange, supply =>{
-            return (this.chartParam.curveParameter.parameterM / (supply ** this.chartParam.curveParameter.parameterK)) <= minY;
+        let endIndex = _.findIndex(dataRange, supply => {
+            return (chartParam.curveParameter.parameterM / (supply ** chartParam.curveParameter.parameterK)) <= minY;
         });
 
         dataRange = _.slice(dataRange, beginIndex, endIndex);
-        xDomain[1] = dataRange[dataRange.length -1];
+        xDomain[1] = dataRange[dataRange.length - 1];
 
-        const xScale = d3.scaleLinear().domain(xDomain).range([0, this.innerWidth]);
-        const yScale = d3.scaleLinear().domain(yDomain).range([this.innerHeight, 0]);
+        const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
+        const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
 
-        d3
-            .select(this.ref)
-            .select('svg')
-            .remove();
-
-        // SVG element
-        const svg = d3
-            .select(this.ref)
-            .append('svg')
-            .attr('width', width)
-            .attr('height', height);
-
-        // Chart group
-        const chart = svg
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-        
-        const numGridLines = 7;
-        let xGridValues = d3.range(yDomain[0], yDomain[1], yDomain[1] / numGridLines);
-        xGridValues.push(yDomain[1]);
-        const xGrid = d3
-            .axisLeft(yScale)
-            .tickValues(xGridValues)
-            .tickSize(-this.innerWidth)
-            .tickFormat(null);
-
-        chart.append('g').attr('class', 'grid').call(xGrid);
-
-        // Remove ticks and default vertical grid line
-        chart.selectAll('.domain').remove();
-        chart.selectAll('.grid text').remove();
-
-        this.drawCurve(chart, xScale, yScale, this.chartParam.curveParameter, dataRange, 'line');
-
-        if (this.chartParam.newCurveParam) {
-            this.drawCurve(chart, xScale, yScale, this.chartParam.newCurveParam, dataRange, 'target-line');
+        let chartState: IChartState = {
+            xDomain: xDomain,
+            yDomain: yDomain,
+            supplyRange: dataRange,
+            xScale: xScale,
+            yScale: yScale
         }
 
-        if (this.chartParam.targetSupply) {
-            let minSupply = 0, maxSupply = 0;
-            if (this.chartParam.currentSupply < this.chartParam.targetSupply) {
-                minSupply = this.chartParam.currentSupply;
-                maxSupply = this.chartParam.targetSupply;
+        setChartState(chartState);
+    }
+
+    function drawChartBase() {
+        if (chartState) {
+            d3
+                .select(chartRef.current)
+                .select('svg')
+                .remove();
+
+            // SVG element
+            const svg = d3
+                .select(chartRef.current)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Chart group
+            const chart = svg
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+
+            chartState.chart = chart;
+            setChartState(chartState);
+
+
+            const numGridLines = GRID_LINE_COUNT;
+            let xGridValues = d3.range(chartState.yDomain[0], chartState.yDomain[1], chartState.yDomain[1] / numGridLines);
+            xGridValues.push(chartState.yDomain[1]);
+            const xGrid = d3
+                .axisLeft(chartState.yScale)
+                .tickValues(xGridValues)
+                .tickSize(-innerWidth)
+                .tickFormat(null);
+
+            chart.append('g').attr('class', 'grid').call(xGrid);
+
+            // Remove ticks and default vertical grid line
+            chart.selectAll('.domain').remove();
+            chart.selectAll('.grid text').remove();
+
+            chart
+                .append('text')
+                .attr('class', 'text-issuance')
+                .attr('x', innerWidth)
+                .attr('y', innerHeight + 20)
+                .attr('text-anchor', 'end')
+                .attr('dominant-baseline', 'baseline')
+                .style('fill', 'white')
+                .text('ISSUANCE');
+        }
+    }
+    function buildGraph(forceRefresh: boolean, refreshCurve = false, refreshArea = false, refreshNewCurve = false) {
+        if(chartParam){
+            if (!initialized || forceRefresh || !chartState || !chartState.chart) {
+                getRectRange();
+                
+                updateChartData();
+                drawChartBase();
+                drawBondingCurve(true, true, true);
+                setInitialized(true);
             } else {
-                minSupply = this.chartParam.targetSupply;
-                maxSupply = this.chartParam.currentSupply;
+                let supplyRange = chartState.supplyRange;
+                if (!inDataRange(supplyRange, chartParam.currentSupply) ||
+                    (chartParam.targetSupply && !inDataRange(supplyRange, chartParam.targetSupply))) {
+                    updateChartData();
+                    refreshCurve = true;
+                    refreshArea = true;
+                    refreshNewCurve = true;
+                }
+    
+                if (refreshCurve) {
+                    removeDot('dot-target');
+                    removeLine('line');
+                }
+    
+                if (refreshArea) {
+                    removeLiquidityArea();
+                }
+    
+                if (refreshNewCurve) {
+                    removeLine('target-line');
+                }
+    
+                drawBondingCurve(refreshCurve, refreshArea, refreshNewCurve);
+            }
+        }
+        
+    }
+
+    function drawBondingCurve(refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
+        if(chartParam){
+            if (refreshCurve) {
+                drawCurve(chartParam.curveParameter, 'line');
+            }
+    
+            if (chartParam.newCurveParam && refreshNewCurve) {
+                drawCurve(chartParam.newCurveParam, 'target-line');
+            }
+    
+            if (chartParam.targetSupply && refreshArea) {
+                drawLiquidityArea();
+            } else {
+                drawDot(chartParam.curveParameter, chartParam.currentSupply, 'dot-target');
+            }
+        }
+    }
+
+    function inDataRange(dataRange: number[], data: number) {
+        return data >= dataRange[0] && data <= dataRange[dataRange.length - 1];
+    }
+
+    function drawLiquidityArea() {
+
+        if (chartState && chartState.chart && chartParam && chartParam.targetSupply) {
+            const supplyRange = chartState?.supplyRange;
+            let minSupply = 0, maxSupply = 0;
+            if (chartParam.currentSupply < chartParam.targetSupply) {
+                minSupply = chartParam.currentSupply;
+                maxSupply = chartParam.targetSupply;
+            } else {
+                minSupply = chartParam.targetSupply;
+                maxSupply = chartParam.currentSupply;
             }
 
-            let beginIndex = _.findIndex(dataRange, item => {
+            let beginIndex = _.findIndex(supplyRange, item => {
                 return item >= minSupply;
             });
 
-            let endIndex = _.findIndex(dataRange, item => {
+            let endIndex = _.findIndex(supplyRange, item => {
                 return item >= maxSupply;
             });
 
@@ -147,99 +285,105 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             }
 
             if (endIndex < 0) {
-                endIndex = dataRange.length;
+                endIndex = supplyRange.length;
             }
 
-            let areaDataRange = _.slice(dataRange, beginIndex, endIndex);
+            let areaDataRange = _.slice(supplyRange, beginIndex, endIndex);
             areaDataRange.splice(0, 0, minSupply);
             areaDataRange.push(maxSupply);
 
-            this.drawArea(chart, xScale, yScale, this.chartParam, areaDataRange);
-            this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.targetSupply, 'dot-target');
-            this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.currentSupply, 'dot-from');
-
-        } else {
-            this.drawDot(chart, xScale, yScale, this.chartParam.curveParameter, this.chartParam.currentSupply, 'dot-target');
+            drawArea(chartParam, areaDataRange);
+            drawDot(chartParam.curveParameter, chartParam.targetSupply, 'dot-target');
+            drawDot(chartParam.curveParameter, chartParam.currentSupply, 'dot-from');
         }
-
-        chart
-            .append('text')
-            .attr('class', 'text-issuance')
-            .attr('x', this.innerWidth)
-            .attr('y', this.innerHeight + 20)
-            .attr('text-anchor', 'end')
-            .attr('dominant-baseline', 'baseline')
-            .style('fill', 'white')
-            .text('ISSUANCE');
     }
 
-    drawDot(chart: any, xScale: any, yScale: any, param: ICurveParam, supply: number, className: string) {
-        const parameterK = param.parameterK;
-        const parameterM = param.parameterM;
+    function drawDot(param: ICurveParam, supply: number, className: string) {
+
+        if (chartState && chartState.chart) {
+            const chart = chartState?.chart;
+            const xScale = chartState?.xScale;
+            const yScale = chartState?.yScale;
+            const supplyRange = chartState?.supplyRange;
+
+            const parameterK = param.parameterK;
+            const parameterM = param.parameterM;
 
 
-        const y = parameterM / (supply ** parameterK);
+            const y = parameterM / (supply ** parameterK);
 
-        const posX = xScale(supply);
-        const posY = yScale(y);
+            const posX = xScale(supply);
+            const posY = yScale(y);
 
-        chart
-            .append('circle')
-            .attr('cx', posX)
-            .attr('cy', posY)
-            .attr('r', 5)
-            .attr('class', className);
+            chart
+                .append('circle')
+                .attr('cx', posX)
+                .attr('cy', posY)
+                .attr('r', 5)
+                .attr('class', className);
+        }
     }
 
-    drawCurve(chart: any, xScale: any, yScale: any, param: ICurveParam, supplyRange: number[], className: string) {
+    function drawCurve(param: ICurveParam, className: string) {
 
-        const parameterK = param.parameterK;
-        const parameterM = param.parameterM;
+        if (chartState && chartState.chart) {
+            const chart = chartState?.chart;
+            const xScale = chartState?.xScale;
+            const yScale = chartState?.yScale;
+            const supplyRange = chartState?.supplyRange;
 
-        // Data
-        const data = supplyRange.map((d) => ({
-            x: d,
-            y: parameterM / (d ** parameterK)
-        }));
+            const parameterK = param.parameterK;
+            const parameterM = param.parameterM;
 
-        // Line generator
-        const line = d3
-            .line<{ x: number; y: number }>()
-            .x((d) => xScale(d.x))
-            .y((d) => yScale(d.y));
-        // Line
-        chart
-            .append('path')
-            .datum(data)
-            .attr('class', className)
-            .attr('d', line);
+            // Data
+            const data = supplyRange.map((d) => ({
+                x: d,
+                y: parameterM / (d ** parameterK)
+            }));
+
+            // Line generator
+            const line = d3
+                .line<{ x: number; y: number }>()
+                .x((d) => xScale(d.x))
+                .y((d) => yScale(d.y));
+            // Line
+            chart
+                .append('path')
+                .datum(data)
+                .attr('class', className)
+                .attr('d', line);
+        }
     }
 
-    drawArea(chart: any, xScale: any, yScale: any, param: IChartParam, supplyRange: number[]) {
+    function removeLiquidityArea() {
+        removeArea();
+        removeDot('dot-target');
+        removeDot('dot-from');
+    }
 
-        const parameterK = param.curveParameter.parameterK;
-        const parameterM = param.curveParameter.parameterM;
+    function removeArea() {
+        if (chartState && chartState.chart) {
+            chartState.chart.select(".area").remove();
+        }
+    }
 
-        // Data
-        const data = supplyRange.map((d) => ({
-            x: d,
-            y: parameterM / (d ** parameterK)
-        }));
+    function removeLine(className: string) {
+        if (chartState && chartState.chart) {
+            chartState.chart.select(className).remove();
+        }
+    }
 
-        // Scales
-        const area = d3.area<{ x: number; y: number }>()
-            .x(d => xScale(d.x))
-            .y0(yScale(0))
-            .y1(d => yScale(d.y));
+    function removeDot(className: string) {
+        if (chartState && chartState.chart) {
+            chartState.chart.select(className).remove();
+        }
+    }
 
-        chart.append('path')
-            .datum(data)
-            .attr('d', area)
-            .attr('class', 'area')
-            .on('mouseover', handleMouseOver)
-            .on('mouseout', handleMouseOut);
+    function handleMouseOver(event: any) {
+        if (chartState && chartState.chart) {
+            const chart = chartState?.chart;
+            const xScale = chartState?.xScale;
 
-        function handleMouseOver(event: any) {
             const [x, y] = d3.pointer(event);
             const value = xScale.invert(x).toFixed(2);
 
@@ -255,14 +399,14 @@ class BondingCurveChart extends React.Component<IProps, IState> {
                 .attr('height', 20)
 
             // TODO: What to show on tooltip?
-            tooltipGroup.append('text')
-                .attr('class', 'tooltip-text')
-                .attr('x', x - 25)
-                .attr('y', y - 45)
-                .attr('text-anchor', 'left')
-                .style('font-size', '10px')
-                .style('white-space', 'pre')
-                .text(`Supply   : ${param.currentSupply} -> ${param.targetSupply}`);
+            // tooltipGroup.append('text')
+            //     .attr('class', 'tooltip-text')
+            //     .attr('x', x - 25)
+            //     .attr('y', y - 45)
+            //     .attr('text-anchor', 'left')
+            //     .style('font-size', '10px')
+            //     .style('white-space', 'pre')
+            //     .text(`Supply   : ${param.currentSupply} -> ${param.targetSupply}`);
             // tooltipGroup.append('text')
             //     .attr('class', 'tooltip-text')
             //     .attr('x', x - 25)
@@ -272,23 +416,54 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             //     .style('white-space', 'pre')
             //     .text("Reserve : 178.56 -> 192.39");
         }
+    }
 
-        function handleMouseOut() {
+    function handleMouseOut() {
+        if (chartState && chartState.chart) {
+            const chart = chartState?.chart;
             chart.select('.tooltip-group').remove();
         }
-
     }
 
-    componentDidMount() {
-        // activate   
-        this.buildGraph();
+    function drawArea(param: IChartParam, supplyRange: number[]) {
+
+        if (chartState && chartState.chart) {
+            const chart = chartState?.chart;
+            const xScale = chartState?.xScale;
+            const yScale = chartState?.yScale;
+
+
+            const parameterK = param.curveParameter.parameterK;
+            const parameterM = param.curveParameter.parameterM;
+
+            // Data
+            const data = supplyRange.map((d) => ({
+                x: d,
+                y: parameterM / (d ** parameterK)
+            }));
+
+            // Scales
+            const area = d3.area<{ x: number; y: number }>()
+                .x(d => xScale(d.x))
+                .y0(yScale(0))
+                .y1(d => yScale(d.y));
+
+            chart.append('path')
+                .datum(data)
+                .attr('d', area)
+                .attr('class', 'area')
+            // .on('mouseover', handleMouseOver)
+            // .on('mouseout', handleMouseOut);
+        }
     }
 
-    render() {
-        return (<div className="svg">
-            <div className="text-price">PRICE</div>
-            <svg className="chart-container" ref={(ref: SVGSVGElement) => this.ref = ref}></svg>
-            <style>{`
+
+
+
+    return (<div className="svg" ref={chartContainerRef}>
+        <div className="text-price">PRICE</div>
+        <svg className="chart-container" ref={chartRef} ></svg>
+        <style>{`
         .svg{
             position: relative;
             width: 100%;
@@ -371,9 +546,8 @@ class BondingCurveChart extends React.Component<IProps, IState> {
             letter-spacing: -0.32px;
         }
       `}</style>
-        </div>);
-    }
+    </div>);
+
 }
 
-
-export default BondingCurveChart;
+// export default BondingCurveChart;

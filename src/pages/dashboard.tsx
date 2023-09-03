@@ -310,7 +310,7 @@ export function Dashboard(){
 
       <GridItem area={'header'}>
         <Stack ml={7} spacing={0}>
-          <Stack direction="row" mt='70px'>
+          <Stack direction="row" mt='70px' mr='7'>
             <Text fontSize='xl'>{headerTitle}</Text>
             <Spacer/>
             <ConnectWallet />

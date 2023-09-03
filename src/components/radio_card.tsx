@@ -22,7 +22,7 @@ export function RadioCard(props: any) {
                     /*boxShadow: 'outline',*/
                 }}
                 _hover={{ }}
-                px={5}
+                px={7}
                 py={2}
             >
                 {props.children}

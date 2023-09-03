@@ -3,8 +3,8 @@ import { Text } from "@chakra-ui/react";
 const Logo = () => (
 	<Text
 		textShadow='0px 4px 4px rgba(0, 0, 0, 0.25)'
-		ml={5}
-		mt={5}
+		ml={7}
+		mt={7}
 		align='left'
 		fontSize='xl'
 		letterSpacing='-0.36px'

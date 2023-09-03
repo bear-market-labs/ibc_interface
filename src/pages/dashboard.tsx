@@ -210,7 +210,7 @@ export function Dashboard(){
         "sidenav vertline1 header header header"
         "sidenav vertline1 horizline horizline horizline"
         "sidenav vertline1 main vertline2 sideinput"`}
-            gridTemplateRows={'100px 1px 1fr'}
+            gridTemplateRows={'150px 1px 1fr'}
             gridTemplateColumns={'200px 1px 2fr 1px 1fr'}
             gap='0'
     >
@@ -220,7 +220,7 @@ export function Dashboard(){
             <Logo/>
           </Stack>
 
-          <Stack {...group} spacing='5' mt='5'>
+          <Stack {...group} spacing='5' mt='7'>
             {navOptions.map((item) => {
               const radio = getRadioProps({ value: item.value })
               return(
@@ -308,9 +308,9 @@ export function Dashboard(){
       </GridItem>
 
       <GridItem area={'header'}>
-        <Stack ml={7} mt={3} spacing={0}>
-          <Stack direction="row">
-            <Text fontSize={'l'}>{headerTitle}</Text>
+        <Stack ml={7} spacing={0}>
+          <Stack direction="row" mt='70px'>
+            <Text fontSize='xl'>{headerTitle}</Text>
             <Spacer/>
             <ConnectWallet />
           </Stack>

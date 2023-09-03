@@ -19,6 +19,7 @@ import MintBurnPrice from "../components/dashboard/mint_burn_price";
 import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
 import LpingReserve from "../components/dashboard/lping_reserve";
 import LpingIssuance from "../components/dashboard/lping_issuance";
+import Logo from "../components/logo";
 
 export function Dashboard(){
   const navOptions = [
@@ -216,9 +217,7 @@ export function Dashboard(){
       <GridItem area={'sidenav'}>
         <Stack spacing={10}>
           <Stack spacing={0}>
-            <Text ml={3} align={"left"}>INVERSE</Text>
-            <Text ml={3} align={"left"}>BONDING</Text>
-            <Text ml={3} align={"left"}>CURVE</Text>
+            <Logo/>
           </Stack>
 
           <Stack {...group} spacing={3}>

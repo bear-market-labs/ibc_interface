@@ -1,21 +1,18 @@
-import { theme as chakraTheme } from '@chakra-ui/react';
-import '@fontsource-variable/roboto-mono';
+import { extendTheme } from "@chakra-ui/react";
+import "@fontsource-variable/roboto-mono";
+import { mode } from "@chakra-ui/theme-tools";
 
-const theme = {
-    ...chakraTheme,
-
-    fonts: {
-        ...chakraTheme.fonts,
-        body: `'Roboto Mono Variable',Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"`
-    },
-    fontWeights: {
-        normal: 400,
-        medium: 600,
-        bold: 700
-    },
-    icons: {
-        ...chakraTheme.icons
-    }
-};
+const theme = extendTheme({
+	styles: {
+		global: (props) => ({
+			body: {
+				bg: mode("white", "#1C1931")(props),
+			},
+		}),
+	},
+	fonts: {
+		body: `'Roboto Mono Variable',Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"`,
+	},
+});
 
 export default theme;

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, parseUnits, formatUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
+import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
@@ -209,7 +210,7 @@ export default function BurnTokens(props: mintProps) {
           <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>
           <Box color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toString())}>MAX</Box>
         </Stack>
-
+        <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'}/>
         <Text align="left">YOU RECEIVE</Text>
         <Stack direction="row">
           <Text>{ (Number(formatEther(liquidityReceived).toString()) * (1 - totalFeePercent)).toFixed(2) }</Text>

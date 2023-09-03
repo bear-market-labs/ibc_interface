@@ -206,12 +206,13 @@ export function Dashboard(){
 
   return (
     <Grid
+        h='calc(100vh)'
         templateAreas={`
         "sidenav vertline1 header header header"
         "sidenav vertline1 horizline horizline horizline"
         "sidenav vertline1 main vertline2 sideinput"`}
             gridTemplateRows={'150px 1px 1fr'}
-            gridTemplateColumns={'200px 1px 2fr 1px 1fr'}
+            gridTemplateColumns={'0.5fr 1px 2fr 1px 1fr'}
             gap='0'
     >
       <GridItem area={'sidenav'}>

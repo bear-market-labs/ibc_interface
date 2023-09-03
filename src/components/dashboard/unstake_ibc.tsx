@@ -110,7 +110,7 @@ export default function UnstakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button onClick={sendTransaction}>Stake</Button>
+        <Button onClick={sendTransaction}>Unstake</Button>
       </Stack>
     </>
   )

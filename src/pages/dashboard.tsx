@@ -216,35 +216,46 @@ export function Dashboard(){
     //   chartParam.curveParameter.parameterM = Number(dashboardDataSet.bondingCurveParams.m)/1e18;
     //   chartParam.currentSupply = Number(dashboardDataSet.inverseTokenSupply)/1e18;
     // }
-    if(newIbcIssuance){
-      chartParam.targetSupply = Number(newIbcIssuance)/1e18;
-    }else{
-      chartParam.targetSupply = null; 
-    }
 
-    if(newReserve && !newIbcIssuance){
-      console.log(dashboardDataSet.bondingCurveParams);
-      console.log(dashboardDataSet.bondingCurveParams.inverseTokenSupply);
-      console.log(newReserve); 
-      const price = Number(dashboardDataSet.bondingCurveParams.currentTokenPrice)/1e18;
-      const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
-      const reserve = Number(newReserve)/1e18;
-      const k = 1 - price * supply / reserve;
-      chartParam.newCurveParam = {
-        parameterK: k,
-        parameterM: price * (supply ** k)
+    if (selectedNavItem === "mintBurn" ){
+      if(newIbcIssuance){
+        chartParam.targetSupply = Number(newIbcIssuance)/1e18;
+      }else{
+        chartParam.targetSupply = null; 
       }
-
-
-      // _parameterK = ONE_INT - int256((currentPrice.mulDown(currentIbcSupply)).divDown(currentBalance));
-      // require(_parameterK < ONE_INT, ERR_PARAM_UPDATE_FAIL);
-      // _parameterM = currentPrice.mulDown(currentIbcSupply.pow(_parameterK));
+    }else if(selectedNavItem === "lp"){
+      chartParam.targetSupply = null; 
+      if(newReserve){
+        console.log(dashboardDataSet.bondingCurveParams);
+        console.log(dashboardDataSet.bondingCurveParams.inverseTokenSupply);
+        console.log(newReserve); 
+        const price = Number(dashboardDataSet.bondingCurveParams.currentTokenPrice)/1e18;
+        const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
+        const reserve = Number(newReserve)/1e18;
+        const k = 1 - price * supply / reserve;
+        chartParam.newCurveParam = {
+          parameterK: k,
+          parameterM: price * (supply ** k)
+        }
+  
+  
+        // _parameterK = ONE_INT - int256((currentPrice.mulDown(currentIbcSupply)).divDown(currentBalance));
+        // require(_parameterK < ONE_INT, ERR_PARAM_UPDATE_FAIL);
+        // _parameterM = currentPrice.mulDown(currentIbcSupply.pow(_parameterK));
+      }else{
+        chartParam.newCurveParam = null;
+      }
     }else{
-      chartParam.newCurveParam = null;
+      return;
     }
+
+
+
+
     
     console.log("-----------> new chart parameter");
     console.log(chartParam);
+    setChartParam(chartParam);
   }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve])
 
   const handleRadioChange = async (val: any) => {

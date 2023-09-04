@@ -50,6 +50,9 @@ export default function BondingCurveChart(props: IProps) {
     const MIN_SUPPLY_FACTOE = 0.2;
     const GRID_LINE_COUNT = 7;
 
+    console.log('Rendering!!!');
+    console.log(props);
+
     useEffect(() => {
 
         console.log('<-------parameter change:');
@@ -58,9 +61,12 @@ export default function BondingCurveChart(props: IProps) {
         if (props && props.chartParam && props.chartParam.currentSupply) {
             console.log(props);
             let forceRefresh = false, refreshCurve = false, refreshArea = false, refreshNewCurve = false;
-            if(chartParam){
+            if(chartParam && initialized){
+                if(_.isEqual(chartParam, props.chartParam)){
+                    return;
+                }
                 if (chartParam.currentSupply != props.chartParam.currentSupply ||
-                    _.isEqual(chartParam.curveParameter, props.chartParam.curveParameter)) {
+                    !_.isEqual(chartParam.curveParameter, props.chartParam.curveParameter)) {
                     refreshCurve = true;
                 }
     
@@ -71,21 +77,59 @@ export default function BondingCurveChart(props: IProps) {
                 forceRefresh = true;
             }
 
-            setChartParam(props.chartParam)
+            setChartParam(_.cloneDeep(props.chartParam));
 
-            buildGraph(forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
-        }
-
-        const resizeObserver = new ResizeObserver(entries => {
-            if (chartParam && chartParam.currentSupply) {
-                buildGraph(true);
+            if(!initialized){
+                const resizeObserver = new ResizeObserver(entries => {
+                    if (chartParam && chartParam.currentSupply) {
+                        buildGraph(chartParam, true);
+                    }
+                });
+        
+                if (chartContainerRef.current) {
+                    resizeObserver.observe(chartContainerRef.current);
+                }
             }
-        });
-
-        if (chartContainerRef.current) {
-            resizeObserver.observe(chartContainerRef.current);
+            buildGraph(props.chartParam, forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
         }
-    }, [props, props.chartParam.currentSupply, props.chartParam.targetSupply, props.chartParam.newCurveParam]);
+
+
+    }, [props, props.chartParam]);
+
+
+    // useEffect(()=>{
+    //     let forceRefresh = false, refreshCurve = false, refreshArea = false, refreshNewCurve = false;
+    //     if(chartParam && initialized){
+    //         // if(_.isEqual(chartParam, props.chartParam)){
+    //         //     return;
+    //         // }
+    //         if (chartParam.currentSupply != props.chartParam.currentSupply ||
+    //             _.isEqual(chartParam.curveParameter, props.chartParam.curveParameter)) {
+    //             refreshCurve = true;
+    //         }
+
+    //         refreshArea = chartParam.targetSupply != props.chartParam.targetSupply;
+
+    //         refreshNewCurve = !_.isEqual(chartParam.newCurveParam, props.chartParam.newCurveParam);
+    //     }else{
+    //         forceRefresh = true;
+    //     }
+
+    //     // setChartParam(props.chartParam)
+
+    //     // if(!initialized){
+    //     //     const resizeObserver = new ResizeObserver(entries => {
+    //     //         if (chartParam && chartParam.currentSupply) {
+    //     //             buildGraph(true);
+    //     //         }
+    //     //     });
+    
+    //     //     if (chartContainerRef.current) {
+    //     //         resizeObserver.observe(chartContainerRef.current);
+    //     //     }
+    //     // }
+    //     buildGraph(forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
+    // },[chartParam, initialized]);
 
     function getRectRange() {
         width = chartRef.current?.parentElement?.clientWidth || 400;
@@ -94,13 +138,11 @@ export default function BondingCurveChart(props: IProps) {
         innerHeight = height - margin.top - margin.bottom;
     }
 
-    function updateChartData() {
-        if(chartParam){
+    function updateChartData(curChartParam: IChartParam) {
 
-        }
-        let currentSupply = chartParam.currentSupply;
-        if (chartParam.targetSupply && chartParam.targetSupply > currentSupply) {
-            currentSupply = chartParam.targetSupply
+        let currentSupply = curChartParam.currentSupply;
+        if (curChartParam.targetSupply && curChartParam.targetSupply > currentSupply) {
+            currentSupply = curChartParam.targetSupply
         }
 
         let xDomain = [0, currentSupply * 10];
@@ -119,18 +161,24 @@ export default function BondingCurveChart(props: IProps) {
         dataRange = dataRange.concat(d3.range(beginSupply, endSupply, (endSupply - beginSupply) / 100));
 
 
-        const currentPrice = chartParam.curveParameter.parameterM / (currentSupply ** chartParam.curveParameter.parameterK)
+        const currentPrice = curChartParam.curveParameter.parameterM / (currentSupply ** curChartParam.curveParameter.parameterK)
         const maxY = currentPrice * MAX_SUPPLY_FACTOR;
         const minY = currentPrice * MIN_SUPPLY_FACTOE;
 
         yDomain[1] = maxY;
 
         let beginIndex = _.findIndex(dataRange, supply => {
-            return (chartParam.curveParameter.parameterM / (supply ** chartParam.curveParameter.parameterK)) <= maxY;
+            return (curChartParam.curveParameter.parameterM / (supply ** curChartParam.curveParameter.parameterK)) <= maxY;
         });
+        if(beginIndex < 0){
+            beginIndex = 0;
+        }
         let endIndex = _.findIndex(dataRange, supply => {
-            return (chartParam.curveParameter.parameterM / (supply ** chartParam.curveParameter.parameterK)) <= minY;
+            return (curChartParam.curveParameter.parameterM / (supply ** curChartParam.curveParameter.parameterK)) <= minY;
         });
+        if(endIndex < 0){
+            endIndex = dataRange.length;
+        }
 
         dataRange = _.slice(dataRange, beginIndex, endIndex);
         xDomain[1] = dataRange[dataRange.length - 1];
@@ -138,19 +186,21 @@ export default function BondingCurveChart(props: IProps) {
         const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
         const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
 
-        let chartState: IChartState = {
+        let curChartState: IChartState = {
             xDomain: xDomain,
             yDomain: yDomain,
             supplyRange: dataRange,
             xScale: xScale,
-            yScale: yScale
+            yScale: yScale,
+            chart: chartState?.chart,
         }
 
-        setChartState(chartState);
+        setChartState(curChartState);
+        return curChartState;
     }
 
-    function drawChartBase() {
-        if (chartState) {
+    function drawChartBase(curChartState: IChartState) {
+        if (curChartState) {
             d3
                 .select(chartRef.current)
                 .select('svg')
@@ -169,15 +219,15 @@ export default function BondingCurveChart(props: IProps) {
                 .attr('transform', `translate(${margin.left},${margin.top})`);
 
 
-            chartState.chart = chart;
-            setChartState(chartState);
+            curChartState.chart = chart;
+            setChartState(curChartState);
 
 
             const numGridLines = GRID_LINE_COUNT;
-            let xGridValues = d3.range(chartState.yDomain[0], chartState.yDomain[1], chartState.yDomain[1] / numGridLines);
-            xGridValues.push(chartState.yDomain[1]);
+            let xGridValues = d3.range(curChartState.yDomain[0], curChartState.yDomain[1], curChartState.yDomain[1] / numGridLines);
+            xGridValues.push(curChartState.yDomain[1]);
             const xGrid = d3
-                .axisLeft(chartState.yScale)
+                .axisLeft(curChartState.yScale)
                 .tickValues(xGridValues)
                 .tickSize(-innerWidth)
                 .tickFormat(null);
@@ -199,28 +249,30 @@ export default function BondingCurveChart(props: IProps) {
                 .text('ISSUANCE');
         }
     }
-    function buildGraph(forceRefresh: boolean, refreshCurve = false, refreshArea = false, refreshNewCurve = false) {
-        if(chartParam){
+    function buildGraph(curChartParam: IChartParam, forceRefresh: boolean, refreshCurve = false, refreshArea = false, refreshNewCurve = false) {
+        if(curChartParam){
             if (!initialized || forceRefresh || !chartState || !chartState.chart) {
                 getRectRange();
                 
-                updateChartData();
-                drawChartBase();
-                drawBondingCurve(true, true, true);
+                let curChartState = updateChartData(curChartParam);
+                drawChartBase(curChartState);
+                drawBondingCurve(curChartParam, curChartState, true, true, true);
                 setInitialized(true);
             } else {
+                getRectRange();
                 let supplyRange = chartState.supplyRange;
-                if (!inDataRange(supplyRange, chartParam.currentSupply) ||
-                    (chartParam.targetSupply && !inDataRange(supplyRange, chartParam.targetSupply))) {
-                    updateChartData();
+                let curChartState = chartState;
+                if (!inDataRange(supplyRange, curChartParam.currentSupply) ||
+                    (curChartParam.targetSupply && !inDataRange(supplyRange, curChartParam.targetSupply))) {
+                    curChartState = updateChartData(curChartParam);
                     refreshCurve = true;
                     refreshArea = true;
                     refreshNewCurve = true;
                 }
     
                 if (refreshCurve) {
-                    removeDot('dot-target');
-                    removeLine('line');
+                    removeDot('.dot-target');
+                    removeLine('.line');
                 }
     
                 if (refreshArea) {
@@ -228,29 +280,32 @@ export default function BondingCurveChart(props: IProps) {
                 }
     
                 if (refreshNewCurve) {
-                    removeLine('target-line');
+                    removeDot('.dot-target');
+                    removeLine('.target-line');
                 }
     
-                drawBondingCurve(refreshCurve, refreshArea, refreshNewCurve);
+                drawBondingCurve(curChartParam, curChartState, refreshCurve, refreshArea, refreshNewCurve);
             }
         }
         
     }
 
-    function drawBondingCurve(refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
-        if(chartParam){
+    function drawBondingCurve(curChartParam: IChartParam, curChartState: IChartState, refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
+        if(curChartParam){
             if (refreshCurve) {
-                drawCurve(chartParam.curveParameter, 'line');
+                drawCurve(curChartState, curChartParam.curveParameter, 'line');
+                drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
             }
     
-            if (chartParam.newCurveParam && refreshNewCurve) {
-                drawCurve(chartParam.newCurveParam, 'target-line');
+            if (curChartParam.newCurveParam && refreshNewCurve) {
+                drawCurve(curChartState, curChartParam.newCurveParam, 'target-line');
+                drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
             }
     
-            if (chartParam.targetSupply && refreshArea) {
-                drawLiquidityArea();
+            if (curChartParam.targetSupply && refreshArea) {
+                drawLiquidityArea(curChartParam, curChartState);
             } else {
-                drawDot(chartParam.curveParameter, chartParam.currentSupply, 'dot-target');
+                // drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
             }
         }
     }
@@ -259,17 +314,17 @@ export default function BondingCurveChart(props: IProps) {
         return data >= dataRange[0] && data <= dataRange[dataRange.length - 1];
     }
 
-    function drawLiquidityArea() {
+    function drawLiquidityArea(curChartParam: IChartParam, curChartState: IChartState) {
 
-        if (chartState && chartState.chart && chartParam && chartParam.targetSupply) {
-            const supplyRange = chartState?.supplyRange;
+        if (curChartState && curChartState.chart && curChartParam && curChartParam.targetSupply) {
+            const supplyRange = curChartState?.supplyRange;
             let minSupply = 0, maxSupply = 0;
-            if (chartParam.currentSupply < chartParam.targetSupply) {
-                minSupply = chartParam.currentSupply;
-                maxSupply = chartParam.targetSupply;
+            if (curChartParam.currentSupply < curChartParam.targetSupply) {
+                minSupply = curChartParam.currentSupply;
+                maxSupply = curChartParam.targetSupply;
             } else {
-                minSupply = chartParam.targetSupply;
-                maxSupply = chartParam.currentSupply;
+                minSupply = curChartParam.targetSupply;
+                maxSupply = curChartParam.currentSupply;
             }
 
             let beginIndex = _.findIndex(supplyRange, item => {
@@ -292,19 +347,19 @@ export default function BondingCurveChart(props: IProps) {
             areaDataRange.splice(0, 0, minSupply);
             areaDataRange.push(maxSupply);
 
-            drawArea(chartParam, areaDataRange);
-            drawDot(chartParam.curveParameter, chartParam.targetSupply, 'dot-target');
-            drawDot(chartParam.curveParameter, chartParam.currentSupply, 'dot-from');
+            drawArea(curChartState, curChartParam, areaDataRange);
+            drawDot(curChartState, curChartParam.curveParameter, curChartParam.targetSupply, 'dot-target');
+            drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
         }
     }
 
-    function drawDot(param: ICurveParam, supply: number, className: string) {
+    function drawDot(curChartState: IChartState, param: ICurveParam, supply: number, className: string) {
 
-        if (chartState && chartState.chart) {
-            const chart = chartState?.chart;
-            const xScale = chartState?.xScale;
-            const yScale = chartState?.yScale;
-            const supplyRange = chartState?.supplyRange;
+        if (curChartState && curChartState.chart) {
+            const chart = curChartState?.chart;
+            const xScale = curChartState?.xScale;
+            const yScale = curChartState?.yScale;
+            const supplyRange = curChartState?.supplyRange;
 
             const parameterK = param.parameterK;
             const parameterM = param.parameterM;
@@ -324,13 +379,14 @@ export default function BondingCurveChart(props: IProps) {
         }
     }
 
-    function drawCurve(param: ICurveParam, className: string) {
+    function drawCurve(curChartState: IChartState, param: ICurveParam, className: string) {
 
-        if (chartState && chartState.chart) {
-            const chart = chartState?.chart;
-            const xScale = chartState?.xScale;
-            const yScale = chartState?.yScale;
-            const supplyRange = chartState?.supplyRange;
+        if (curChartState && curChartState.chart) {
+            const chart = curChartState?.chart;
+            const xScale = curChartState?.xScale;
+            const yScale = curChartState?.yScale;
+            const yDomain = curChartState.yDomain;
+            const supplyRange = curChartState?.supplyRange;
 
             const parameterK = param.parameterK;
             const parameterM = param.parameterM;
@@ -340,6 +396,10 @@ export default function BondingCurveChart(props: IProps) {
                 x: d,
                 y: parameterM / (d ** parameterK)
             }));
+
+            _.remove(data, item =>{
+                return item.y > yDomain[1];
+            })
 
             // Line generator
             const line = d3
@@ -357,8 +417,8 @@ export default function BondingCurveChart(props: IProps) {
 
     function removeLiquidityArea() {
         removeArea();
-        removeDot('dot-target');
-        removeDot('dot-from');
+        removeDot('.dot-target');
+        removeDot('.dot-from');
     }
 
     function removeArea() {
@@ -425,12 +485,12 @@ export default function BondingCurveChart(props: IProps) {
         }
     }
 
-    function drawArea(param: IChartParam, supplyRange: number[]) {
+    function drawArea(curChartState: IChartState, param: IChartParam, supplyRange: number[]) {
 
-        if (chartState && chartState.chart) {
-            const chart = chartState?.chart;
-            const xScale = chartState?.xScale;
-            const yScale = chartState?.yScale;
+        if (curChartState && curChartState.chart) {
+            const chart = curChartState?.chart;
+            const xScale = curChartState?.xScale;
+            const yScale = curChartState?.yScale;
 
 
             const parameterK = param.curveParameter.parameterK;

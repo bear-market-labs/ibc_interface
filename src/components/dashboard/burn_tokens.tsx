@@ -192,9 +192,9 @@ export default function BurnTokens(props: mintProps) {
   return (
     <>
       <Stack>
-        <Text align="left">YOU PAY</Text>
+        <Text align="left" fontSize='sm'>YOU PAY</Text>
 
-        <Stack direction="row">
+        <Stack direction="row" justifyContent={'space-between'}>
           <Input
             name="amount"
             type="text"
@@ -203,23 +203,24 @@ export default function BurnTokens(props: mintProps) {
             onChange={e => handleAmountChange(e.target.value)}
             width="auto"
             border="none"
+            fontSize='4xl'
           />
-          <Text align="right">{ibcSymbol}</Text>
+          <Text align="right" fontSize='4xl'>{ibcSymbol}</Text>
         </Stack>
-        <Stack direction="row" align="right">
+        <Stack direction="row" justify="right" fontSize='sm'>
           <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>
           <Box color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toString())}>MAX</Box>
         </Stack>
-        <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'}/>
-        <Text align="left">YOU RECEIVE</Text>
-        <Stack direction="row">
+        <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>
+        <Text align="left" fontSize='sm'>YOU RECEIVE</Text>
+        <Stack direction="row" justifyContent={'space-between'} fontSize='4xl'>
           <Text>{ (Number(formatEther(liquidityReceived).toString()) * (1 - totalFeePercent)).toFixed(2) }</Text>
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
-        <Text align="right">{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
+        <Text align="right" fontSize='sm'>{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
         <Spacer/>
 
-        <Stack direction="row">
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mt='12'>
           <Text align="left">Price Impact</Text>
           <Text align="right">
             {`${
@@ -229,7 +230,7 @@ export default function BurnTokens(props: mintProps) {
             }
           </Text> 
         </Stack>
-        <Stack direction="row">
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
         </Stack>

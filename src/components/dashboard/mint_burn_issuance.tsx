@@ -1,6 +1,7 @@
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Icon, Spacer, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
+import { HiOutlineArrowRight} from "react-icons/hi"
 
 type mintProps = {
   dashboardDataSet: any;
@@ -28,8 +29,10 @@ export default function MintBurnIssuance(props: mintProps) {
           {
             newIbcIssuance.gt(0) &&
             <>
-              <Text align="center">{`-->`}</Text>
-              <Text align="right">{`${Number(ethers.utils.formatUnits(newIbcIssuance, inverseTokenDecimals)).toFixed(3)} IBC`}</Text>
+              <Box ml='7' mr='7'>
+                <Icon as={HiOutlineArrowRight} h='100%'/>
+              </Box>
+              <Text>{`${Number(ethers.utils.formatUnits(newIbcIssuance, inverseTokenDecimals)).toFixed(3)} IBC`}</Text>
             </>
           }
         </Stack>
@@ -42,8 +45,10 @@ export default function MintBurnIssuance(props: mintProps) {
           {
             newReserve.gt(0) &&
             <>
-              <Text align="center">{`-->`}</Text>
-              <Text align="right">{`${Number(ethers.utils.formatEther(newReserve)).toFixed(3)} ETH`}</Text>
+              <Box ml='7' mr='7'>
+                <Icon as={HiOutlineArrowRight} h='100%'/>
+              </Box>
+              <Text>{`${Number(ethers.utils.formatEther(newReserve)).toFixed(3)} ETH`}</Text>
             </>
           }
         </Stack>

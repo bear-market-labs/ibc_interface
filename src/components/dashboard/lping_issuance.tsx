@@ -1,7 +1,8 @@
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Icon, Spacer, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { BigNumber as bignumber } from 'bignumber.js'
+import { HiOutlineArrowRight} from "react-icons/hi"
 
 type mintProps = {
   dashboardDataSet: any;
@@ -29,8 +30,10 @@ export default function LpingIssuance(props: mintProps) {
           {
             newLpIssuance.gt(0) &&
             <>
-              <Text align="center">{`-->`}</Text>
-              <Text align="right">{`${Number(ethers.utils.formatUnits(newLpIssuance, lpTokenDecimals)).toFixed(3)} IBC`}</Text>
+              <Box ml='7' mr='7'>
+                <Icon as={HiOutlineArrowRight} h='100%'/>
+              </Box>
+              <Text>{`${Number(ethers.utils.formatUnits(newLpIssuance, lpTokenDecimals)).toFixed(3)} IBC`}</Text>
             </>
           }
         </Stack>
@@ -43,8 +46,10 @@ export default function LpingIssuance(props: mintProps) {
           {
             userNewLpShare.gt(0) &&
             <>
-              <Text align="center">{`-->`}</Text>
-              <Text align="right">{`${userNewLpShare.toFixed(2)} %`}</Text>
+              <Box ml='7' mr='7'>
+                <Icon as={HiOutlineArrowRight} h='100%'/>
+              </Box>
+              <Text>{`${userNewLpShare.toFixed(2)} %`}</Text>
             </>
           }
         </Stack>

@@ -20,6 +20,7 @@ import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
 import LpingReserve from "../components/dashboard/lping_reserve";
 import LpingIssuance from "../components/dashboard/lping_issuance";
 import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
+import Logo from "../components/logo";
 
 export function Dashboard(){
   const navOptions = [
@@ -263,6 +264,8 @@ export function Dashboard(){
         
     if (val === "claim" || val === "stake"){
       onOpen()
+    } else {
+      handleNavInputSwitch()
     }
 
     setSelectedNavItem(val)
@@ -275,31 +278,36 @@ export function Dashboard(){
   })
   const group = getRootProps()
 
+  const handleNavInputSwitch = async() => {
+    setNewIbcIssuance(null)
+    setNewLpIssuance(null)
+    setNewPrice(null)
+    setNewReserve(null)
+  }
 
   return (
     <Grid
+        h='calc(100vh)'
         templateAreas={`
         "sidenav vertline1 header header header"
         "sidenav vertline1 horizline horizline horizline"
         "sidenav vertline1 main vertline2 sideinput"`}
-            gridTemplateRows={'100px 1px 1fr'}
-            gridTemplateColumns={'200px 1px 2fr 1px 1fr'}
+            gridTemplateRows={'150px 1px 1fr'}
+            gridTemplateColumns={'0.5fr 1px 2fr 1px 1fr'}
             gap='0'
     >
       <GridItem area={'sidenav'}>
         <Stack spacing={10}>
           <Stack spacing={0}>
-            <Text ml={3} align={"left"}>INVERSE</Text>
-            <Text ml={3} align={"left"}>BONDING</Text>
-            <Text ml={3} align={"left"}>CURVE</Text>
+            <Logo/>
           </Stack>
 
-          <Stack {...group} spacing={3}>
+          <Stack {...group} spacing='5' mt='7'>
             {navOptions.map((item) => {
               const radio = getRadioProps({ value: item.value })
               return(
                 <RadioCard key={item.value} {...radio}>
-                  <Text align="left">{item.displayText}</Text>
+                  <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                 </RadioCard>
               )
             })}
@@ -382,9 +390,9 @@ export function Dashboard(){
       </GridItem>
 
       <GridItem area={'header'}>
-        <Stack ml={7} mt={3} spacing={0}>
-          <Stack direction="row">
-            <Text fontSize={'l'}>{headerTitle}</Text>
+        <Stack ml={7} spacing={0}>
+          <Stack direction="row" mt='70px' mr='7'>
+            <Text fontSize='xl'>{headerTitle}</Text>
             <Spacer/>
             <ConnectWallet />
           </Stack>
@@ -476,7 +484,7 @@ export function Dashboard(){
               headerTitle === "MINT / BURN" &&
               (
                 <>
-                  <Tabs>
+                  <Tabs onChange={handleNavInputSwitch}>
                     <TabList>
                       <Tab>Mint</Tab>
                       <Tab>Burn</Tab>
@@ -515,7 +523,7 @@ export function Dashboard(){
               headerTitle === "ADD / REMOVE LIQUIDITY" &&
               (
                 <>
-                  <Tabs>
+                  <Tabs onChange={handleNavInputSwitch}>
                     <TabList>
                       <Tab>Add</Tab>
                       <Tab>Remove</Tab>

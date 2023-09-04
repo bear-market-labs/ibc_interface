@@ -239,6 +239,7 @@ export default function BondingCurveChart(props: IProps) {
                 }
     
                 if (refreshNewCurve) {
+                    removeDot('.dot-from');
                     removeDot('.dot-target');
                     removeLine('.target-line');
                 }
@@ -250,21 +251,33 @@ export default function BondingCurveChart(props: IProps) {
     }
 
     function drawBondingCurve(curChartParam: IChartParam, curChartState: IChartState, refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
+        let currentCurvePainted = false, liquidityAreaPainted = false, newCurvePainted = false;
         if(curChartParam){
             if (refreshCurve) {
                 drawCurve(curChartState, curChartParam.curveParameter, 'line');
-                drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
+                currentCurvePainted = true;
+                
             }
     
             if (curChartParam.newCurveParam && refreshNewCurve) {
                 drawCurve(curChartState, curChartParam.newCurveParam, 'target-line');
-                drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
+                newCurvePainted = true;
+                
             }
     
             if(refreshArea){
                 if (curChartParam.targetSupply) {
                     drawLiquidityArea(curChartParam, curChartState);
+                    liquidityAreaPainted = true;
                 } else {
+                    // drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
+                }
+            }
+
+            if(!liquidityAreaPainted){
+                if(newCurvePainted){
+                    drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
+                }else if(currentCurvePainted){
                     drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
                 }
             }
@@ -309,8 +322,8 @@ export default function BondingCurveChart(props: IProps) {
             areaDataRange.push(maxSupply);
 
             drawArea(curChartState, curChartParam, areaDataRange);
-            drawDot(curChartState, curChartParam.curveParameter, curChartParam.targetSupply, 'dot-target');
             drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
+            drawDot(curChartState, curChartParam.curveParameter, curChartParam.targetSupply, 'dot-target');            
         }
     }
 

@@ -191,6 +191,8 @@ export function Dashboard(){
         
     if (val === "claim" || val === "stake"){
       onOpen()
+    } else {
+      handleNavInputSwitch()
     }
 
     setSelectedNavItem(val)
@@ -203,6 +205,12 @@ export function Dashboard(){
   })
   const group = getRootProps()
 
+  const handleNavInputSwitch = async() => {
+    setNewIbcIssuance(null)
+    setNewLpIssuance(null)
+    setNewPrice(null)
+    setNewReserve(null)
+  }
 
   return (
     <Grid
@@ -399,7 +407,7 @@ export function Dashboard(){
               headerTitle === "MINT / BURN" &&
               (
                 <>
-                  <Tabs>
+                  <Tabs onChange={handleNavInputSwitch}>
                     <TabList>
                       <Tab>Mint</Tab>
                       <Tab>Burn</Tab>
@@ -438,7 +446,7 @@ export function Dashboard(){
               headerTitle === "ADD / REMOVE LIQUIDITY" &&
               (
                 <>
-                  <Tabs>
+                  <Tabs onChange={handleNavInputSwitch}>
                     <TabList>
                       <Tab>Add</Tab>
                       <Tab>Remove</Tab>

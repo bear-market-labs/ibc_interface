@@ -218,6 +218,7 @@ export function Dashboard(){
     // }
 
     if (selectedNavItem === "mintBurn" ){
+      chartParam.newCurveParam = null;
       if(newIbcIssuance){
         chartParam.targetSupply = Number(newIbcIssuance)/1e18;
       }else{
@@ -256,7 +257,7 @@ export function Dashboard(){
     console.log("-----------> new chart parameter");
     console.log(chartParam);
     setChartParam(chartParam);
-  }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve])
+  }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve, selectedNavItem])
 
   const handleRadioChange = async (val: any) => {
         

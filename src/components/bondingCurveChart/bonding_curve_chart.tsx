@@ -81,8 +81,8 @@ export default function BondingCurveChart(props: IProps) {
 
             if(!initialized){
                 const resizeObserver = new ResizeObserver(entries => {
-                    if (chartParam && chartParam.currentSupply) {
-                        buildGraph(chartParam, true);
+                    if (props.chartParam && props.chartParam.currentSupply) {
+                        buildGraph(props.chartParam, true);
                     }
                 });
         
@@ -238,15 +238,15 @@ export default function BondingCurveChart(props: IProps) {
             chart.selectAll('.domain').remove();
             chart.selectAll('.grid text').remove();
 
-            chart
-                .append('text')
-                .attr('class', 'text-issuance')
-                .attr('x', innerWidth)
-                .attr('y', innerHeight + 20)
-                .attr('text-anchor', 'end')
-                .attr('dominant-baseline', 'baseline')
-                .style('fill', 'white')
-                .text('ISSUANCE');
+            // chart
+            //     .append('text')
+            //     .attr('class', 'text-issuance')
+            //     .attr('x', innerWidth)
+            //     .attr('y', innerHeight + 20)
+            //     .attr('text-anchor', 'end')
+            //     .attr('dominant-baseline', 'baseline')
+            //     .style('fill', 'white')
+            //     .text('ISSUANCE');
         }
     }
     function buildGraph(curChartParam: IChartParam, forceRefresh: boolean, refreshCurve = false, refreshArea = false, refreshNewCurve = false) {
@@ -522,6 +522,7 @@ export default function BondingCurveChart(props: IProps) {
 
     return (<div className="svg" ref={chartContainerRef}>
         <div className="text-price">PRICE</div>
+        <div className="text-issuance">ISSUANCE</div>
         <svg className="chart-container" ref={chartRef} ></svg>
         <style>{`
         .svg{
@@ -574,6 +575,9 @@ export default function BondingCurveChart(props: IProps) {
             font-weight: 500;
             line-height: 25px;
             letter-spacing: 5.6px;
+            position: absolute;
+            right: 13px;
+            bottom: 2px;
         }
 
         .text-price{

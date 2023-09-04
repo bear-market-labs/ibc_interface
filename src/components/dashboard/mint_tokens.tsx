@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Icon, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Icon, Stack, Text } from '@chakra-ui/react'
 import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
@@ -179,7 +179,7 @@ export default function MintTokens(props: mintProps) {
             value={amount?.toString()}
             placeholder={`0`}
             onChange={e => handleAmountChange(e.target.value)}
-            width="auto"
+            minWidth="auto"
             border="none"
             fontSize='4xl'
           />

@@ -21,6 +21,7 @@ import LpingReserve from "../components/dashboard/lping_reserve";
 import LpingIssuance from "../components/dashboard/lping_issuance";
 import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
 import Logo from "../components/logo";
+import * as _ from "lodash";
 
 export function Dashboard(){
   const navOptions = [
@@ -210,6 +211,7 @@ export function Dashboard(){
   }, [selectedNavItem, navOptions])
 
   useEffect(()=>{
+    const updateChartParam = _.cloneDeep(chartParam);
     console.log(newIbcIssuance);
     console.log(dashboardDataSet);
     // if(dashboardDataSet?.bondingCurveParams && dashboardDataSet?.inverseTokenSupply){
@@ -219,14 +221,14 @@ export function Dashboard(){
     // }
 
     if (selectedNavItem === "mintBurn" ){
-      chartParam.newCurveParam = null;
+      updateChartParam.newCurveParam = null;
       if(newIbcIssuance){
-        chartParam.targetSupply = Number(newIbcIssuance)/1e18;
+        updateChartParam.targetSupply = Number(newIbcIssuance)/1e18;
       }else{
-        chartParam.targetSupply = null; 
+        updateChartParam.targetSupply = null; 
       }
     }else if(selectedNavItem === "lp"){
-      chartParam.targetSupply = null; 
+      updateChartParam.targetSupply = null; 
       if(newReserve){
         console.log(dashboardDataSet.bondingCurveParams);
         console.log(dashboardDataSet.bondingCurveParams.inverseTokenSupply);
@@ -235,7 +237,7 @@ export function Dashboard(){
         const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
         const reserve = Number(newReserve)/1e18;
         const k = 1 - price * supply / reserve;
-        chartParam.newCurveParam = {
+        updateChartParam.newCurveParam = {
           parameterK: k,
           parameterM: price * (supply ** k)
         }
@@ -245,7 +247,7 @@ export function Dashboard(){
         // require(_parameterK < ONE_INT, ERR_PARAM_UPDATE_FAIL);
         // _parameterM = currentPrice.mulDown(currentIbcSupply.pow(_parameterK));
       }else{
-        chartParam.newCurveParam = null;
+        updateChartParam.newCurveParam = null;
       }
     }else{
       return;
@@ -256,8 +258,8 @@ export function Dashboard(){
 
     
     console.log("-----------> new chart parameter");
-    console.log(chartParam);
-    setChartParam(chartParam);
+    console.log(updateChartParam);
+    setChartParam(updateChartParam);
   }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve, selectedNavItem])
 
   const handleRadioChange = async (val: any) => {

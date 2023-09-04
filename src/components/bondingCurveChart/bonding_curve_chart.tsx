@@ -2,7 +2,6 @@ import React from 'react';
 import * as d3 from 'd3';
 import * as _ from "lodash";
 import { useCallback, useEffect, useState, useRef } from 'react';
-import './bonding_curve_chart.css';
 
 interface ICurveParam {
     parameterK: number;
@@ -50,9 +49,6 @@ export default function BondingCurveChart(props: IProps) {
     const MIN_SUPPLY_FACTOE = 0.2;
     const GRID_LINE_COUNT = 7;
 
-    console.log('Rendering!!!');
-    console.log(props);
-
     useEffect(() => {
 
         console.log('<-------parameter change:');
@@ -77,59 +73,25 @@ export default function BondingCurveChart(props: IProps) {
                 forceRefresh = true;
             }
 
-            setChartParam(_.cloneDeep(props.chartParam));
+            setChartParam(props.chartParam);
 
-            if(!initialized){
-                const resizeObserver = new ResizeObserver(entries => {
-                    if (props.chartParam && props.chartParam.currentSupply) {
-                        buildGraph(props.chartParam, true);
-                    }
-                });
-        
-                if (chartContainerRef.current) {
-                    resizeObserver.observe(chartContainerRef.current);
+            const curChartParam = _.cloneDeep(props.chartParam);
+            const resizeObserver = new ResizeObserver(entries => {
+                if (curChartParam && curChartParam.currentSupply) {
+                    buildGraph(curChartParam, true);
                 }
+            });           
+    
+            if (chartContainerRef.current) {
+                resizeObserver.unobserve(chartContainerRef.current)
+                resizeObserver.observe(chartContainerRef.current);
             }
+            
             buildGraph(props.chartParam, forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
         }
 
 
     }, [props, props.chartParam]);
-
-
-    // useEffect(()=>{
-    //     let forceRefresh = false, refreshCurve = false, refreshArea = false, refreshNewCurve = false;
-    //     if(chartParam && initialized){
-    //         // if(_.isEqual(chartParam, props.chartParam)){
-    //         //     return;
-    //         // }
-    //         if (chartParam.currentSupply != props.chartParam.currentSupply ||
-    //             _.isEqual(chartParam.curveParameter, props.chartParam.curveParameter)) {
-    //             refreshCurve = true;
-    //         }
-
-    //         refreshArea = chartParam.targetSupply != props.chartParam.targetSupply;
-
-    //         refreshNewCurve = !_.isEqual(chartParam.newCurveParam, props.chartParam.newCurveParam);
-    //     }else{
-    //         forceRefresh = true;
-    //     }
-
-    //     // setChartParam(props.chartParam)
-
-    //     // if(!initialized){
-    //     //     const resizeObserver = new ResizeObserver(entries => {
-    //     //         if (chartParam && chartParam.currentSupply) {
-    //     //             buildGraph(true);
-    //     //         }
-    //     //     });
-    
-    //     //     if (chartContainerRef.current) {
-    //     //         resizeObserver.observe(chartContainerRef.current);
-    //     //     }
-    //     // }
-    //     buildGraph(forceRefresh, refreshCurve, refreshArea, refreshNewCurve);
-    // },[chartParam, initialized]);
 
     function getRectRange() {
         width = chartRef.current?.parentElement?.clientWidth || 400;
@@ -162,8 +124,15 @@ export default function BondingCurveChart(props: IProps) {
 
 
         const currentPrice = curChartParam.curveParameter.parameterM / (currentSupply ** curChartParam.curveParameter.parameterK)
-        const maxY = currentPrice * MAX_SUPPLY_FACTOR;
+        let maxY = currentPrice * MAX_SUPPLY_FACTOR;
         const minY = currentPrice * MIN_SUPPLY_FACTOE;
+
+        if(curChartParam.targetSupply && curChartParam.targetSupply < currentSupply){
+            const targetPrice = curChartParam.curveParameter.parameterM / (curChartParam.targetSupply ** curChartParam.curveParameter.parameterK);
+            if(targetPrice > maxY){
+                maxY = targetPrice;
+            }
+        }
 
         yDomain[1] = maxY;
 
@@ -237,16 +206,6 @@ export default function BondingCurveChart(props: IProps) {
             // Remove ticks and default vertical grid line
             chart.selectAll('.domain').remove();
             chart.selectAll('.grid text').remove();
-
-            // chart
-            //     .append('text')
-            //     .attr('class', 'text-issuance')
-            //     .attr('x', innerWidth)
-            //     .attr('y', innerHeight + 20)
-            //     .attr('text-anchor', 'end')
-            //     .attr('dominant-baseline', 'baseline')
-            //     .style('fill', 'white')
-            //     .text('ISSUANCE');
         }
     }
     function buildGraph(curChartParam: IChartParam, forceRefresh: boolean, refreshCurve = false, refreshArea = false, refreshNewCurve = false) {
@@ -302,10 +261,12 @@ export default function BondingCurveChart(props: IProps) {
                 drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
             }
     
-            if (curChartParam.targetSupply && refreshArea) {
-                drawLiquidityArea(curChartParam, curChartState);
-            } else {
-                // drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
+            if(refreshArea){
+                if (curChartParam.targetSupply) {
+                    drawLiquidityArea(curChartParam, curChartState);
+                } else {
+                    drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
+                }
             }
         }
     }
@@ -422,20 +383,21 @@ export default function BondingCurveChart(props: IProps) {
     }
 
     function removeArea() {
+
         if (chartState && chartState.chart) {
-            chartState.chart.select(".area").remove();
+            chartState.chart.selectAll(".area").remove();
         }
     }
 
     function removeLine(className: string) {
         if (chartState && chartState.chart) {
-            chartState.chart.select(className).remove();
+            chartState.chart.selectAll(className).remove();
         }
     }
 
     function removeDot(className: string) {
         if (chartState && chartState.chart) {
-            chartState.chart.select(className).remove();
+            chartState.chart.selectAll(className).remove();
         }
     }
 

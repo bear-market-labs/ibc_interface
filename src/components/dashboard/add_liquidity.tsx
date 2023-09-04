@@ -129,7 +129,7 @@ export default function AddLiquidity(props: mintProps) {
             value={amount?.toString()}
             placeholder={`0`}
             onChange={e => handleAmountChange(e.target.value)}
-            width="auto"
+            minWidth="auto"
             border="none"
             fontSize='4xl'
           />

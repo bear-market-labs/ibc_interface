@@ -2,11 +2,18 @@ import { extendTheme } from "@chakra-ui/react";
 import "@fontsource-variable/roboto-mono";
 import { mode } from "@chakra-ui/theme-tools";
 
+const config = {
+	initialColorMode: 'dark',
+	useSystemColorMode: false,
+  }
+  
 const theme = extendTheme({
+	config,
 	styles: {
 		global: (props:any) => ({
 			body: {
-				bg: mode("white", "#1C1931")(props),
+				bg: mode("#DDE2EA", "#1C1931")(props),
+				color: mode("#1C1931","#DDE2EA")(props),
 			},
 		}),
 	},

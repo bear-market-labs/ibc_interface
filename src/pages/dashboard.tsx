@@ -23,7 +23,14 @@ import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/
 import Logo from "../components/logo";
 import * as _ from "lodash";
 
-export function Dashboard(){
+type dashboardProps = {
+  mostRecentIbcBlock: any;
+  nonWalletProvider: any;
+}
+
+export function Dashboard( props: dashboardProps ){
+  const {mostRecentIbcBlock, nonWalletProvider} = props
+
   const navOptions = [
     {
       value: 'mintBurn',
@@ -77,6 +84,50 @@ export function Dashboard(){
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
+
+  useEffect(() => {
+    const fetchIbcMetrics = async() => {
+      console.log("yo ",mostRecentIbcBlock)
+      const abiCoder = ethers.utils.defaultAbiCoder
+
+      // fetch/set main panel metrics data
+      const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])
+      const bondingCurveParamsBytes = await nonWalletProvider.call(bondingCurveParamsQuery)
+      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+
+      const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
+      const lpTokenSupplyBytes = await nonWalletProvider.call(lpTokenSupplyQuery)
+      const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
+
+      const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
+      const lpTokenDecimalsBytes = await nonWalletProvider.call(lpTokenDecimalsQuery)
+      const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
+
+      dashboardDataSet.bondingCurveParams = {
+        reserveAmount: bondingCurveParams[0][0].toString(),
+        inverseTokenSupply: bondingCurveParams[0][1].toString(),
+        currentTokenPrice: bondingCurveParams[0][2].toString(),
+        k: bondingCurveParams[0][3].toString(),
+        m: bondingCurveParams[0][4].toString()
+      };
+
+      dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
+      dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
+      
+      //setDashboardDataSet(currDashboardDataset);
+
+      chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
+      chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
+      chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+      setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
+      setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
+      setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
+      setNewLpIssuance(dashboardDataSet.lpTokenSupply)
+    }
+
+    fetchIbcMetrics()
+
+  }, [mostRecentIbcBlock, nonWalletProvider])
 
   useEffect(() => {
 

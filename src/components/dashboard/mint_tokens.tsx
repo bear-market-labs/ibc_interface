@@ -21,7 +21,7 @@ type mintProps = {
 export default function MintTokens(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<Number>()
+  const [amount, setAmount] = useState<string>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -114,8 +114,12 @@ export default function MintTokens(props: mintProps) {
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
 
   const handleAmountChange = (val: any) => {
-    const parsedAmount = val === '' ? 0 : Number(val);
+    const parsedAmount = val;
     setAmount(parsedAmount)
+
+    if (isNaN(val)){
+      return
+    }
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
 
@@ -145,19 +149,6 @@ export default function MintTokens(props: mintProps) {
         
       }
     }
-
-    /*
-    setMintAmount(              
-      amountToMint2(
-        decimaledParsedAmount,
-        BigNumber.from(bondingCurveParams.m),
-        BigNumber.from(bondingCurveParams.k), 
-        BigNumber.from(bondingCurveParams.inverseTokenSupply), 
-      )
-    )
-
-    setResultPrice(price2(BigNumber.from(bondingCurveParams.m), BigNumber.from(bondingCurveParams.k), BigNumber.from(bondingCurveParams.inverseTokenSupply).add(decimaledParsedAmount)))
-    */
 
     if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams){
       calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))

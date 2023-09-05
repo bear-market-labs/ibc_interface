@@ -28,7 +28,7 @@ export default function LpingIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals)).toFixed(3)} IBC`}</Text>
           {
-            newLpIssuance.gt(0) &&
+            newLpIssuance.gt(0) && !newLpIssuance.eq(lpTokenSupply) && 
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
@@ -44,7 +44,7 @@ export default function LpingIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${userCurrentLpShare.toFixed(2)} %`}</Text>
           {
-            userNewLpShare.gt(0) &&
+            userNewLpShare.gt(0) && !userNewLpShare.eq(userCurrentLpShare) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>

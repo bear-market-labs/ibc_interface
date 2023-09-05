@@ -1,3 +1,5 @@
+import { ethers } from 'ethers'
+
 export const contracts = {
   tenderly:{
     uniswapV2Factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
@@ -8,3 +10,11 @@ export const contracts = {
     ibcContract: "0x88d1af96098a928ee278f162c1a84f339652f95b",
   }
 }
+
+export const ibcEvents = [
+  ethers.utils.id("TokenBought(address,address,uint256,uint256)"),
+  //ethers.utils.id("TokenSold(address,address,uint256,uint256)"),
+  //ethers.utils.id("LiquidityAdded(address,address,uint256,uint256,int256,uin256)"),
+  //ethers.utils.id("LiquidityRemoved(address,address,uint256,uint256,int256,uint256)"),
+  //ethers.utils.id("RewardClaimed(address,address,int8,uint256)"),
+]

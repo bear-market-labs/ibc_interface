@@ -276,7 +276,7 @@ export function Dashboard(){
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'vaults',
     onChange: (val) => handleRadioChange(val),
-    
+    value: selectedNavItem,
   })
   const group = getRootProps()
 
@@ -285,6 +285,13 @@ export function Dashboard(){
     setNewLpIssuance(null)
     setNewPrice(null)
     setNewReserve(null)
+  }
+
+  const handleModalClose = async() => {
+    const preModalSelectedNavItem = navOptions.find(x => x.displayText.toUpperCase() === headerTitle.toUpperCase())?.value
+    setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
+
+    onClose()
   }
 
   return (
@@ -318,7 +325,7 @@ export function Dashboard(){
 
           <Modal
               isOpen={isOpen}
-              onClose={onClose}
+              onClose={handleModalClose}
               scrollBehavior='inside'
               isCentered
               size='sm'>
@@ -464,19 +471,6 @@ export function Dashboard(){
                 />
               </>
           }
-
-
-          {/*
-
-          chart component
-
-          */}
-          <Spacer/>
-          {/*
-
-          Calculation output text based on sideinput
-
-          */}
         </Stack>
 
       </GridItem>

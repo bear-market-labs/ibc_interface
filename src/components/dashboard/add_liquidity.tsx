@@ -19,7 +19,7 @@ type mintProps = {
 export default function AddLiquidity(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<Number>()
+  const [amount, setAmount] = useState<string>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -104,8 +104,12 @@ export default function AddLiquidity(props: mintProps) {
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, currentTokenPrice]);
 
   const handleAmountChange = (val: any) => {
-    const parsedAmount = val === '' ? 0 : Number(val);
+    const parsedAmount = val;
     setAmount(parsedAmount)
+
+    if (isNaN(val)){
+      return
+    }
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
 

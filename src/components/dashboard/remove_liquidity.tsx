@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
-import type {
-    TokenSymbol
-  } from '@web3-onboard/common'
+
 import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, parseUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
-import { areaUnderBondingCurve, amountToMint, price, amountToMint2, price2 } from '../../util/bonding_curve'
-import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -25,7 +21,7 @@ type mintProps = {
 export default function RemoveLiquidity(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<Number>()
+  const [amount, setAmount] = useState<string>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -147,8 +143,12 @@ export default function RemoveLiquidity(props: mintProps) {
   }, [amount, wallet, provider, ibcContractAddress, maxSlippage, liquidityReceived, userInverseTokenAllowance]);
 
   const handleAmountChange = (val: any) => {
-    const parsedAmount = val === '' ? 0 : Number(val);
+    const parsedAmount = val;
     setAmount(parsedAmount)
+
+    if (isNaN(val)){
+      return
+    }
 
     const decimaledParsedAmount = parseUnits(val=== '' ? '0' : val, inverseTokenDecimals.toNumber())
 

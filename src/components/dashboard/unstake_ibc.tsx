@@ -5,8 +5,6 @@ import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
-
-import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 
 type mintProps = {
@@ -18,7 +16,7 @@ export default function UnstakeIbc(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet} = props
-  const [amount, setAmount] = useState<Number>()
+  const [amount, setAmount] = useState<string>()
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userStakingBalance = BigNumber.from("userStakingBalance" in dashboardDataSet ? dashboardDataSet.userStakingBalance : '0'); 
@@ -97,7 +95,7 @@ export default function UnstakeIbc(props: mintProps) {
             type="text"
             value={amount?.toString()}
             placeholder={`0`}
-            onChange={e => setAmount(Number(e.target.value))}
+            onChange={e => setAmount(e.target.value)}
             width="auto"
             border="none"
           />

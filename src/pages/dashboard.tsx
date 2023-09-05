@@ -116,14 +116,15 @@ export function Dashboard( props: dashboardProps ){
       chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
       chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
       chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
-      
+
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
       setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
       setNewLpIssuance(dashboardDataSet.lpTokenSupply)
     }
 
-    fetchIbcMetrics()
+    
+    fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})
 
   }, [mostRecentIbcBlock, nonWalletProvider])
 

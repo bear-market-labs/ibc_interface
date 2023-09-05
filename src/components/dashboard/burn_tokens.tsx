@@ -166,11 +166,14 @@ export default function BurnTokens(props: mintProps) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
-        // calculate supply with new liquidity added in
-
+        // liquidity between start/end supply
         const liquidityQuery = composeQuery(ibcContractAddress, "getLiquidityFromSupply", ["uint256"], [inverseTokenSupply.sub(decimaledParsedAmount)])
         const liquidityBytes = await provider.call(liquidityQuery)
         const liquidityReceived = reserveAmount.sub(BigNumber.from(abiCoder.decode(["uint256"], liquidityBytes)[0].toString()))
+
+        const newPriceQuery = composeQuery(ibcContractAddress, "getPrice", ["uint256"], [inverseTokenSupply.sub(decimaledParsedAmount)])
+        const newPriceBytes = await provider.call(newPriceQuery)
+        const newPrice = BigNumber.from(abiCoder.decode(["uint256"], newPriceBytes)[0].toString())
 
         // calculate resulting price
         //setResultPrice((decimaledParsedAmount.toString() / liquidityReceived.toString()).toString())
@@ -179,7 +182,7 @@ export default function BurnTokens(props: mintProps) {
         setResultPrice(bignumber(resultPriceInWei.toString()))
         setLiquidityReceived(liquidityReceived)
 
-        parentSetters?.setNewPrice(resultPriceInWei.toString())
+        parentSetters?.setNewPrice(newPrice.toString())
         parentSetters?.setNewIbcIssuance(inverseTokenSupply.sub(decimaledParsedAmount).toString())
         parentSetters?.setNewReserve(abiCoder.decode(["uint256"], liquidityBytes)[0].toString())
       }

@@ -133,17 +133,24 @@ export default function MintTokens(props: mintProps) {
         const supplyQuery = composeQuery(ibcContractAddress, "getSupplyFromLiquidity", ["uint256"], [reserveAmount.add(decimaledParsedAmount)])
         const supplyBytes = await provider.call(supplyQuery)
         const newSupply = BigNumber.from(abiCoder.decode(["uint256"], supplyBytes)[0].toString())
+        
+        const newPriceQuery = composeQuery(ibcContractAddress, "getPrice", ["uint256"], [newSupply])
+        const newPriceBytes = await provider.call(newPriceQuery)
+        const newPrice = BigNumber.from(abiCoder.decode(["uint256"], newPriceBytes)[0].toString())
 
         const mintAmount = newSupply.sub(inverseTokenSupply)
 
         // calculate resulting price
         //setResultPrice((decimaledParsedAmount.toString() / mintAmount.toString()).toString())
+
+        // this is the minter's price, not the resulting bonding curve price!!!
         const resultPriceInEth = bignumber(decimaledParsedAmount.toString()).dividedBy(bignumber(mintAmount.toString())).toFixed(reserveAssetDecimals)
         const resultPriceInWei = parseEther(resultPriceInEth)
         setResultPrice(bignumber(resultPriceInWei.toString()))
         setMintAmount(mintAmount)
 
-        parentSetters?.setNewPrice(resultPriceInWei.toString())
+
+        parentSetters?.setNewPrice(newPrice.toString())
         parentSetters?.setNewIbcIssuance(newSupply.toString())
         parentSetters?.setNewReserve(reserveAmount.add(decimaledParsedAmount).toString())
         

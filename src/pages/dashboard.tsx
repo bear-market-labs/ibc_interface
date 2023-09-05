@@ -87,7 +87,6 @@ export function Dashboard( props: dashboardProps ){
 
   useEffect(() => {
     const fetchIbcMetrics = async() => {
-      console.log("yo ",mostRecentIbcBlock)
       const abiCoder = ethers.utils.defaultAbiCoder
 
       // fetch/set main panel metrics data
@@ -113,12 +112,11 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
       dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
-      
-      //setDashboardDataSet(currDashboardDataset);
 
       chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
       chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
       chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+      
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
       setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)

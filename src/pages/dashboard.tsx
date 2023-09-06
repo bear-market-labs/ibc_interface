@@ -130,13 +130,10 @@ export function Dashboard( props: dashboardProps ){
     const fetchWalletInfo = async() => {
       if (wallet?.provider) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
-        setProvider(provider)
         const abiCoder = ethers.utils.defaultAbiCoder
         
         //  user balance info
         const ethBalance = await provider.getBalance(wallet.accounts[0].address)
-
-        setUserEthBalance(ethBalance === undefined ? '0' : ethers.utils.formatEther(ethBalance.toString()))
 
         // ibc contract state
         const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])

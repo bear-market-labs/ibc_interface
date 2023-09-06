@@ -56,9 +56,7 @@ export function Dashboard( props: dashboardProps ){
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
-  const [{ wallet, connecting }] = useConnectWallet()
-  const [userEthBalance, setUserEthBalance] = useState<string>('0')
-  const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
+  const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
@@ -123,7 +121,6 @@ export function Dashboard( props: dashboardProps ){
       setNewLpIssuance(dashboardDataSet.lpTokenSupply)
     }
 
-    
     fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})
 
   }, [mostRecentIbcBlock, nonWalletProvider])

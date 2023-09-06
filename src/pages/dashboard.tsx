@@ -1,4 +1,4 @@
-import { Code, Divider, Grid, GridItem, Link, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, VStack } from "@chakra-ui/react";
+import { Code, Divider, Grid, GridItem, Link, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, VStack, Box } from "@chakra-ui/react";
 import { useConnectWallet } from "@web3-onboard/react";
 import React, { useEffect, useState } from "react";
 import ConnectWallet from "../components/ConnectWallet";
@@ -19,9 +19,18 @@ import MintBurnPrice from "../components/dashboard/mint_burn_price";
 import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
 import LpingReserve from "../components/dashboard/lping_reserve";
 import LpingIssuance from "../components/dashboard/lping_issuance";
+import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
 import Logo from "../components/logo";
+import * as _ from "lodash";
 
-export function Dashboard(){
+type dashboardProps = {
+  mostRecentIbcBlock: any;
+  nonWalletProvider: any;
+}
+
+export function Dashboard( props: dashboardProps ){
+  const {mostRecentIbcBlock, nonWalletProvider} = props
+
   const navOptions = [
     {
       value: 'mintBurn',
@@ -61,7 +70,64 @@ export function Dashboard(){
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
 
   const [updated, updateState] = React.useState<any>();
+
+  const [chartParam, setChartParam] = React.useState<any>(
+    {
+      currentSupply: 1,
+      curveParameter: {
+        parameterK: 0.5,
+        parameterM: 1
+      },
+      targetSupply: null,
+      newCurveParam: null,
+    }
+  );
   const forceUpdate = React.useCallback(() => updateState({}), []);
+
+
+  useEffect(() => {
+    const fetchIbcMetrics = async() => {
+      console.log("yo ",mostRecentIbcBlock)
+      const abiCoder = ethers.utils.defaultAbiCoder
+
+      // fetch/set main panel metrics data
+      const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])
+      const bondingCurveParamsBytes = await nonWalletProvider.call(bondingCurveParamsQuery)
+      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+
+      const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
+      const lpTokenSupplyBytes = await nonWalletProvider.call(lpTokenSupplyQuery)
+      const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
+
+      const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
+      const lpTokenDecimalsBytes = await nonWalletProvider.call(lpTokenDecimalsQuery)
+      const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
+
+      dashboardDataSet.bondingCurveParams = {
+        reserveAmount: bondingCurveParams[0][0].toString(),
+        inverseTokenSupply: bondingCurveParams[0][1].toString(),
+        currentTokenPrice: bondingCurveParams[0][2].toString(),
+        k: bondingCurveParams[0][3].toString(),
+        m: bondingCurveParams[0][4].toString()
+      };
+
+      dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
+      dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
+      
+      //setDashboardDataSet(currDashboardDataset);
+
+      chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
+      chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
+      chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+      setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
+      setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
+      setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
+      setNewLpIssuance(dashboardDataSet.lpTokenSupply)
+    }
+
+    fetchIbcMetrics()
+
+  }, [mostRecentIbcBlock, nonWalletProvider])
 
   useEffect(() => {
 
@@ -161,7 +227,15 @@ export function Dashboard(){
             stakingFee: fees[1].toString(),
             protocolFee: fees[2].toString(),
           }
-        })
+        });
+
+        console.log('------->set dashboard infor');
+        console.log(dashboardDataSet);
+
+        chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
+        chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
+        chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+        console.log(chartParam);
       }
     }
 
@@ -187,6 +261,58 @@ export function Dashboard(){
     setHeaderTitle(headerTitle.toUpperCase())
   }, [selectedNavItem, navOptions])
 
+  useEffect(()=>{
+    const updateChartParam = _.cloneDeep(chartParam);
+    console.log(newIbcIssuance);
+    console.log(dashboardDataSet);
+    // if(dashboardDataSet?.bondingCurveParams && dashboardDataSet?.inverseTokenSupply){
+    //   chartParam.curveParameter.parameterK = Number(dashboardDataSet.bondingCurveParams.k)/1e18;
+    //   chartParam.curveParameter.parameterM = Number(dashboardDataSet.bondingCurveParams.m)/1e18;
+    //   chartParam.currentSupply = Number(dashboardDataSet.inverseTokenSupply)/1e18;
+    // }
+
+    if (selectedNavItem === "mintBurn" ){
+      updateChartParam.newCurveParam = null;
+      if(newIbcIssuance){
+        updateChartParam.targetSupply = Number(newIbcIssuance)/1e18;
+      }else{
+        updateChartParam.targetSupply = null; 
+      }
+    }else if(selectedNavItem === "lp"){
+      updateChartParam.targetSupply = null; 
+      if(newReserve){
+        console.log(dashboardDataSet.bondingCurveParams);
+        console.log(dashboardDataSet.bondingCurveParams.inverseTokenSupply);
+        console.log(newReserve); 
+        const price = Number(dashboardDataSet.bondingCurveParams.currentTokenPrice)/1e18;
+        const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
+        const reserve = Number(newReserve)/1e18;
+        const k = 1 - price * supply / reserve;
+        updateChartParam.newCurveParam = {
+          parameterK: k,
+          parameterM: price * (supply ** k)
+        }
+  
+  
+        // _parameterK = ONE_INT - int256((currentPrice.mulDown(currentIbcSupply)).divDown(currentBalance));
+        // require(_parameterK < ONE_INT, ERR_PARAM_UPDATE_FAIL);
+        // _parameterM = currentPrice.mulDown(currentIbcSupply.pow(_parameterK));
+      }else{
+        updateChartParam.newCurveParam = null;
+      }
+    }else{
+      return;
+    }
+
+
+
+
+    
+    console.log("-----------> new chart parameter");
+    console.log(updateChartParam);
+    setChartParam(updateChartParam);
+  }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve, selectedNavItem])
+
   const handleRadioChange = async (val: any) => {
         
     if (val === "claim" || val === "stake"){
@@ -201,7 +327,7 @@ export function Dashboard(){
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'vaults',
     onChange: (val) => handleRadioChange(val),
-    
+    value: selectedNavItem,
   })
   const group = getRootProps()
 
@@ -210,6 +336,13 @@ export function Dashboard(){
     setNewLpIssuance(null)
     setNewPrice(null)
     setNewReserve(null)
+  }
+
+  const handleModalClose = async() => {
+    const preModalSelectedNavItem = navOptions.find(x => x.displayText.toUpperCase() === headerTitle.toUpperCase())?.value
+    setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
+
+    onClose()
   }
 
   return (
@@ -243,7 +376,7 @@ export function Dashboard(){
 
           <Modal
               isOpen={isOpen}
-              onClose={onClose}
+              onClose={handleModalClose}
               scrollBehavior='inside'
               isCentered
               size='sm'>
@@ -345,7 +478,9 @@ export function Dashboard(){
                   }}
                 />
 
-                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+                <Box width="100%" height="400px" padding="10px 20px">
+                  <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
+                </Box>
 
                 <MintBurnIssuance
                   dashboardDataSet={dashboardDataSet}
@@ -372,7 +507,9 @@ export function Dashboard(){
                   }}
                 />
 
-                <Text ml={7} mt={25} mb={25}>Awesome chart component</Text>
+                <Box width="100%" height="400px" padding="10px 20px">
+                  <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
+                </Box>
 
                 <LpingIssuance
                   dashboardDataSet={dashboardDataSet}
@@ -385,19 +522,6 @@ export function Dashboard(){
                 />
               </>
           }
-
-
-          {/*
-
-          chart component
-
-          */}
-          <Spacer/>
-          {/*
-
-          Calculation output text based on sideinput
-
-          */}
         </Stack>
 
       </GridItem>

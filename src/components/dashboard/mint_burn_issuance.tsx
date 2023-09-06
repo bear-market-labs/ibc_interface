@@ -27,7 +27,7 @@ export default function MintBurnIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)).toFixed(3)} IBC`}</Text>
           {
-            newIbcIssuance.gt(0) &&
+            newIbcIssuance.gt(0) && !newIbcIssuance.eq(inverseTokenSupply) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
@@ -43,7 +43,7 @@ export default function MintBurnIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(reserveAmount)).toFixed(3)} ETH`}</Text>
           {
-            newReserve.gt(0) &&
+            newReserve.gt(0) && !newReserve.eq(reserveAmount) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>

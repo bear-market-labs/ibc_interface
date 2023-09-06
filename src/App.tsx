@@ -10,9 +10,19 @@ import { Route, Routes } from "react-router-dom";
 import { StagingPage } from "./pages/staging";
 import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
+import { contracts, ibcEvents } from "./config/contracts";
+import { useState } from "react";
 
 const injected = injectedModule();
 const rpcUrl = `https://rpc.tenderly.co/fork/cc2b5331-1bfa-4756-84ab-e2f2f63a91d5`
+
+let provider: any;
+
+// wallet-independent provider for updating main panel metrics 
+if (!provider){
+  provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+}
+
 
 init({
   // apiKey,
@@ -34,21 +44,28 @@ init({
 })
 
 export const App = () => {
-  const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
+  const [mostRecentIbcBlock, setMostRecentIbcBlock ] = useState<any>()
 
-  // create an ethers provider
-  let ethersProvider
-
-  if (wallet) {
-    // if using ethers v6 this is:
-    // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-    ethersProvider = new ethers.providers.Web3Provider(wallet.provider, 'any')
+  provider.removeAllListeners()
+  const handleLog = (log: any) => {
+    // Process the log data here
+    console.log('Received LOG:', log);
+    setMostRecentIbcBlock(log.blockNumber)
+  };
+  
+  const eventFilter = {
+    address: contracts.tenderly.ibcContract,
+  };
+  
+  if (provider.listenerCount === 0 || true){
+    provider.on(eventFilter, handleLog);
   }
+
   return (
   <ChakraProvider theme={theme}>
     <Box textAlign="center" fontSize="xl">
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} />} />
         <Route path="/staging" element={<StagingPage/>}/>
       </Routes>
     </Box>

@@ -21,7 +21,7 @@ export default function LpingReserve(props: mintProps) {
       <Stack direction="row">
         <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(reserveAmount)).toFixed(3)} ETH`}</Text>
         {
-          newReserve.gt(0) &&
+          newReserve.gt(0) && !newReserve.eq(reserveAmount) && 
           <>
             <Box ml='7' mr='7'>
               <Icon as={HiOutlineArrowRight} h='100%'/>

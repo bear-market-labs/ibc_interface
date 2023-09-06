@@ -21,7 +21,7 @@ type mintProps = {
 export default function RemoveLiquidity(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<string>()
+  const [amount, setAmount] = useState<string>('')
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)

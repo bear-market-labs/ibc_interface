@@ -42,7 +42,7 @@ export default function ConnectWallet() {
   if(wallet?.provider && account) {
     return (
         <div>
-          <Button onClick={() => { disconnect({ label: wallet.label }) }}>{`${account.address.substring(0,5)}...${account.address.substring(account.address.length - 6, account.address.length - 1)}`}</Button>
+          <Button onClick={() => { disconnect({ label: wallet.label }) }}>{`${account.address.substring(0,5)}...${account.address.substring(account.address.length - 5, account.address.length)}`}</Button>
         </div>
     )
   }

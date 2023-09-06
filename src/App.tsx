@@ -16,13 +16,7 @@ import { useState } from "react";
 const injected = injectedModule();
 const rpcUrl = `https://rpc.tenderly.co/fork/cc2b5331-1bfa-4756-84ab-e2f2f63a91d5`
 
-let provider: any;
-
-// wallet-independent provider for updating main panel metrics 
-if (!provider){
-  provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-}
-
+let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
 init({
   // apiKey,
@@ -57,9 +51,8 @@ export const App = () => {
     address: contracts.tenderly.ibcContract,
   };
   
-  if (provider.listenerCount === 0 || true){
-    provider.on(eventFilter, handleLog);
-  }
+  provider.on(eventFilter, handleLog);
+
 
   return (
   <ChakraProvider theme={theme}>

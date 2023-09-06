@@ -56,9 +56,7 @@ export function Dashboard( props: dashboardProps ){
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
-  const [{ wallet, connecting }] = useConnectWallet()
-  const [userEthBalance, setUserEthBalance] = useState<string>('0')
-  const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
+  const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
@@ -87,7 +85,6 @@ export function Dashboard( props: dashboardProps ){
 
   useEffect(() => {
     const fetchIbcMetrics = async() => {
-      console.log("yo ",mostRecentIbcBlock)
       const abiCoder = ethers.utils.defaultAbiCoder
 
       // fetch/set main panel metrics data
@@ -113,19 +110,18 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
       dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
-      
-      //setDashboardDataSet(currDashboardDataset);
 
       chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
       chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
       chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
       setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
       setNewLpIssuance(dashboardDataSet.lpTokenSupply)
     }
 
-    fetchIbcMetrics()
+    fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})
 
   }, [mostRecentIbcBlock, nonWalletProvider])
 
@@ -134,13 +130,10 @@ export function Dashboard( props: dashboardProps ){
     const fetchWalletInfo = async() => {
       if (wallet?.provider) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
-        setProvider(provider)
         const abiCoder = ethers.utils.defaultAbiCoder
         
         //  user balance info
         const ethBalance = await provider.getBalance(wallet.accounts[0].address)
-
-        setUserEthBalance(ethBalance === undefined ? '0' : ethers.utils.formatEther(ethBalance.toString()))
 
         // ibc contract state
         const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "getCurveParameters", [], [])

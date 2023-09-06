@@ -16,7 +16,7 @@ export default function UnstakeIbc(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet} = props
-  const [amount, setAmount] = useState<string>()
+  const [amount, setAmount] = useState<string>('')
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userStakingBalance = BigNumber.from("userStakingBalance" in dashboardDataSet ? dashboardDataSet.userStakingBalance : '0'); 

@@ -12,7 +12,6 @@ import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
-import { utimes } from 'fs'
 
 type mintProps = {
   dashboardDataSet: any;

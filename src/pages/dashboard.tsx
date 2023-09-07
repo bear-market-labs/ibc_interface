@@ -116,9 +116,20 @@ export function Dashboard( props: dashboardProps ){
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
       dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
 
-      chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
+      // compute old k/m params from utilization and invariant
+      const k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
+      * 
+      Math.pow(
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
+        k
+      )
+      // p = m * (s) ** -k
+      // m = p * s**k
+
+      chartParam.curveParameter.parameterK = k;
       chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
-      chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
+      chartParam.currentSupply = m;
 
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
@@ -228,8 +239,19 @@ export function Dashboard( props: dashboardProps ){
         console.log('------->set dashboard infor');
         console.log(dashboardDataSet);
 
-        chartParam.curveParameter.parameterK = Number(bondingCurveParams[0][3].toString())/1e18;
-        chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
+        // compute old k/m params from utilization and invariant
+        const k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+        const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
+        * 
+        Math.pow(
+          Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
+          k
+        )
+        // p = m * (s) ** -k
+        // m = p * s**k
+
+        chartParam.curveParameter.parameterK = k;
+        chartParam.curveParameter.parameterM = m;
         chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
         console.log(chartParam);
       }

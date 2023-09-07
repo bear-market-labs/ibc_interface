@@ -12,6 +12,7 @@ import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { utimes } from 'fs'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -161,35 +162,40 @@ export default function BurnTokens(props: mintProps) {
 
     const decimaledParsedAmount = parseUnits(val=== '' ? '0' : val, inverseTokenDecimals.toNumber())
 
-    const calcBurnAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber) => {
+    const calcBurnAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber, utilization: BigNumber) => {
       if (wallet?.provider) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
-        // liquidity between start/end supply
-        const liquidityQuery = composeQuery(ibcContractAddress, "getLiquidityFromSupply", ["uint256"], [inverseTokenSupply.sub(decimaledParsedAmount)])
-        const liquidityBytes = await provider.call(liquidityQuery)
-        const liquidityReceived = reserveAmount.sub(BigNumber.from(abiCoder.decode(["uint256"], liquidityBytes)[0].toString()))
+        // this should be a non-under/overflow number between 0,1
+        const fee = parseUnits(Number(Number(formatUnits(decimaledParsedAmount, inverseTokenDecimals)) * totalFeePercent).toFixed(Number(inverseTokenDecimals)), inverseTokenDecimals)
+        const burnedAmount = decimaledParsedAmount.sub(fee)
+        const supplyDelta = Number(formatEther(inverseTokenSupply.sub(burnedAmount))) / Number(formatEther(inverseTokenSupply))
 
-        const newPriceQuery = composeQuery(ibcContractAddress, "getPrice", ["uint256"], [inverseTokenSupply.sub(decimaledParsedAmount)])
+        // this will be a negative number
+        const logSupplyDeltaTimesUtilization = Math.log(supplyDelta) * Number(formatEther(utilization))
+
+        const liquidityReceived = parseEther(Number(-1*(Math.exp(logSupplyDeltaTimesUtilization) - 1) * Number(formatEther(reserveAmount))).toFixed(reserveAssetDecimals))
+
+        const newPriceQuery = composeQuery(ibcContractAddress, "priceOf", ["uint256"], [inverseTokenSupply.sub(burnedAmount)])
         const newPriceBytes = await provider.call(newPriceQuery)
         const newPrice = BigNumber.from(abiCoder.decode(["uint256"], newPriceBytes)[0].toString())
 
         // calculate resulting price
         //setResultPrice((decimaledParsedAmount.toString() / liquidityReceived.toString()).toString())
-        const resultPriceInEth = bignumber(liquidityReceived.toString()).dividedBy(bignumber(decimaledParsedAmount.toString())).toFixed(inverseTokenDecimals.toNumber())
+        const resultPriceInEth = bignumber(liquidityReceived.toString()).dividedBy(bignumber(burnedAmount.toString())).toFixed(inverseTokenDecimals.toNumber())
         const resultPriceInWei = parseEther(resultPriceInEth)
         setResultPrice(bignumber(resultPriceInWei.toString()))
         setLiquidityReceived(liquidityReceived)
 
         parentSetters?.setNewPrice(newPrice.toString())
-        parentSetters?.setNewIbcIssuance(inverseTokenSupply.sub(decimaledParsedAmount).toString())
-        parentSetters?.setNewReserve(abiCoder.decode(["uint256"], liquidityBytes)[0].toString())
+        parentSetters?.setNewIbcIssuance(inverseTokenSupply.sub(burnedAmount).toString())
+        parentSetters?.setNewReserve(reserveAmount.sub(liquidityReceived).toString())
       }
     }
 
-    if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams){
-      calcBurnAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
+    if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams && "utilization" in bondingCurveParams){
+      calcBurnAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply), BigNumber.from(bondingCurveParams.utilization))
       .then()
       .catch((err) => console.log(err))
     }

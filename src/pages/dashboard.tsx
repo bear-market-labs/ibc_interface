@@ -245,8 +245,6 @@ export function Dashboard( props: dashboardProps ){
           Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
           k
         )
-        // p = m * (s) ** -k
-        // m = p * s**k
 
         chartParam.curveParameter.parameterK = k;
         chartParam.curveParameter.parameterM = m;

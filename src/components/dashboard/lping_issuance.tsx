@@ -9,6 +9,8 @@ type mintProps = {
   parentInputDynamicData: any;
 }
 
+const issuanceDiffTolerance = 0.000001
+
 export default function LpingIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
@@ -18,7 +20,13 @@ export default function LpingIssuance(props: mintProps) {
   const userCurrentLpShare = bignumber(userLpTokenBalance.toString()).dividedBy(bignumber(lpTokenSupply.toString())).multipliedBy(100)
 
 
-  const newLpIssuance = BigNumber.from(parentInputDynamicData?.newLpIssuance ? parentInputDynamicData.newLpIssuance : '0')
+
+  let newLpIssuance = BigNumber.from(parentInputDynamicData?.newLpIssuance ? parentInputDynamicData.newLpIssuance : '0')
+
+  if (Math.abs(Number(ethers.utils.formatUnits(lpTokenSupply.sub(newLpIssuance), lpTokenDecimals))) < issuanceDiffTolerance){
+    newLpIssuance = lpTokenSupply
+  }
+
   const userNewLpShare = bignumber(userLpTokenBalance.add(newLpIssuance.sub(lpTokenSupply)).toString()).dividedBy(bignumber(newLpIssuance.toString())).multipliedBy(100)
 
   return (

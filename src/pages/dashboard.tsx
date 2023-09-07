@@ -124,11 +124,9 @@ export function Dashboard( props: dashboardProps ){
         Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
         k
       )
-      // p = m * (s) ** -k
-      // m = p * s**k
 
       chartParam.curveParameter.parameterK = k;
-      chartParam.curveParameter.parameterM = Number(bondingCurveParams[0][4].toString())/1e18;
+      chartParam.curveParameter.parameterM = m;
       chartParam.currentSupply = m;
 
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)

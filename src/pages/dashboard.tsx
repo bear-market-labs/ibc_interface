@@ -127,7 +127,7 @@ export function Dashboard( props: dashboardProps ){
 
       chartParam.curveParameter.parameterK = k;
       chartParam.curveParameter.parameterM = m;
-      chartParam.currentSupply = m;
+      chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
 
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)

@@ -3,7 +3,7 @@ import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
 
 import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, parseUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, parseUnits, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
@@ -152,7 +152,10 @@ export default function RemoveLiquidity(props: mintProps) {
 
     const decimaledParsedAmount = parseUnits(val=== '' ? '0' : val, inverseTokenDecimals.toNumber())
 
-    const liquidityRetrieved = bignumber(decimaledParsedAmount.mul(bondingCurveParams.reserveAmount).toString()).dividedBy(bignumber(lpTokenSupply.toString())).toFixed(0)
+    const price = formatUnits(bondingCurveParams.inverseTokenSupply, bondingCurveParams.inverseTokenDecimals)
+    const price_supply_product = bignumber(bondingCurveParams.currentTokenPrice).multipliedBy(price)
+
+    const liquidityRetrieved = bignumber(decimaledParsedAmount.mul(BigNumber.from(bondingCurveParams.reserveAmount).sub(price_supply_product.toFixed(0))).toString()).dividedBy(bignumber(lpTokenSupply.toString())).toFixed(0)
 
     setLiquidityReceived(BigNumber.from(liquidityRetrieved))
 

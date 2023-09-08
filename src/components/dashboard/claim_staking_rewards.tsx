@@ -98,7 +98,7 @@ export default function ClaimStakingRewards(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button onClick={sendTransaction}>Claim</Button>
+        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>Claim</Button>
       </Stack>
     </>
   )

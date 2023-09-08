@@ -108,7 +108,7 @@ export default function StakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button onClick={sendTransaction}>Stake</Button>
+        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>Stake</Button>
       </Stack>
     </>
   )

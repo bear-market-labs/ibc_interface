@@ -443,17 +443,15 @@ export function Dashboard( props: dashboardProps ){
       </GridItem>
 
       <GridItem area={'header'}>
-        <Stack ml={7} spacing={0}>
-          <Stack direction="row" mt='70px' mr='7'>
-            <Text fontSize='xl'>{headerTitle}</Text>
-            <Spacer/>
-            <ConnectWallet />
-          </Stack>
-          <Stack direction="row">
+        <Stack ml={7} direction="row" justifyContent={'space-between'}>
+          <Stack direction="column" mt='70px'>
+            <Text fontSize='xl' textAlign={'left'}>{headerTitle}</Text>            
             <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
           </Stack>
+          <Stack justifyContent={'center'} mr='7'>
+            <ConnectWallet />
+          </Stack>
         </Stack>
-
       </GridItem>
 
       <GridItem area={'main'}>

@@ -117,7 +117,10 @@ export function Dashboard( props: dashboardProps ){
       dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
 
       // compute old k/m params from utilization and invariant
-      const k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+      let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+      if (k < 0){
+        k = 0
+      }
       const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
       * 
       Math.pow(
@@ -238,7 +241,10 @@ export function Dashboard( props: dashboardProps ){
         console.log(dashboardDataSet);
 
         // compute old k/m params from utilization and invariant
-        const k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+        let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+        if (k < 0){
+          k = 0
+        }
         const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
         * 
         Math.pow(
@@ -301,7 +307,10 @@ export function Dashboard( props: dashboardProps ){
         const price = Number(dashboardDataSet.bondingCurveParams.currentTokenPrice)/1e18;
         const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
         const reserve = Number(newReserve)/1e18;
-        const k = 1 - price * supply / reserve;
+        let k = 1 - price * supply / reserve;
+        if (k < 0 || reserve < 0){
+          k = 0
+        }
         updateChartParam.newCurveParam = {
           parameterK: k,
           parameterM: price * (supply ** k)

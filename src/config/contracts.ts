@@ -10,14 +10,8 @@ export const contracts = {
     //ibcContract: "0x88d1af96098a928ee278f162c1a84f339652f95b",
     
     //ibcContract: "0x9f62EE65a8395824Ee0821eF2Dc4C947a23F0f25",
-    ibcContract: "0x0B1a87021ec75fBaE919b1e86b2B1335FFC8F4d3",
+    //ibcContract: "0x0B1a87021ec75fBaE919b1e86b2B1335FFC8F4d3",
+
+    ibcContract: "0x3818eab6ca8bf427222bfacfa706c514145f4104",
   }
 }
-
-export const ibcEvents = [
-  ethers.utils.id("TokenBought(address,address,uint256,uint256)"),
-  //ethers.utils.id("TokenSold(address,address,uint256,uint256)"),
-  //ethers.utils.id("LiquidityAdded(address,address,uint256,uint256,int256,uin256)"),
-  //ethers.utils.id("LiquidityRemoved(address,address,uint256,uint256,int256,uint256)"),
-  //ethers.utils.id("RewardClaimed(address,address,int8,uint256)"),
-]

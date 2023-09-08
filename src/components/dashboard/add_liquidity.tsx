@@ -123,7 +123,7 @@ export default function AddLiquidity(props: mintProps) {
     parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
     parentSetters?.setNewReserve(decimaledParsedAmount.add(bondingCurveParams.reserveAmount).toString())
   }
-  1.253000000000045003
+
   return (
     <>
       <Stack>

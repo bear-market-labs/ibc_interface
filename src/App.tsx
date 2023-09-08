@@ -10,7 +10,7 @@ import { Route, Routes } from "react-router-dom";
 import { StagingPage } from "./pages/staging";
 import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
-import { contracts, ibcEvents } from "./config/contracts";
+import { contracts, } from "./config/contracts";
 import { useState } from "react";
 
 const injected = injectedModule();

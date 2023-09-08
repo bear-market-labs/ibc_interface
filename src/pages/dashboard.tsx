@@ -116,9 +116,7 @@ export function Dashboard( props: dashboardProps ){
       chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
 
       setNewPrice(dashboardDataSet.bondingCurveParams.currentPrice)
-      setNewIbcIssuance(dashboardDataSet.bondingCurveParams.inverseTokenSupply)
       setNewReserve(dashboardDataSet.bondingCurveParams.reserveAmount)
-      setNewLpIssuance(dashboardDataSet.lpTokenSupply)
     }
 
     fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})

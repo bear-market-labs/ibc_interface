@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, BigNumber } from 'ethers'
 import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, formatUnits, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
@@ -113,14 +113,17 @@ export default function AddLiquidity(props: mintProps) {
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
 
-    const mintAmount = BigNumber.from(bignumber(lpTokenSupply.mul(decimaledParsedAmount).toString()).dividedBy(bignumber(bondingCurveParams.reserveAmount.toString())).toFixed(0))
+    const price = formatUnits(bondingCurveParams.inverseTokenSupply, bondingCurveParams.inverseTokenDecimals)
+    const price_supply_product = bignumber(bondingCurveParams.currentTokenPrice).multipliedBy(price)
+
+    const mintAmount = BigNumber.from(bignumber(lpTokenSupply.mul(decimaledParsedAmount).toString()).dividedBy(bignumber(bondingCurveParams.reserveAmount).minus(price_supply_product)).toFixed(0))
 
     setMintAmount(mintAmount)
 
     parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
     parentSetters?.setNewReserve(decimaledParsedAmount.add(bondingCurveParams.reserveAmount).toString())
   }
-
+  1.253000000000045003
   return (
     <>
       <Stack>

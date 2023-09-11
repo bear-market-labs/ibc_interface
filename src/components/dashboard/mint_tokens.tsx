@@ -6,12 +6,15 @@ import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { Toast } from '../toast'
+import { Link } from "@chakra-ui/react"
+import { BiLinkExternal } from 'react-icons/bi'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -104,14 +107,52 @@ export default function MintTokens(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      let description = "Error details"
+
+      if (result.status === 1){
+        // extract TokenBought event, and display details
+        let tokenBoughtDetails;
+        result.logs.find(x => {
+          try{
+            tokenBoughtDetails = abiCoder.decode(["uint256", "uint256"], x.data)
+            return true
+          }catch(err){
+            return false
+          }
+        })
+
+        if (tokenBoughtDetails){
+          description = `Received ${Number(formatUnits(tokenBoughtDetails[1], inverseTokenDecimals)).toFixed(4)} IBC for ${Number(formatEther(tokenBoughtDetails[0])).toFixed(4)} ETH`
+        }
+      } 
+
+      const url = explorerUrl + result.transactionHash
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: null,
+        isClosable: true
+      })
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction confirmed",
+          description: error,
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals]);
 
   const handleAmountChange = (val: any) => {
     const parsedAmount = val;

@@ -68,6 +68,7 @@ export default function BurnTokens(props: mintProps) {
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
       let txDetails;
+      let description = "Error details"
 
       if (userInverseTokenAllowance.gt(0)){
 
@@ -144,11 +145,8 @@ export default function BurnTokens(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
-
-      let description = "Error details"
-
       if (result.status === 1){
-        // extract TokenBought event, and display details
+        // extract TokenSold event, and display details
         let tokenSoldDetails;
         result.logs.find(x => {
           try{
@@ -161,6 +159,9 @@ export default function BurnTokens(props: mintProps) {
 
         if (tokenSoldDetails){
           description = `Received ${Number(formatEther(tokenSoldDetails[1])).toFixed(4)} ETH for ${Number(formatUnits(tokenSoldDetails[0], inverseTokenDecimals)).toFixed(4)} IBC`
+        } else {
+          // allowance type tx was performed
+          description = `Allowance updated`
         }
       } 
 
@@ -171,7 +172,7 @@ export default function BurnTokens(props: mintProps) {
         title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
         description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
         status: result.status === 1 ? "success" : "error",
-        duration: null,
+        duration: 5000,
         isClosable: true
       })
 
@@ -182,7 +183,7 @@ export default function BurnTokens(props: mintProps) {
         console.log(error)
         Toast({
           id: "",
-          title: "Transaction confirmed",
+          title: "Transaction failed",
           description: error,
           status: "error",
           duration: null,

@@ -133,7 +133,7 @@ export default function MintTokens(props: mintProps) {
         title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
         description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
         status: result.status === 1 ? "success" : "error",
-        duration: null,
+        duration: 5000,
         isClosable: true
       })
 
@@ -143,7 +143,7 @@ export default function MintTokens(props: mintProps) {
         console.log(error)
         Toast({
           id: "",
-          title: "Transaction confirmed",
+          title: "Transaction failed",
           description: error,
           status: "error",
           duration: null,

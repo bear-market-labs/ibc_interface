@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, BigNumber } from 'ethers'
-import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Icon, Input, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, formatUnits, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
@@ -19,7 +19,7 @@ type mintProps = {
 export default function AddLiquidity(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -130,16 +130,17 @@ export default function AddLiquidity(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU PAY</Text>
 
         <Stack direction="row" justifyContent={'space-between'}>
-          <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => handleAmountChange(e.target.value)}
-            minWidth="auto"
-            border="none"
-            fontSize='4xl'
-          />
+          <NumberInput
+            value={amount}
+            onChange={valueString => handleAmountChange(valueString)}
+          >
+            <NumberInputField 
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right" fontSize='4xl'>{reserveAssetSymbol}</Text>
         </Stack>
         <Stack direction="row" justify="right" fontSize='sm'>

@@ -123,25 +123,26 @@ export default function MintTokens(props: mintProps) {
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
 
-    const calcMintAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber) => {
+    const calcMintAmount = async(decimaledParsedAmount: BigNumber, reserveAmount: BigNumber, inverseTokenSupply: BigNumber, utilization: BigNumber) => {
       if (wallet?.provider) {
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
-        // calculate supply with new liquidity added in
+        //directly calculate mintAmount with invariant and utilization
 
-        const supplyQuery = composeQuery(ibcContractAddress, "getSupplyFromLiquidity", ["uint256"], [reserveAmount.add(decimaledParsedAmount)])
-        const supplyBytes = await provider.call(supplyQuery)
-        const newSupply = BigNumber.from(abiCoder.decode(["uint256"], supplyBytes)[0].toString())
+        // this should be a non-under/overflow number
+        const reserveDelta = Number(formatEther(decimaledParsedAmount)) / Number(formatEther(reserveAmount))
+
+        // keep calc in non-under/overflow numeric domains
+        const logMintedTokensPlusSupply = Math.log(1 + reserveDelta) / Number(formatEther(utilization)) + Math.log(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)))
+
+        const mintAmount = parseUnits(Math.exp(logMintedTokensPlusSupply).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals).sub(inverseTokenSupply)
         
-        const newPriceQuery = composeQuery(ibcContractAddress, "getPrice", ["uint256"], [newSupply])
+        const newSupply = mintAmount.add(inverseTokenSupply)
+
+        const newPriceQuery = composeQuery(ibcContractAddress, "priceOf", ["uint256"], [newSupply])
         const newPriceBytes = await provider.call(newPriceQuery)
         const newPrice = BigNumber.from(abiCoder.decode(["uint256"], newPriceBytes)[0].toString())
-
-        const mintAmount = newSupply.sub(inverseTokenSupply)
-
-        // calculate resulting price
-        //setResultPrice((decimaledParsedAmount.toString() / mintAmount.toString()).toString())
 
         // this is the minter's price, not the resulting bonding curve price!!!
         const resultPriceInEth = bignumber(decimaledParsedAmount.toString()).dividedBy(bignumber(mintAmount.toString())).toFixed(reserveAssetDecimals)
@@ -157,8 +158,8 @@ export default function MintTokens(props: mintProps) {
       }
     }
 
-    if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams){
-      calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply))
+    if ("reserveAmount" in bondingCurveParams && "inverseTokenSupply" in bondingCurveParams && "utilization" in bondingCurveParams){
+      calcMintAmount(decimaledParsedAmount, BigNumber.from(bondingCurveParams.reserveAmount), BigNumber.from(bondingCurveParams.inverseTokenSupply), BigNumber.from(bondingCurveParams.utilization))
       .then()
       .catch((err) => console.log(err))
     }

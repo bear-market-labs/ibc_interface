@@ -8,6 +8,8 @@ type mintProps = {
   parentInputDynamicData: any;
 }
 
+const diffTolerance = 0.000001
+
 export default function MintBurnIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
@@ -17,8 +19,17 @@ export default function MintBurnIssuance(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
 
 
-  const newIbcIssuance = BigNumber.from(parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance : '0')
-  const newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0')
+  let newIbcIssuance = BigNumber.from(parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance : '0')
+  let newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0')
+
+  if (Math.abs(Number(ethers.utils.formatUnits(inverseTokenSupply.sub(newIbcIssuance), inverseTokenDecimals))) < diffTolerance){
+    newIbcIssuance = inverseTokenSupply
+  }
+
+  if (Math.abs(Number(ethers.utils.formatEther(reserveAmount.sub(newReserve)))) < diffTolerance){
+    newReserve = reserveAmount
+  }
+
 
   return (
     <>

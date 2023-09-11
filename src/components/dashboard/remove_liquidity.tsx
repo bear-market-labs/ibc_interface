@@ -146,7 +146,7 @@ export default function RemoveLiquidity(props: mintProps) {
     const parsedAmount = val;
     setAmount(parsedAmount)
 
-    if (isNaN(val)){
+    if (isNaN(val) || val.trim() === ''){
       return
     }
 

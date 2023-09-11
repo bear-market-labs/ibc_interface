@@ -155,7 +155,7 @@ export default function BurnTokens(props: mintProps) {
     const parsedAmount = val;
     setAmount(parsedAmount)
 
-    if (isNaN(val)){
+    if (isNaN(val) || val.trim() === ''){
       return
     }
 

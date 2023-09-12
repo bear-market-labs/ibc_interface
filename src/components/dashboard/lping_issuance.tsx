@@ -15,7 +15,7 @@ export default function LpingIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const virtualLpAmount = BigNumber.from(bondingCurveParams?.virtualReserveAmount);
+  const virtualLpAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
 
   const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0').sub(virtualLpAmount); 
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 

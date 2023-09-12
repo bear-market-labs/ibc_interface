@@ -216,7 +216,7 @@ export function Dashboard( props: dashboardProps ){
           inverseTokenAddress: inverseTokenAddress.toString(),
           bondingCurveParams: {
             reserveAmount: bondingCurveParams[0][0].toString(),
-            inverseTokenSupply: (bondingCurveParams[0][1].add(bondingCurveParams[0][3])).toString(),
+            inverseTokenSupply: bondingCurveParams[0][1].toString(),
             virtualReserveAmount: bondingCurveParams[0][2].toString(),
             virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
             currentTokenPrice: bondingCurveParams[0][4].toString(),

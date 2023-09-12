@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Link, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
@@ -9,6 +9,9 @@ import { contracts } from '../../config/contracts'
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { explorerUrl } from '../../config/constants'
+import { BiLinkExternal } from 'react-icons/bi'
+import { Toast } from '../toast'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -82,10 +85,48 @@ export default function ClaimLpRewards(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      let description = "Error details"
+
+      if (result.status === 1){
+        // extract RewardClaimed event, and display details
+        let RewardClaimedDetails;
+        result.logs.find(x => {
+          try{
+            RewardClaimedDetails = abiCoder.decode(["uint256", "uint256"], x.data)
+            return true
+          }catch(err){
+            return false
+          }
+        })
+
+        if (RewardClaimedDetails){
+          description = `Received ${Number(formatUnits(RewardClaimedDetails[0], inverseTokenDecimals)).toFixed(4)} IBC and ${Number(formatEther(RewardClaimedDetails[1])).toFixed(4)} ETH`
+        }
+      } 
+
+      const url = explorerUrl + result.transactionHash
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: 5000,
+        isClosable: true
+      })
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction failed",
+          description: JSON.stringify(error),
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate()

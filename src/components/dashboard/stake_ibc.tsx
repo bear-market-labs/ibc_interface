@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers } from 'ethers'
+import {  ethers, constants } from 'ethers'
 import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
@@ -22,9 +22,11 @@ export default function StakeIbc(props: mintProps) {
   const [amount, setAmount] = useState<string>('')
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+  const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
   const userIbcTokenBalance = BigNumber.from("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
   const forceUpdate = dashboardDataSet.forceUpdate;
-  const [isProcessing, setIsProcessing] = useState(false);
+  const userInverseTokenAllowance = BigNumber.from("userInverseTokenAllowance" in dashboardDataSet ? dashboardDataSet.userInverseTokenAllowance : '0');
+  const [isProcessing, setIsProcessing] = useState(false); 
 
   useEffect(() => {
     // If the wallet has a provider than the wallet is connected
@@ -51,37 +53,72 @@ export default function StakeIbc(props: mintProps) {
       setIsProcessing(true)
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
+      let description = "Error details"
+      let txDetails;
 
-      const functionDescriptorBytes = arrayify(solidityKeccak256(
-        [
-          "string"
-        ]
-        ,
-        [
-          "stake(uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-        ]
-      )).slice(0,4)
-        
-      const payloadBytes = arrayify(abiCoder.encode(
-        [
-          "uint256",
-        ], // array of types; make sure to represent complex types as tuples 
-        [
-          parseUnits(amount.toString(), inverseTokenDecimals)
-        ] // arg values
-      ))
+      if (userInverseTokenAllowance.gt(0)){
 
-      const txDetails = {
-        to: ibcContractAddress,
-        data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+        const functionDescriptorBytes = arrayify(solidityKeccak256(
+          [
+            "string"
+          ]
+          ,
+          [
+            "stake(uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          ]
+        )).slice(0,4)
+          
+        const payloadBytes = arrayify(abiCoder.encode(
+          [
+            "uint256",
+          ], // array of types; make sure to represent complex types as tuples 
+          [
+            parseUnits(amount.toString(), inverseTokenDecimals)
+          ] // arg values
+        ))
+  
+        txDetails = {
+          to: ibcContractAddress,
+          data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+        }
+
+        description = `${amount} IBC staked`
+      } else {
+        const functionDescriptorBytes = arrayify(solidityKeccak256(
+          [
+            "string"
+          ]
+          ,
+          [
+            "approve(address,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          ]
+        )).slice(0,4)
+  
+        const payloadBytes = arrayify(abiCoder.encode(
+          [
+            "address",
+            "uint",
+          ], // array of types; make sure to represent complex types as tuples 
+          [
+            ibcContractAddress,
+            constants.MaxUint256
+          ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+        ))
+
+        txDetails = {
+          to: inverseTokenAddress,
+          data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+        }
+        description = "Allowance updated"
       }
+
 
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
       const url = explorerUrl + result.transactionHash
-      const description = result.status === 1 ?
-        `${amount} IBC staked`
+      description = result.status === 1 ?
+        description
         :
         "Error details";
 
@@ -108,7 +145,7 @@ export default function StakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals]);
+  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress]);
 
   return (
     <>
@@ -135,7 +172,11 @@ export default function StakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>Stake</Button>
+        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>
+        {
+              userInverseTokenAllowance.gt(0) ? "Stake" : "Approve IBC"
+        }
+        </Button>
       </Stack>
     </>
   )

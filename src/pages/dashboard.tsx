@@ -165,7 +165,7 @@ export function Dashboard( props: dashboardProps ){
 
         const feeQuery = composeQuery(ibcContractAddress, "feeConfig", [], [])
         const feeBytes = await provider.call(feeQuery)
-        const fees = abiCoder.decode(["uint256[]", "uint256[]", "uint256[]"], feeBytes)
+        const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
 
         // ibc token info
         const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
@@ -200,7 +200,7 @@ export function Dashboard( props: dashboardProps ){
         const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
 
         // fetch rewards data
-        const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address", "uint8"], [wallet.accounts[0].address, 0])
+        const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
         const userClaimableRewardsBytes = await provider.call(userClaimableRewardsQuery)
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
@@ -208,8 +208,6 @@ export function Dashboard( props: dashboardProps ){
         const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
         const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
         const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
-
-        const actions = actionTypes
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -238,15 +236,15 @@ export function Dashboard( props: dashboardProps ){
           userStakingBalance: userStakingBalance.toString(),
           fees:{
             lpFee: fees[0].reduce( (acc: any, x:any, i:any) => {
-              acc[actions[i]] = x.toString();
+              acc[actionTypes[i]] = x.toString();
               return acc;
             }, {}),
             stakingFee: fees[1].reduce( (acc: any, x:any, i:any) => {
-              acc[actions[i]] = x.toString();
+              acc[actionTypes[i]] = x.toString();
               return acc;
             }, {}),
             protocolFee: fees[2].reduce( (acc: any, x:any, i:any) => {
-              acc[actions[i]] = x.toString();
+              acc[actionTypes[i]] = x.toString();
               return acc;
             }, {}),
           }

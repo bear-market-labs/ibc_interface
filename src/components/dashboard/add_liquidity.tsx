@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, BigNumber } from 'ethers'
-import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Icon, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, parseEther, formatUnits, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { Toast } from '../toast'
+import { BiLinkExternal } from 'react-icons/bi'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -19,14 +21,14 @@ type mintProps = {
 export default function AddLiquidity(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+  const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
@@ -94,10 +96,48 @@ export default function AddLiquidity(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      let description = "Error details"
+
+      if (result.status === 1){
+        // extract LiquidityAdded event, and display details
+        let LiquidityAddedDetails;
+        result.logs.find(x => {
+          try{
+            LiquidityAddedDetails = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], x.data)
+            return true
+          }catch(err){
+            return false
+          }
+        })
+
+        if (LiquidityAddedDetails){
+          description = `Received ${Number(formatUnits(LiquidityAddedDetails[1], lpTokenDecimals)).toFixed(4)} LP for ${Number(formatEther(LiquidityAddedDetails[0])).toFixed(4)} ETH`
+        }
+      } 
+
+      const url = explorerUrl + result.transactionHash
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: 5000,
+        isClosable: true
+      })
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction failed",
+          description: error,
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate();
@@ -107,7 +147,7 @@ export default function AddLiquidity(props: mintProps) {
     const parsedAmount = val;
     setAmount(parsedAmount)
 
-    if (isNaN(val)){
+    if (isNaN(val) || val.trim() === ''){
       return
     }
 
@@ -130,16 +170,17 @@ export default function AddLiquidity(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU PAY</Text>
 
         <Stack direction="row" justifyContent={'space-between'}>
-          <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => handleAmountChange(e.target.value)}
-            minWidth="auto"
-            border="none"
-            fontSize='4xl'
-          />
+          <NumberInput
+            value={amount}
+            onChange={valueString => handleAmountChange(valueString)}
+          >
+            <NumberInputField 
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right" fontSize='4xl'>{reserveAssetSymbol}</Text>
         </Stack>
         <Stack direction="row" justify="right" fontSize='sm'>
@@ -149,10 +190,10 @@ export default function AddLiquidity(props: mintProps) {
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>
         <Text align="left" fontSize='sm'>YOU RECEIVE</Text>
         <Stack direction="row" justifyContent={'space-between'} fontSize='4xl'>
-          <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(inverseTokenDecimals).toString()).toString()).toFixed(2) }</Text>
+          <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(lpTokenDecimals).toString()).toString()).toFixed(2) }</Text>
           <Text align="right">LP</Text>
         </Stack>
-        <Text align="right" fontSize='sm'>{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>
+        <Text align="right" fontSize='sm'>{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, lpTokenDecimals.toNumber())).toFixed(2)}`}</Text>
         <Spacer/>
 
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mt='12'>

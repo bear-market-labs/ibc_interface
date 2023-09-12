@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Input, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
@@ -90,15 +90,17 @@ export default function UnstakeIbc(props: mintProps) {
       <Stack>
         <Text align="left">YOU UNSTAKE</Text>
         <Stack direction="row">
-        <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => setAmount(e.target.value)}
-            width="auto"
-            border="none"
-          />
+        <NumberInput
+            value={amount}
+            onChange={valueString => setAmount(valueString)}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right">IBC</Text>
         </Stack>
         <Text align="right" fontSize={'xs'}>

@@ -19,7 +19,7 @@ export default function ClaimStakingRewards(props: mintProps) {
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet} = props
 
-  const userClaimableStakingRewards = BigNumber.from("userClauserClaimableStakingRewardsmableLpRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingRewards : '0')
+  const userClaimableStakingRewards = BigNumber.from("userClaimableStakingRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingRewards : '0')
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0');
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);

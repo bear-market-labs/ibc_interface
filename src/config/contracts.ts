@@ -12,6 +12,8 @@ export const contracts = {
     //ibcContract: "0x9f62EE65a8395824Ee0821eF2Dc4C947a23F0f25",
     //ibcContract: "0x0B1a87021ec75fBaE919b1e86b2B1335FFC8F4d3",
 
-    ibcContract: "0x3818eab6ca8bf427222bfacfa706c514145f4104",
+    //ibcContract: "0x3818eab6ca8bf427222bfacfa706c514145f4104",
+
+    ibcContract: "0xF357118EBd576f3C812c7875B1A1651a7f140E9C",
   }
 }

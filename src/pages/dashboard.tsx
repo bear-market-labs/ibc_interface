@@ -12,7 +12,6 @@ import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
 import { colors } from "../config/style";
 import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
-import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
 import StakeIbc from "../components/dashboard/stake_ibc";
 import UnstakeIbc from "../components/dashboard/unstake_ibc";
 import MintBurnPrice from "../components/dashboard/mint_burn_price";
@@ -451,20 +450,7 @@ export function Dashboard( props: dashboardProps ){
                     {
                       selectedNavItem === "claim" &&
                       <>
-                        <Tabs>
-                          <TabList>
-                            <Tab>LP</Tab>
-                            <Tab>Staking</Tab>
-                          </TabList>
-                          <TabPanels>
-                            <TabPanel>
-                              <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                            <TabPanel>
-                              <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                          </TabPanels>
-                        </Tabs>
+                        <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
                       </>
                     }
                   </ModalBody>

@@ -174,7 +174,7 @@ export default function RemoveLiquidity(props: mintProps) {
         Toast({
           id: "",
           title: "Transaction failed",
-          description: error,
+          description: JSON.stringify(error),
           status: "error",
           duration: null,
           isClosable: true

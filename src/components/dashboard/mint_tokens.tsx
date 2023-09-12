@@ -78,7 +78,7 @@ export default function MintTokens(props: mintProps) {
       )).slice(0,4)
 
        
-      const receivedAmount =  Number(formatUnits(mintAmount, inverseTokenDecimals)) * (1-totalFeePercent/100);
+      const receivedAmount =  Number(formatUnits(mintAmount, inverseTokenDecimals)) * (1-totalFeePercent);
 
       const maxPriceLimit = 
         bignumber(

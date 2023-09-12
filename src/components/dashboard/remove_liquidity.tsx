@@ -35,6 +35,7 @@ export default function RemoveLiquidity(props: mintProps) {
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
   const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'); 
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatEther(dashboardDataSet.fees[y]["removeLiquidity"])) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -235,7 +236,7 @@ export default function RemoveLiquidity(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU RECEIVE</Text>
 
         <Stack direction="row" justifyContent={'space-between'} fontSize='4xl'>
-          <Text>{ Number(formatEther(liquidityReceived).toString()).toFixed(2) }</Text>
+          <Text>{ Number(Number(formatEther(liquidityReceived).toString()) * (1-totalFeePercent)).toFixed(2) }</Text>
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Text align="right" fontSize='sm'>{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>

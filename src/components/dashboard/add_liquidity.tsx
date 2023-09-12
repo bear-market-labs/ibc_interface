@@ -134,7 +134,7 @@ export default function AddLiquidity(props: mintProps) {
         Toast({
           id: "",
           title: "Transaction failed",
-          description: error,
+          description: JSON.stringify(error),
           status: "error",
           duration: null,
           isClosable: true
@@ -153,7 +153,7 @@ export default function AddLiquidity(props: mintProps) {
     }
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
-    const feeAdjustedAmount = parseEther(Number(Number(formatEther(decimaledParsedAmount)) * (1 - totalFeePercent / 100)).toFixed(reserveAssetDecimals))
+    const feeAdjustedAmount = parseEther(Number(Number(formatEther(decimaledParsedAmount)) * (1 - totalFeePercent)).toFixed(reserveAssetDecimals))
 
     const supply = formatUnits(bondingCurveParams.inverseTokenSupply, bondingCurveParams.inverseTokenDecimals)
     const price_supply_product = bignumber(bondingCurveParams.currentTokenPrice).multipliedBy(supply)

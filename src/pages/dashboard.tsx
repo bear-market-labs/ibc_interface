@@ -12,7 +12,6 @@ import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
 import { colors } from "../config/style";
 import ClaimLpRewards from "../components/dashboard/claim_lp_rewards";
-import ClaimStakingRewards from "../components/dashboard/claim_staking_rewards";
 import StakeIbc from "../components/dashboard/stake_ibc";
 import UnstakeIbc from "../components/dashboard/unstake_ibc";
 import MintBurnPrice from "../components/dashboard/mint_burn_price";
@@ -22,6 +21,7 @@ import LpingIssuance from "../components/dashboard/lping_issuance";
 import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
 import Logo from "../components/logo";
 import * as _ from "lodash";
+import { actionTypes } from "../config/constants";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -95,7 +95,7 @@ export function Dashboard( props: dashboardProps ){
       // fetch/set main panel metrics data
       const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "curveParameters", [], [])
       const bondingCurveParamsBytes = await nonWalletProvider.call(bondingCurveParamsQuery)
-      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
 
       const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
       const lpTokenSupplyBytes = await nonWalletProvider.call(lpTokenSupplyQuery)
@@ -107,21 +107,24 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.bondingCurveParams = {
         reserveAmount: bondingCurveParams[0][0].toString(),
-        inverseTokenSupply: bondingCurveParams[0][1].toString(),
-        currentTokenPrice: bondingCurveParams[0][2].toString(),
-        invariant: bondingCurveParams[0][3].toString(),
-        utilization: bondingCurveParams[0][4].toString()
+        inverseTokenSupply: (bondingCurveParams[0][1].add(bondingCurveParams[0][3])).toString(),
+        virtualReserveAmount: bondingCurveParams[0][2].toString(),
+        virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
+        currentTokenPrice: bondingCurveParams[0][4].toString(),
+        invariant: bondingCurveParams[0][5].toString(),
+        utilization: bondingCurveParams[0][6].toString()
+
       };
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
-      dashboardDataSet.lpTokenSupply = lpTokenSupply.toString();
+      dashboardDataSet.lpTokenSupply = (lpTokenSupply.add(bondingCurveParams[0][2])).toString();
 
       // compute old k/m params from utilization and invariant
-      let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+      let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
+      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][4])) 
       * 
       Math.pow(
         Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
@@ -153,7 +156,7 @@ export function Dashboard( props: dashboardProps ){
         // ibc contract state
         const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "curveParameters", [], [])
         const bondingCurveParamsBytes = await provider.call(bondingCurveParamsQuery)
-        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
 
         const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "inverseTokenAddress", [], [])
         const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
@@ -161,7 +164,7 @@ export function Dashboard( props: dashboardProps ){
 
         const feeQuery = composeQuery(ibcContractAddress, "feeConfig", [], [])
         const feeBytes = await provider.call(feeQuery)
-        const fees = abiCoder.decode(["uint256", "uint256", "uint256"], feeBytes)
+        const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
 
         // ibc token info
         const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
@@ -196,13 +199,9 @@ export function Dashboard( props: dashboardProps ){
         const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
 
         // fetch rewards data
-        const userClaimableLpRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address", "uint8"], [wallet.accounts[0].address, 0])
-        const userClaimableLpRewardsBytes = await provider.call(userClaimableLpRewardsQuery)
-        const userClaimableLpRewards = abiCoder.decode(["uint256"], userClaimableLpRewardsBytes)[0]
-
-        const userClaimableStakingRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address", "uint8"], [wallet.accounts[0].address, 1])
-        const userClaimableStakingRewardsBytes = await provider.call(userClaimableStakingRewardsQuery)
-        const userClaimableStakingRewards = abiCoder.decode(["uint256"], userClaimableStakingRewardsBytes)[0]
+        const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
+        const userClaimableRewardsBytes = await provider.call(userClaimableRewardsQuery)
+        const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
         // fetch staking balance
         const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
@@ -217,23 +216,36 @@ export function Dashboard( props: dashboardProps ){
           bondingCurveParams: {
             reserveAmount: bondingCurveParams[0][0].toString(),
             inverseTokenSupply: bondingCurveParams[0][1].toString(),
-            currentTokenPrice: bondingCurveParams[0][2].toString(),
-            invariant: bondingCurveParams[0][3].toString(),
-            utilization: bondingCurveParams[0][4].toString()
+            virtualReserveAmount: bondingCurveParams[0][2].toString(),
+            virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
+            currentTokenPrice: bondingCurveParams[0][4].toString(),
+            invariant: bondingCurveParams[0][5].toString(),
+            utilization: bondingCurveParams[0][6].toString()
           },
           userInverseTokenAllowance: userInverseTokenAllowance.toString(),
           lpTokenDecimals: lpTokenDecimals.toString(),
           userLpTokenBalance: userLpTokenBalance.toString(),
           userLpTokenAllowance: userLpTokenAllowance.toString(),
-          lpTokenSupply: lpTokenSupply.toString(),
-          userClaimableStakingRewards: userClaimableStakingRewards.toString(),
-          userClaimableLpRewards: userClaimableLpRewards.toString(),
+          lpTokenSupply: (lpTokenSupply.add(bondingCurveParams[0][2])).toString(),
+          userClaimableLpRewards: userClaimableRewards[0].toString(),
+          userClaimableStakingRewards: userClaimableRewards[1].toString(),
+          userClaimableLpReserveRewards: userClaimableRewards[2].toString(),
+          userClaimableStakingReserveRewards: userClaimableRewards[3].toString(),
           forceUpdate: forceUpdate,
           userStakingBalance: userStakingBalance.toString(),
           fees:{
-            lpFee: fees[0].toString(),
-            stakingFee: fees[1].toString(),
-            protocolFee: fees[2].toString(),
+            lpFee: fees[0].reduce( (acc: any, x:any, i:any) => {
+              acc[actionTypes[i]] = x.toString();
+              return acc;
+            }, {}),
+            stakingFee: fees[1].reduce( (acc: any, x:any, i:any) => {
+              acc[actionTypes[i]] = x.toString();
+              return acc;
+            }, {}),
+            protocolFee: fees[2].reduce( (acc: any, x:any, i:any) => {
+              acc[actionTypes[i]] = x.toString();
+              return acc;
+            }, {}),
           }
         });
 
@@ -241,11 +253,11 @@ export function Dashboard( props: dashboardProps ){
         console.log(dashboardDataSet);
 
         // compute old k/m params from utilization and invariant
-        let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][4], 18))
+        let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
         if (k < 0){
           k = 0
         }
-        const m = Number(ethers.utils.formatEther(bondingCurveParams[0][2])) 
+        const m = Number(ethers.utils.formatEther(bondingCurveParams[0][4])) 
         * 
         Math.pow(
           Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
@@ -438,20 +450,7 @@ export function Dashboard( props: dashboardProps ){
                     {
                       selectedNavItem === "claim" &&
                       <>
-                        <Tabs>
-                          <TabList>
-                            <Tab>LP</Tab>
-                            <Tab>Staking</Tab>
-                          </TabList>
-                          <TabPanels>
-                            <TabPanel>
-                              <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                            <TabPanel>
-                              <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                          </TabPanels>
-                        </Tabs>
+                        <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
                       </>
                     }
                   </ModalBody>

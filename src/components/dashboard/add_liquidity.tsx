@@ -32,6 +32,7 @@ export default function AddLiquidity(props: mintProps) {
   const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatEther(dashboardDataSet.fees[y]["addLiquidity"])) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -133,7 +134,7 @@ export default function AddLiquidity(props: mintProps) {
         Toast({
           id: "",
           title: "Transaction failed",
-          description: error,
+          description: JSON.stringify(error),
           status: "error",
           duration: null,
           isClosable: true
@@ -152,16 +153,17 @@ export default function AddLiquidity(props: mintProps) {
     }
 
     const decimaledParsedAmount = parseEther(val=== '' ? '0' : val)
+    const feeAdjustedAmount = parseEther(Number(Number(formatEther(decimaledParsedAmount)) * (1 - totalFeePercent)).toFixed(reserveAssetDecimals))
 
-    const price = formatUnits(bondingCurveParams.inverseTokenSupply, bondingCurveParams.inverseTokenDecimals)
-    const price_supply_product = bignumber(bondingCurveParams.currentTokenPrice).multipliedBy(price)
+    const supply = formatUnits(bondingCurveParams.inverseTokenSupply, bondingCurveParams.inverseTokenDecimals)
+    const price_supply_product = bignumber(bondingCurveParams.currentTokenPrice).multipliedBy(supply)
 
-    const mintAmount = BigNumber.from(bignumber(lpTokenSupply.mul(decimaledParsedAmount).toString()).dividedBy(bignumber(bondingCurveParams.reserveAmount).minus(price_supply_product)).toFixed(0))
+    const mintAmount = BigNumber.from(bignumber(lpTokenSupply.mul(feeAdjustedAmount).toString()).dividedBy(bignumber(bondingCurveParams.reserveAmount).minus(price_supply_product)).toFixed(0))
 
     setMintAmount(mintAmount)
 
     parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
-    parentSetters?.setNewReserve(decimaledParsedAmount.add(bondingCurveParams.reserveAmount).toString())
+    parentSetters?.setNewReserve(feeAdjustedAmount.add(bondingCurveParams.reserveAmount).toString())
   }
 
   return (
@@ -190,7 +192,7 @@ export default function AddLiquidity(props: mintProps) {
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>
         <Text align="left" fontSize='sm'>YOU RECEIVE</Text>
         <Stack direction="row" justifyContent={'space-between'} fontSize='4xl'>
-          <Text>{ Number(bignumber(mintAmount.toString()).dividedBy(BigNumber.from(10).pow(lpTokenDecimals).toString()).toString()).toFixed(2) }</Text>
+          <Text>{ Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(2)}</Text>
           <Text align="right">LP</Text>
         </Stack>
         <Text align="right" fontSize='sm'>{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, lpTokenDecimals.toNumber())).toFixed(2)}`}</Text>

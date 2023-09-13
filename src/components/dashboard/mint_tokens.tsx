@@ -34,7 +34,7 @@ export default function MintTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
-  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y], inverseTokenDecimals)) + x, 0): 0;
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y]["buyTokens"], inverseTokenDecimals)) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -77,13 +77,16 @@ export default function MintTokens(props: mintProps) {
         ]
       )).slice(0,4)
 
+       
+      const receivedAmount =  Number(formatUnits(mintAmount, inverseTokenDecimals)) * (1-totalFeePercent);
+
       const maxPriceLimit = 
         bignumber(
           Number(amount.toString()) * (1 + maxSlippage / 100)
         )
         .dividedBy(
           bignumber(
-            formatUnits(mintAmount, inverseTokenDecimals).toString()
+            receivedAmount
           )
         ).toFixed(reserveAssetDecimals)
         
@@ -144,7 +147,7 @@ export default function MintTokens(props: mintProps) {
         Toast({
           id: "",
           title: "Transaction failed",
-          description: error,
+          description: JSON.stringify(error),
           status: "error",
           duration: null,
           isClosable: true
@@ -152,7 +155,7 @@ export default function MintTokens(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals, totalFeePercent]);
 
   const handleAmountChange = (val: any) => {
     const parsedAmount = val;

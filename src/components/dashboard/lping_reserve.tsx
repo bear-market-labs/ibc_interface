@@ -11,8 +11,10 @@ type mintProps = {
 export default function LpingReserve(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const reserveAmount = BigNumber.from("reserveAmount" in bondingCurveParams ? bondingCurveParams.reserveAmount : '0'); 
-  const newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0')
+  const virtualReserveAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
+
+  const reserveAmount = BigNumber.from("reserveAmount" in bondingCurveParams ? bondingCurveParams.reserveAmount : '0').sub(virtualReserveAmount); 
+  const newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0').sub(virtualReserveAmount); 
 
   return (
     <>

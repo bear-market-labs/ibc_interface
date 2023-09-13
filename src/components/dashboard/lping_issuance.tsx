@@ -17,14 +17,15 @@ export default function LpingIssuance(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const virtualLpAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
 
-  const lpTokenSupply = BigNumber.from("lpTokenSupply" in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0').sub(virtualLpAmount); 
+  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply).sub(virtualLpAmount) : BigNumber.from('0')
+
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userLpTokenBalance = BigNumber.from("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
   const userCurrentLpShare = bignumber(userLpTokenBalance.toString()).dividedBy(bignumber(lpTokenSupply.toString())).multipliedBy(100)
 
 
 
-  let newLpIssuance = BigNumber.from(parentInputDynamicData?.newLpIssuance ? parentInputDynamicData.newLpIssuance : '0').sub(virtualLpAmount)
+  let newLpIssuance = parentInputDynamicData?.newLpIssuance ? BigNumber.from(parentInputDynamicData.newLpIssuance).sub(virtualLpAmount) : BigNumber.from('0')
 
   if (Math.abs(Number(ethers.utils.formatUnits(lpTokenSupply.sub(newLpIssuance), lpTokenDecimals))) < issuanceDiffTolerance){
     newLpIssuance = lpTokenSupply

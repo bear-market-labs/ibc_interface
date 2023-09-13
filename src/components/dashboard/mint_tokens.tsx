@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Icon, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Icon, Stack, Text, NumberInput, NumberInputField } from '@chakra-ui/react'
 import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { Toast } from '../toast'
+import { Link } from "@chakra-ui/react"
+import { BiLinkExternal } from 'react-icons/bi'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -21,7 +24,7 @@ type mintProps = {
 export default function MintTokens(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -31,7 +34,7 @@ export default function MintTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
-  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y], inverseTokenDecimals)) + x, 0): 0;
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y]["buyTokens"], inverseTokenDecimals)) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -74,13 +77,16 @@ export default function MintTokens(props: mintProps) {
         ]
       )).slice(0,4)
 
+       
+      const receivedAmount =  Number(formatUnits(mintAmount, inverseTokenDecimals)) * (1-totalFeePercent);
+
       const maxPriceLimit = 
         bignumber(
           Number(amount.toString()) * (1 + maxSlippage / 100)
         )
         .dividedBy(
           bignumber(
-            formatUnits(mintAmount, inverseTokenDecimals).toString()
+            receivedAmount
           )
         ).toFixed(reserveAssetDecimals)
         
@@ -104,20 +110,58 @@ export default function MintTokens(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      let description = "Error details"
+
+      if (result.status === 1){
+        // extract TokenBought event, and display details
+        let tokenBoughtDetails;
+        result.logs.find(x => {
+          try{
+            tokenBoughtDetails = abiCoder.decode(["uint256", "uint256"], x.data)
+            return true
+          }catch(err){
+            return false
+          }
+        })
+
+        if (tokenBoughtDetails){
+          description = `Received ${Number(formatUnits(tokenBoughtDetails[1], inverseTokenDecimals)).toFixed(4)} IBC for ${Number(formatEther(tokenBoughtDetails[0])).toFixed(4)} ETH`
+        }
+      } 
+
+      const url = explorerUrl + result.transactionHash
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: 5000,
+        isClosable: true
+      })
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction failed",
+          description: JSON.stringify(error),
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals, totalFeePercent]);
 
   const handleAmountChange = (val: any) => {
     const parsedAmount = val;
     setAmount(parsedAmount)
 
-    if (isNaN(val)){
+    if (isNaN(val) || val.trim() === ''){
       return
     }
 
@@ -172,16 +216,17 @@ export default function MintTokens(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU PAY</Text>
 
         <Stack direction="row" justifyContent={'space-between'}>
-          <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => handleAmountChange(e.target.value)}
-            minWidth="auto"
-            border="none"
-            fontSize='4xl'
-          />
+        <NumberInput
+            value={amount}
+            onChange={valueString => handleAmountChange(valueString)}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right" fontSize='4xl'>{reserveAssetSymbol}</Text>
         </Stack>
 

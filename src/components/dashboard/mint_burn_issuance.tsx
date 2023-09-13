@@ -14,13 +14,16 @@ export default function MintBurnIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const reserveAmount = BigNumber.from("reserveAmount" in bondingCurveParams ? bondingCurveParams.reserveAmount : '0'); 
-  const inverseTokenSupply = BigNumber.from("inverseTokenSupply" in bondingCurveParams ? bondingCurveParams.inverseTokenSupply : '0'); 
+  const virtualReserveAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
+  const virtualInverseTokenAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualInverseTokenAmount) : BigNumber.from('0');
+
+  const reserveAmount = BigNumber.from("reserveAmount" in bondingCurveParams ? bondingCurveParams.reserveAmount : '0').sub(virtualReserveAmount); 
+  const inverseTokenSupply = BigNumber.from("inverseTokenSupply" in bondingCurveParams ? bondingCurveParams.inverseTokenSupply : '0').sub(virtualInverseTokenAmount); 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
 
 
-  let newIbcIssuance = BigNumber.from(parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance : '0')
-  let newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0')
+  let newIbcIssuance = BigNumber.from(parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance : '0').sub(virtualInverseTokenAmount)
+  let newReserve = BigNumber.from(parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0').sub(virtualReserveAmount)
 
   if (Math.abs(Number(ethers.utils.formatUnits(inverseTokenSupply.sub(newIbcIssuance), inverseTokenDecimals))) < diffTolerance){
     newIbcIssuance = inverseTokenSupply

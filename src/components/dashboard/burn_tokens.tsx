@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
-import { Box, Button, Icon, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Icon, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, parseUnits, formatUnits, concat, defaultAbiCoder, hexlify, parseEther, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
+import { Toast } from '../toast'
+import { BiLinkExternal } from 'react-icons/bi'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -21,7 +23,7 @@ type mintProps = {
 export default function BurnTokens(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
@@ -33,7 +35,7 @@ export default function BurnTokens(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
   const userBalance = BigNumber.from("userEthBalance" in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'); 
   const userIbcBalance = bignumber("userIbcTokenBalance" in dashboardDataSet ? dashboardDataSet.userIbcTokenBalance : '0'); 
-  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y], inverseTokenDecimals)) + x, 0): 0;
+  const totalFeePercent = "fees" in dashboardDataSet ? Object.keys(dashboardDataSet.fees).reduce( (x, y) => Number(formatUnits(dashboardDataSet.fees[y]["sellTokens"], inverseTokenDecimals)) + x, 0): 0;
   const forceUpdate = dashboardDataSet.forceUpdate;
 
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
@@ -66,6 +68,7 @@ export default function BurnTokens(props: mintProps) {
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
       let txDetails;
+      let description = "Error details"
 
       if (userInverseTokenAllowance.gt(0)){
 
@@ -142,10 +145,50 @@ export default function BurnTokens(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      if (result.status === 1){
+        // extract TokenSold event, and display details
+        let tokenSoldDetails;
+        result.logs.find(x => {
+          try{
+            tokenSoldDetails = abiCoder.decode(["uint256", "uint256"], x.data)
+            return true
+          }catch(err){
+            return false
+          }
+        })
+
+        if (tokenSoldDetails){
+          description = `Received ${Number(formatEther(tokenSoldDetails[1])).toFixed(4)} ETH for ${Number(formatUnits(tokenSoldDetails[0], inverseTokenDecimals)).toFixed(4)} IBC`
+        } else {
+          // allowance type tx was performed
+          description = `Allowance updated`
+        }
+      } 
+
+      const url = explorerUrl + result.transactionHash
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: 5000,
+        isClosable: true
+      })
+
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction failed",
+          description: JSON.stringify(error),
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate()
@@ -155,7 +198,7 @@ export default function BurnTokens(props: mintProps) {
     const parsedAmount = val;
     setAmount(parsedAmount)
 
-    if (isNaN(val)){
+    if (isNaN(val) || val.trim() === ''){
       return
     }
 
@@ -207,16 +250,17 @@ export default function BurnTokens(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU PAY</Text>
 
         <Stack direction="row" justifyContent={'space-between'}>
-          <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => handleAmountChange(e.target.value)}
-            minWidth="auto"
-            border="none"
-            fontSize='4xl'
-          />
+        <NumberInput
+            value={amount}
+            onChange={valueString => handleAmountChange(valueString)}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right" fontSize='4xl'>{ibcSymbol}</Text>
         </Stack>
         <Stack direction="row" justify="right" fontSize='sm'>

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
+import { explorerUrl } from '../../config/constants'
+import { Toast } from '../toast'
+import { BiLinkExternal } from 'react-icons/bi'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -76,10 +79,33 @@ export default function UnstakeIbc(props: mintProps) {
       const tx = await signer.sendTransaction(txDetails)
       const result = await tx.wait();
 
+      const url = explorerUrl + result.transactionHash
+      const description = result.status === 1 ?
+        `${amount} IBC unstaked`
+        :
+        "Error details";
+
+      Toast({
+        id: result.transactionHash,
+        title: result.status === 1 ? "Transaction confirmed" : "Transaction failed",
+        description: (<div><Link href={url} isExternal>{description +" " + result.transactionHash.slice(0, 5) + "..." + result.transactionHash.slice(-5)}<BiLinkExternal></BiLinkExternal></Link></div>),
+        status: result.status === 1 ? "success" : "error",
+        duration: 5000,
+        isClosable: true
+      })
+
       console.log(result)
 
     } catch (error) {
         console.log(error)
+        Toast({
+          id: "",
+          title: "Transaction failed",
+          description: JSON.stringify(error),
+          status: "error",
+          duration: null,
+          isClosable: true
+        })
     }
     setIsProcessing(false)
     forceUpdate()
@@ -90,15 +116,17 @@ export default function UnstakeIbc(props: mintProps) {
       <Stack>
         <Text align="left">YOU UNSTAKE</Text>
         <Stack direction="row">
-        <Input
-            name="amount"
-            type="text"
-            value={amount?.toString()}
-            placeholder={`0`}
-            onChange={e => setAmount(e.target.value)}
-            width="auto"
-            border="none"
-          />
+        <NumberInput
+            value={amount}
+            onChange={valueString => setAmount(valueString)}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              fontSize='4xl'
+              placeholder={`0`}
+            />
+          </NumberInput>
           <Text align="right">IBC</Text>
         </Stack>
         <Text align="right" fontSize={'xs'}>

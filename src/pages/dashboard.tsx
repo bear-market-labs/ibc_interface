@@ -1,4 +1,4 @@
-import { Code, Divider, Grid, GridItem, Link, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, RadioGroup, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, VStack, Box } from "@chakra-ui/react";
+import { Divider, Grid, GridItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalHeader, ModalOverlay, Show, Spacer, Stack, Tab, TabList, TabPanel, TabPanels, Tabs, Text, useDisclosure, useRadioGroup, Box } from "@chakra-ui/react";
 import { useConnectWallet } from "@web3-onboard/react";
 import React, { useEffect, useState } from "react";
 import ConnectWallet from "../components/ConnectWallet";
@@ -22,6 +22,7 @@ import LpingIssuance from "../components/dashboard/lping_issuance";
 import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
 import Logo from "../components/logo";
 import * as _ from "lodash";
+import MobileDisplay from '../components/dashboard/mobile_display'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -369,280 +370,283 @@ export function Dashboard( props: dashboardProps ){
   }
 
   return (
-    <Grid
-        h='calc(100vh)'
-        templateAreas={`
-        "sidenav vertline1 header header header"
-        "sidenav vertline1 horizline horizline horizline"
-        "sidenav vertline1 main vertline2 sideinput"`}
-            gridTemplateRows={'150px 1px 1fr'}
-            gridTemplateColumns={'0.5fr 1px 2fr 1px 1fr'}
-            gap='0'
-    >
-      <GridItem area={'sidenav'}>
-        <Stack spacing={10}>
-          <Stack spacing={0}>
-            <Logo/>
-          </Stack>
+    <>
+      <MobileDisplay/>
+      <Show above="sm">
+        <Grid
+          h='calc(100vh)'
+          templateAreas={`
+          "sidenav vertline1 header header header"
+          "sidenav vertline1 horizline horizline horizline"
+          "sidenav vertline1 main vertline2 sideinput"`}
+              gridTemplateRows={'150px 1px 1fr'}
+              gridTemplateColumns={'0.5fr 1px 2fr 1px 1fr'}
+              gap='0'
+        >
+          <GridItem area={'sidenav'}>
+            <Stack spacing={10}>
+              <Stack spacing={0}>
+                <Logo/>
+              </Stack>
 
-          <Stack {...group} spacing='5' mt='7'>
-            {navOptions.map((item) => {
-              const radio = getRadioProps({ value: item.value })
-              return(
-                <RadioCard key={item.value} {...radio}>
-                  <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
-                </RadioCard>
-              )
-            })}
-          </Stack>
+              <Stack {...group} spacing='5' mt='7'>
+                {navOptions.map((item) => {
+                  const radio = getRadioProps({ value: item.value })
+                  return(
+                    <RadioCard key={item.value} {...radio}>
+                      <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
+                    </RadioCard>
+                  )
+                })}
+              </Stack>
 
 
-          <Modal
-              isOpen={isOpen}
-              onClose={handleModalClose}
-              scrollBehavior='inside'
-              isCentered
-              size='sm'>
-              <ModalOverlay
-                  backdropFilter='blur(20px)' />
-              <ModalContent
-                  backgroundColor={colors.ROYAL}
-                  boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
-                  <ModalHeader>
-                    <Stack>
-                      <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
-                      <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
-                    </Stack>
-                  </ModalHeader>
-                  <ModalCloseButton />
-                  <ModalBody pb={6}>
-                    {
-                      selectedNavItem === "stake" &&
-                      <>
-                        <Tabs>
-                          <TabList>
-                            <Tab>Stake</Tab>
-                            <Tab>Unstake</Tab>
-                          </TabList>
-                          <TabPanels>
-                            <TabPanel>
-                              <StakeIbc dashboardDataSet={dashboardDataSet} />
-                            </TabPanel>
-                            <TabPanel>
-                              <UnstakeIbc dashboardDataSet={dashboardDataSet} />
-                            </TabPanel>
-                          </TabPanels>
-                        </Tabs>
-                      </>
-                    }
-                    {
-                      selectedNavItem === "claim" &&
-                      <>
-                        <Tabs>
-                          <TabList>
-                            <Tab>LP</Tab>
-                            <Tab>Staking</Tab>
-                          </TabList>
-                          <TabPanels>
-                            <TabPanel>
-                              <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                            <TabPanel>
-                              <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
-                            </TabPanel>
-                          </TabPanels>
-                        </Tabs>
-                      </>
-                    }
-                  </ModalBody>
-              </ModalContent>
-          </Modal>
-        </Stack>
-      </GridItem>
+              <Modal
+                  isOpen={isOpen}
+                  onClose={handleModalClose}
+                  scrollBehavior='inside'
+                  isCentered
+                  size='sm'>
+                  <ModalOverlay
+                      backdropFilter='blur(20px)' />
+                  <ModalContent
+                      backgroundColor={colors.ROYAL}
+                      boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
+                      <ModalHeader>
+                        <Stack>
+                          <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
+                          <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
+                        </Stack>
+                      </ModalHeader>
+                      <ModalCloseButton />
+                      <ModalBody pb={6}>
+                        {
+                          selectedNavItem === "stake" &&
+                          <>
+                            <Tabs>
+                              <TabList>
+                                <Tab>Stake</Tab>
+                                <Tab>Unstake</Tab>
+                              </TabList>
+                              <TabPanels>
+                                <TabPanel>
+                                  <StakeIbc dashboardDataSet={dashboardDataSet} />
+                                </TabPanel>
+                                <TabPanel>
+                                  <UnstakeIbc dashboardDataSet={dashboardDataSet} />
+                                </TabPanel>
+                              </TabPanels>
+                            </Tabs>
+                          </>
+                        }
+                        {
+                          selectedNavItem === "claim" &&
+                          <>
+                            <Tabs>
+                              <TabList>
+                                <Tab>LP</Tab>
+                                <Tab>Staking</Tab>
+                              </TabList>
+                              <TabPanels>
+                                <TabPanel>
+                                  <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
+                                </TabPanel>
+                                <TabPanel>
+                                  <ClaimStakingRewards dashboardDataSet={dashboardDataSet}/>
+                                </TabPanel>
+                              </TabPanels>
+                            </Tabs>
+                          </>
+                        }
+                      </ModalBody>
+                  </ModalContent>
+              </Modal>
+            </Stack>
+          </GridItem>
 
-      <GridItem area={'horizline'} >
-        <Divider orientation={'horizontal'} colorScheme={'gray'}/>
-      </GridItem>
+          <GridItem area={'horizline'} >
+            <Divider orientation={'horizontal'} colorScheme={'gray'}/>
+          </GridItem>
 
-      <GridItem area={'vertline1'} >
-        <Divider orientation={'vertical'} colorScheme={'gray'}/>
-      </GridItem>
+          <GridItem area={'vertline1'} >
+            <Divider orientation={'vertical'} colorScheme={'gray'}/>
+          </GridItem>
 
-      <GridItem area={'vertline2'} >
-        <Divider orientation={'vertical'} colorScheme={'gray'}/>
-      </GridItem>
+          <GridItem area={'vertline2'} >
+            <Divider orientation={'vertical'} colorScheme={'gray'}/>
+          </GridItem>
 
-      <GridItem area={'header'}>
-        <Stack ml={7} direction="row" justifyContent={'space-between'}>
-          <Stack direction="column" mt='70px'>
-            <Text fontSize='xl' textAlign={'left'}>{headerTitle}</Text>            
-            <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
-          </Stack>
-          <Stack justifyContent={'center'} mr='7'>
-            <ConnectWallet />
-          </Stack>
-        </Stack>
-      </GridItem>
+          <GridItem area={'header'}>
+            <Stack ml={7} direction="row" justifyContent={'space-between'}>
+              <Stack direction="column" mt='70px'>
+                <Text fontSize='xl' textAlign={'left'}>{headerTitle}</Text>            
+                <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
+              </Stack>
+              <Stack justifyContent={'center'} mr='7'>
+                <ConnectWallet />
+              </Stack>
+            </Stack>
+          </GridItem>
 
-      <GridItem area={'main'}>
-        <Stack>
-          {
-              headerTitle === "MINT / BURN" &&
-              <>
-                <MintBurnPrice
-                  dashboardDataSet={dashboardDataSet}
-                  parentInputDynamicData={{
-                    newPrice: newPrice,
-                    newIbcIssuance: newIbcIssuance,
-                    newLpIssuance: newLpIssuance,
-                    newReserve: newReserve
-                  }}
-                />
+          <GridItem area={'main'}>
+            <Stack>
+              {
+                  headerTitle === "MINT / BURN" &&
+                  <>
+                    <MintBurnPrice
+                      dashboardDataSet={dashboardDataSet}
+                      parentInputDynamicData={{
+                        newPrice: newPrice,
+                        newIbcIssuance: newIbcIssuance,
+                        newLpIssuance: newLpIssuance,
+                        newReserve: newReserve
+                      }}
+                    />
 
-                <Box width="100%" height="400px" padding="10px 20px">
-                  <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
-                </Box>
+                    <Box width="100%" height="400px" padding="10px 20px">
+                      <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
+                    </Box>
 
-                <MintBurnIssuance
-                  dashboardDataSet={dashboardDataSet}
-                  parentInputDynamicData={{
-                    newPrice: newPrice,
-                    newIbcIssuance: newIbcIssuance,
-                    newLpIssuance: newLpIssuance,
-                    newReserve: newReserve
-                  }}
-                />
-              </>
-          }
+                    <MintBurnIssuance
+                      dashboardDataSet={dashboardDataSet}
+                      parentInputDynamicData={{
+                        newPrice: newPrice,
+                        newIbcIssuance: newIbcIssuance,
+                        newLpIssuance: newLpIssuance,
+                        newReserve: newReserve
+                      }}
+                    />
+                  </>
+              }
 
-          {
-              headerTitle === "ADD / REMOVE LIQUIDITY" &&
-              <>
-                <LpingReserve
-                  dashboardDataSet={dashboardDataSet}
-                  parentInputDynamicData={{
-                    newPrice: newPrice,
-                    newIbcIssuance: newIbcIssuance,
-                    newLpIssuance: newLpIssuance,
-                    newReserve: newReserve
-                  }}
-                />
+              {
+                  headerTitle === "ADD / REMOVE LIQUIDITY" &&
+                  <>
+                    <LpingReserve
+                      dashboardDataSet={dashboardDataSet}
+                      parentInputDynamicData={{
+                        newPrice: newPrice,
+                        newIbcIssuance: newIbcIssuance,
+                        newLpIssuance: newLpIssuance,
+                        newReserve: newReserve
+                      }}
+                    />
 
-                <Box width="100%" height="400px" padding="10px 20px">
-                  <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
-                </Box>
+                    <Box width="100%" height="400px" padding="10px 20px">
+                      <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
+                    </Box>
 
-                <LpingIssuance
-                  dashboardDataSet={dashboardDataSet}
-                  parentInputDynamicData={{
-                    newPrice: newPrice,
-                    newIbcIssuance: newIbcIssuance,
-                    newLpIssuance: newLpIssuance,
-                    newReserve: newReserve
-                  }}
-                />
-              </>
-          }
-        </Stack>
+                    <LpingIssuance
+                      dashboardDataSet={dashboardDataSet}
+                      parentInputDynamicData={{
+                        newPrice: newPrice,
+                        newIbcIssuance: newIbcIssuance,
+                        newLpIssuance: newLpIssuance,
+                        newReserve: newReserve
+                      }}
+                    />
+                  </>
+              }
+            </Stack>
 
-      </GridItem>
-      <GridItem area={'sideinput'} mt='-42px'>
-          <Stack>
-            {
-              headerTitle === "MINT / BURN" &&
-              (
-                <>
-                  <Tabs onChange={handleNavInputSwitch}>
-                    <TabList>
-                      <Tab>Mint</Tab>
-                      <Tab>Burn</Tab>
-                    </TabList>
+          </GridItem>
+          <GridItem area={'sideinput'} mt='-42px'>
+              <Stack>
+                {
+                  headerTitle === "MINT / BURN" &&
+                  (
+                    <>
+                      <Tabs onChange={handleNavInputSwitch}>
+                        <TabList>
+                          <Tab>Mint</Tab>
+                          <Tab>Burn</Tab>
+                        </TabList>
 
-                    <TabPanels>
-                      <TabPanel>
-                        <MintTokens
-                          dashboardDataSet={dashboardDataSet}
-                          parentSetters={{
-                            setNewIbcIssuance: setNewIbcIssuance,
-                            setNewPrice: setNewPrice,
-                            setNewLpIssuance: setNewLpIssuance,
-                            setNewReserve: setNewReserve
-                          }}
-                        />
-                      </TabPanel>
-                      <TabPanel>
-                        <BurnTokens
-                            dashboardDataSet={dashboardDataSet}
-                            parentSetters={{
-                              setNewIbcIssuance: setNewIbcIssuance,
-                              setNewPrice: setNewPrice,
-                              setNewLpIssuance: setNewLpIssuance,
-                              setNewReserve: setNewReserve
-                            }}
-                          />
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                </>
-              )
-            }
+                        <TabPanels>
+                          <TabPanel>
+                            <MintTokens
+                              dashboardDataSet={dashboardDataSet}
+                              parentSetters={{
+                                setNewIbcIssuance: setNewIbcIssuance,
+                                setNewPrice: setNewPrice,
+                                setNewLpIssuance: setNewLpIssuance,
+                                setNewReserve: setNewReserve
+                              }}
+                            />
+                          </TabPanel>
+                          <TabPanel>
+                            <BurnTokens
+                                dashboardDataSet={dashboardDataSet}
+                                parentSetters={{
+                                  setNewIbcIssuance: setNewIbcIssuance,
+                                  setNewPrice: setNewPrice,
+                                  setNewLpIssuance: setNewLpIssuance,
+                                  setNewReserve: setNewReserve
+                                }}
+                              />
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
+                    </>
+                  )
+                }
 
-            {
-              headerTitle === "ADD / REMOVE LIQUIDITY" &&
-              (
-                <>
-                  <Tabs onChange={handleNavInputSwitch}>
-                    <TabList>
-                      <Tab>Add</Tab>
-                      <Tab>Remove</Tab>
-                    </TabList>
+                {
+                  headerTitle === "ADD / REMOVE LIQUIDITY" &&
+                  (
+                    <>
+                      <Tabs onChange={handleNavInputSwitch}>
+                        <TabList>
+                          <Tab>Add</Tab>
+                          <Tab>Remove</Tab>
+                        </TabList>
 
-                    <TabPanels>
-                      <TabPanel>
-                        <AddLiquidity
-                          dashboardDataSet={dashboardDataSet}
-                          parentSetters={{
-                            setNewIbcIssuance: setNewIbcIssuance,
-                            setNewPrice: setNewPrice,
-                            setNewLpIssuance: setNewLpIssuance,
-                            setNewReserve: setNewReserve
-                          }}
-                        />
-                      </TabPanel>
-                      <TabPanel>
-                        <RemoveLiquidity
-                            dashboardDataSet={dashboardDataSet}
-                            parentSetters={{
-                              setNewIbcIssuance: setNewIbcIssuance,
-                              setNewPrice: setNewPrice,
-                              setNewLpIssuance: setNewLpIssuance,
-                              setNewReserve: setNewReserve
-                            }}
-                          />
-                      </TabPanel>
-                    </TabPanels>
-                  </Tabs>
-                </>
-              )
-            
-            
-            /*
+                        <TabPanels>
+                          <TabPanel>
+                            <AddLiquidity
+                              dashboardDataSet={dashboardDataSet}
+                              parentSetters={{
+                                setNewIbcIssuance: setNewIbcIssuance,
+                                setNewPrice: setNewPrice,
+                                setNewLpIssuance: setNewLpIssuance,
+                                setNewReserve: setNewReserve
+                              }}
+                            />
+                          </TabPanel>
+                          <TabPanel>
+                            <RemoveLiquidity
+                                dashboardDataSet={dashboardDataSet}
+                                parentSetters={{
+                                  setNewIbcIssuance: setNewIbcIssuance,
+                                  setNewPrice: setNewPrice,
+                                  setNewLpIssuance: setNewLpIssuance,
+                                  setNewReserve: setNewReserve
+                                }}
+                              />
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
+                    </>
+                  )
+                
+                
+                /*
 
-              Tabbed component
+                  Tabbed component
 
-              Mint/Burn
+                  Mint/Burn
 
-              or 
+                  or 
 
-              Provide / Withdraw
+                  Provide / Withdraw
 
-            */}
+                */}
 
-            <Spacer/>
-          </Stack>
-      </GridItem>
-
-    </Grid>
-
+                <Spacer/>
+              </Stack>
+          </GridItem>
+        </Grid>
+      </Show> 
+    </>
   )
 }

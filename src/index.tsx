@@ -18,8 +18,8 @@ root.render(
   <React.StrictMode>
     <HashRouter>
       <ColorModeScript initialColorMode={'dark'} />
-      <App />
       <ToastContainer />
+      <App />
     </HashRouter>
   </React.StrictMode>,
 )

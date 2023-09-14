@@ -274,7 +274,6 @@ export default function BurnTokens(props: mintProps) {
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Text align="right" fontSize='sm'>{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
-        <Spacer/>
 
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mt='12'>
           <Text align="left">Price Impact</Text>

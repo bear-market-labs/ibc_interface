@@ -14,6 +14,7 @@ import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
+import { error_message } from '../../config/error'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -179,12 +180,13 @@ export default function BurnTokens(props: mintProps) {
 
       console.log(result)
 
-    } catch (error) {
+    } catch (error:any) {
         console.log(error)
+
         Toast({
           id: "",
           title: "Transaction failed",
-          description: JSON.stringify(error),
+          description: error_message(error),
           status: "error",
           duration: null,
           isClosable: true
@@ -274,7 +276,6 @@ export default function BurnTokens(props: mintProps) {
           <Text align="right">{reserveAssetSymbol}</Text>
         </Stack>
         <Text align="right" fontSize='sm'>{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
-        <Spacer/>
 
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mt='12'>
           <Text align="left">Price Impact</Text>

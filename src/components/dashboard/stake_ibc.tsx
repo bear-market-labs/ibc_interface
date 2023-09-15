@@ -9,6 +9,7 @@ import { DefaultSpinner } from '../spinner'
 import { explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
+import { error_message } from '../../config/error'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -132,12 +133,13 @@ export default function StakeIbc(props: mintProps) {
       })
       console.log(result)
 
-    } catch (error) {
+    } catch (error: any) {
         console.log(error)
+        
         Toast({
           id: "",
           title: "Transaction failed",
-          description: JSON.stringify(error),
+          description: error_message(error),
           status: "error",
           duration: null,
           isClosable: true

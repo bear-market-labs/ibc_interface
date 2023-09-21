@@ -10,6 +10,7 @@ import { explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
+import { colors } from '../../config/style'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -165,11 +166,14 @@ export default function StakeIbc(props: mintProps) {
               placeholder={`0`}
             />
           </NumberInput>
-          <Text align="right">IBC</Text>
+          <Text align="right" verticalAlign={"center"}>IBC</Text>
         </Stack>
-        <Text align="right" fontSize={'xs'}>
-          {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
-        </Text>
+        <Stack direction={`row`} justifyContent={`flex-end`} >
+          <Text fontSize={'xs'}>
+            {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
+          </Text>
+          <Box as='button' fontSize={'xs'} color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+        </Stack>
         {
           isProcessing &&
           <DefaultSpinner />

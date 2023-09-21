@@ -10,6 +10,7 @@ import { explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
+import { colors } from '../../config/style'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -118,10 +119,10 @@ export default function UnstakeIbc(props: mintProps) {
       <Stack>
         <Text align="left">YOU UNSTAKE</Text>
         <Stack direction="row">
-        <NumberInput
-            value={amount}
-            onChange={valueString => setAmount(valueString)}
-          >
+          <NumberInput
+              value={amount}
+              onChange={valueString => setAmount(valueString)}
+            >
             <NumberInputField
               minWidth="auto"
               border="none"
@@ -131,9 +132,13 @@ export default function UnstakeIbc(props: mintProps) {
           </NumberInput>
           <Text align="right">IBC</Text>
         </Stack>
-        <Text align="right" fontSize={'xs'}>
-          {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
-        </Text>
+        <Stack direction={`row`} justifyContent={`flex-end`}>
+          <Text fontSize={'xs'}>
+            {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
+          </Text>
+          <Box as='button' fontSize={'xs'}  color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+        </Stack>
+
         {
           isProcessing &&
           <DefaultSpinner />

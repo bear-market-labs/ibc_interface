@@ -267,7 +267,7 @@ export default function BurnTokens(props: mintProps) {
         </Stack>
         <Stack direction="row" justify="right" fontSize='sm'>
           <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toFixed(2)}`}</Text>
-          <Box color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber())).toString())}>MAX</Box>
         </Stack>
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>
         <Text align="left" fontSize='sm'>YOU RECEIVE</Text>

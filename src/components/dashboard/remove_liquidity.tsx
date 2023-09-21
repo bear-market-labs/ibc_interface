@@ -229,7 +229,7 @@ export default function RemoveLiquidity(props: mintProps) {
         </Stack>
         <Stack direction="row" justify="right" fontSize='sm'>
           <Text align="right">{`Balance: ${userIbcBalance.dividedBy(Math.pow(10, lpTokenDecimals.toNumber())).toFixed(2)}`}</Text>
-          <Box color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, lpTokenDecimals.toNumber())).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => handleAmountChange(userIbcBalance.dividedBy(Math.pow(10, lpTokenDecimals.toNumber())).toString())}>MAX</Box>
         </Stack>
 
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>

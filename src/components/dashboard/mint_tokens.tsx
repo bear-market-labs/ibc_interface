@@ -234,7 +234,7 @@ export default function MintTokens(props: mintProps) {
 
         <Stack direction="row" justify="right" fontSize='sm'>
           <Text align="right">{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
-          <Box color={colors.TEAL} onClick={() => handleAmountChange(formatEther(userBalance).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => handleAmountChange(formatEther(userBalance).toString())}>MAX</Box>
         </Stack>
 
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>

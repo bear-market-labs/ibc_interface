@@ -6,7 +6,7 @@ import { SiGitbook } from "react-icons/si";
 const links = [
 	{ address: "https://github.com/bear-market-labs", icon: FaGithub },
 	{ address: "https://x.com/bearmarketlabs", icon: RiTwitterXFill },
-	{ address: "https://github.com/bear-market-labs", icon: SiGitbook },
+	{ address: "https://docs.inversebondingcurve.com/", icon: SiGitbook },
 ];
 
 const ExternalLinks = () => (

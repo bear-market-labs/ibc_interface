@@ -27,8 +27,8 @@ export default function BurnTokens(props: mintProps) {
   const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
-  const [maxSlippage,] = useState<number>(maxSlippagePercent)
-  const [maxReserve,] = useState<number>(maxReserveChangePercent)
+  const [maxSlippage, setSlippage] = useState<number>(maxSlippagePercent)
+  const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
   const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
@@ -251,6 +251,9 @@ export default function BurnTokens(props: mintProps) {
 
   }
 
+  const format = (val: any) => val + `%`
+  const parse = (val: any) => val.replace(/^\%/, '')
+
   return (
     <>
       <Stack>
@@ -298,7 +301,21 @@ export default function BurnTokens(props: mintProps) {
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
           <Text align="left">Max Reserve Divergence</Text> 
-          <Text align="right">{`${maxReserve}%`}</Text> 
+          <NumberInput
+            value={format(maxReserve)}
+            onChange={valueString => setMaxReserve(parse(valueString))}
+            defaultValue={maxReserveChangePercent}
+            min={0}
+            max={100}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+            />
+          </NumberInput>
         </Stack>
           {
             isProcessing &&

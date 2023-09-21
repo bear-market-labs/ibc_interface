@@ -98,7 +98,7 @@ export default function BurnTokens(props: mintProps) {
             )
           ).toFixed(reserveAssetDecimals)
           
-        const minReserveLimit = bondingCurveParams.reserveAmount.mul(1 - maxReserve / 100)
+        const minReserveLimit = Number(formatEther(bondingCurveParams.reserveAmount)) * (1 - maxReserve / 100)
 
         const payloadBytes = arrayify(abiCoder.encode(
           [
@@ -111,7 +111,7 @@ export default function BurnTokens(props: mintProps) {
             wallet.accounts[0].address,
             decimaledAmount,
             parseEther(minPriceLimit),
-            minReserveLimit
+            parseEther(minReserveLimit.toFixed(reserveAssetDecimals))
           ] // arg values
         ))
   
@@ -297,7 +297,23 @@ export default function BurnTokens(props: mintProps) {
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'}>
           <Text align="left">Max Slippage</Text>
-          <Text align="right">{`${maxSlippage}%`}</Text> 
+          <NumberInput
+            value={format(maxSlippage)}
+            onChange={valueString => setSlippage(parse(valueString))}
+            defaultValue={maxSlippagePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
           <Text align="left">Max Reserve Divergence</Text> 
@@ -307,6 +323,7 @@ export default function BurnTokens(props: mintProps) {
             defaultValue={maxReserveChangePercent}
             min={0}
             max={100}
+            width={`50px`}
           >
             <NumberInputField
               minWidth="auto"
@@ -314,6 +331,7 @@ export default function BurnTokens(props: mintProps) {
               height={`unset`}
               textAlign={`right`}
               paddingInline={`unset`}
+              color={colors.TEAL}
             />
           </NumberInput>
         </Stack>

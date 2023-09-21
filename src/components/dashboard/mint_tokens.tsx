@@ -6,7 +6,7 @@ import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, maxReserveChangePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
@@ -29,6 +29,7 @@ export default function MintTokens(props: mintProps) {
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
+  const [maxReserve,] = useState<number>(maxReserveChangePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
@@ -90,15 +91,20 @@ export default function MintTokens(props: mintProps) {
             receivedAmount
           )
         ).toFixed(reserveAssetDecimals)
+
+      const maxReserveLimit = bondingCurveParams.reserveAmount.mul(1 + maxReserve / 100)
+
         
       const payloadBytes = arrayify(abiCoder.encode(
         [
           "address",
-          "uint256"
+          "uint256",
+          "uint256",
         ], // array of types; make sure to represent complex types as tuples 
         [
           wallet.accounts[0].address,
-          parseEther(maxPriceLimit)
+          parseEther(maxPriceLimit),
+          maxReserveLimit,
         ] // arg values
       ))
 
@@ -157,7 +163,7 @@ export default function MintTokens(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals, totalFeePercent]);
+  }, [amount, wallet, provider, ibcContractAddress, maxSlippage, mintAmount, inverseTokenDecimals, totalFeePercent, maxReserve, bondingCurveParams]);
 
   const handleAmountChange = (val: any) => {
     const parsedAmount = val;
@@ -253,12 +259,16 @@ export default function MintTokens(props: mintProps) {
                   currentTokenPrice.toString() === '0' || resultPrice.toString() === '0'? 0 :
                     resultPrice.minus(bignumber(currentTokenPrice.toString())).multipliedBy(100).dividedBy(bignumber(currentTokenPrice.toString())).toFixed(2)
               }%`
-            }
+            } 
           </Text> 
         </Stack>
-        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'}>
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
+        </Stack>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+          <Text align="left">Max Reserve Divergence</Text> 
+          <Text align="right">{`${maxReserve}%`}</Text> 
         </Stack>
         {
           isProcessing &&

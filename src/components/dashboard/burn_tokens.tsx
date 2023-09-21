@@ -6,7 +6,7 @@ import { arrayify, parseUnits, formatUnits, concat, defaultAbiCoder, hexlify, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, maxReserveChangePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
@@ -28,6 +28,7 @@ export default function BurnTokens(props: mintProps) {
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
   const [maxSlippage,] = useState<number>(maxSlippagePercent)
+  const [maxReserve,] = useState<number>(maxReserveChangePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
   const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
@@ -97,16 +98,20 @@ export default function BurnTokens(props: mintProps) {
             )
           ).toFixed(reserveAssetDecimals)
           
+        const minReserveLimit = bondingCurveParams.reserveAmount.mul(1 - maxReserve / 100)
+
         const payloadBytes = arrayify(abiCoder.encode(
           [
             "address",
             "uint256",
-            "uint256"
+            "uint256",
+            "uint256",
           ], // array of types; make sure to represent complex types as tuples 
           [
             wallet.accounts[0].address,
             decimaledAmount,
-            parseEther(minPriceLimit)
+            parseEther(minPriceLimit),
+            minReserveLimit
           ] // arg values
         ))
   
@@ -287,9 +292,13 @@ export default function BurnTokens(props: mintProps) {
             }
           </Text> 
         </Stack>
-        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'}>
           <Text align="left">Max Slippage</Text>
           <Text align="right">{`${maxSlippage}%`}</Text> 
+        </Stack>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+          <Text align="left">Max Reserve Divergence</Text> 
+          <Text align="right">{`${maxReserve}%`}</Text> 
         </Stack>
           {
             isProcessing &&

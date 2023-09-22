@@ -23,6 +23,7 @@ import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
 import { actionTypes } from "../config/constants";
+import ExternalLinks from '../components/dashboard/external_links'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -52,11 +53,6 @@ export function Dashboard( props: dashboardProps ){
       value: 'claim',
       displayText: 'Claim',
       description: 'Claim trading fees'
-    },
-    {
-      value: 'docs',
-      displayText: "Docs",
-      description: "documentation"
     }
   ]
 
@@ -395,12 +391,12 @@ export function Dashboard( props: dashboardProps ){
               gap='0'
         >
           <GridItem area={'sidenav'}>
-            <Stack spacing={10}>
-              <Stack spacing={0}>
+            <Stack spacing={10} minHeight='100%'>
+              <Stack spacing={0} flexGrow={0} flexShrink={0}>
                 <Logo/>
               </Stack>
 
-              <Stack {...group} spacing='5' mt='7'>
+              <Stack {...group} spacing='5' mt='7' flexGrow={1}>
                 {navOptions.map((item) => {
                   const radio = getRadioProps({ value: item.value })
                   return(
@@ -411,6 +407,7 @@ export function Dashboard( props: dashboardProps ){
                 })}
               </Stack>
 
+              <ExternalLinks/>
 
               <Modal
                   isOpen={isOpen}

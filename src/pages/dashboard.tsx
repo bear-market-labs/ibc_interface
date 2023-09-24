@@ -37,7 +37,7 @@ export function Dashboard( props: dashboardProps ){
     {
       value: 'mintBurn',
       displayText: 'Mint / Burn',
-      description: 'Mint tokens with inversed market properties, first of its kind'
+      description: 'Mint tokens with inversed market properties, the first of its kind'
     },
     {
       value: 'lp',

@@ -28,8 +28,8 @@ export default function MintTokens(props: mintProps) {
   const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
-  const [maxSlippage,] = useState<number>(maxSlippagePercent)
-  const [maxReserve,] = useState<number>(maxReserveChangePercent)
+  const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
+  const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
   const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
@@ -217,6 +217,9 @@ export default function MintTokens(props: mintProps) {
 
   }
 
+  const format = (val: any) => val + `%`
+  const parse = (val: any) => val.replace(/^\%/, '')
+
   return (
     <>
       <Stack>
@@ -263,11 +266,43 @@ export default function MintTokens(props: mintProps) {
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'}>
           <Text align="left">Max Slippage</Text>
-          <Text align="right">{`${maxSlippage}%`}</Text> 
+          <NumberInput
+            value={format(maxSlippage)}
+            onChange={valueString => setMaxSlippage(parse(valueString))}
+            defaultValue={maxSlippagePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
           <Text align="left">Max Reserve Divergence</Text> 
-          <Text align="right">{`${maxReserve}%`}</Text> 
+          <NumberInput
+            value={format(maxReserve)}
+            onChange={valueString => setMaxReserve(parse(valueString))}
+            defaultValue={maxReserveChangePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
         </Stack>
         {
           isProcessing &&

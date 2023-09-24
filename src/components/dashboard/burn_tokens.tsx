@@ -27,7 +27,7 @@ export default function BurnTokens(props: mintProps) {
   const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
-  const [maxSlippage, setSlippage] = useState<number>(maxSlippagePercent)
+  const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
   const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
@@ -299,7 +299,7 @@ export default function BurnTokens(props: mintProps) {
           <Text align="left">Max Slippage</Text>
           <NumberInput
             value={format(maxSlippage)}
-            onChange={valueString => setSlippage(parse(valueString))}
+            onChange={valueString => setMaxSlippage(parse(valueString))}
             defaultValue={maxSlippagePercent}
             min={0}
             max={100}

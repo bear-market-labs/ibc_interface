@@ -551,13 +551,13 @@ export function Dashboard( props: dashboardProps ){
                   headerTitle === "MINT / BURN" &&
                   (
                     <>
-                      <Tabs onChange={handleNavInputSwitch}>
+                      <Tabs onChange={handleNavInputSwitch} pl='5' pr='5'>
                         <TabList borderBottom={'none'}>
                           <Tab>Mint</Tab>
                           <Tab>Burn</Tab>
                         </TabList>
 
-                        <TabPanels>
+                        <TabPanels pt='5'>
                           <TabPanel>
                             <MintTokens
                               dashboardDataSet={dashboardDataSet}

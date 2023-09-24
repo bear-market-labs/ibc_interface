@@ -7,7 +7,7 @@ import { arrayify, parseUnits, concat, defaultAbiCoder, hexlify, formatUnits, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, maxSlippagePercent, reserveAssetSymbol, parse, format } from '../../config/constants'
 import { CgArrowDownR} from "react-icons/cg"
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -27,7 +27,7 @@ export default function RemoveLiquidity(props: mintProps) {
   const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
-  const [maxSlippage,] = useState<number>(maxSlippagePercent)
+  const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
   const userInverseTokenAllowance = BigNumber.from("userLpTokenAllowance" in dashboardDataSet ? dashboardDataSet.userLpTokenAllowance : '0');
@@ -251,7 +251,23 @@ export default function RemoveLiquidity(props: mintProps) {
         </Stack>
         <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
           <Text align="left">Max Slippage</Text>
-          <Text align="right">{`${maxSlippage}%`}</Text> 
+          <NumberInput
+            value={format(maxSlippage)}
+            onChange={valueString => setMaxSlippage(parse(valueString))}
+            defaultValue={maxSlippagePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
         </Stack>
           {
             isProcessing &&

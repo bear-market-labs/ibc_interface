@@ -6,7 +6,7 @@ import { arrayify, parseUnits, formatUnits, concat, defaultAbiCoder, hexlify, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { explorerUrl, ibcSymbol, maxSlippagePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, maxReserveChangePercent, reserveAssetDecimals, reserveAssetSymbol, format, parse } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
@@ -27,7 +27,8 @@ export default function BurnTokens(props: mintProps) {
   const [amount, setAmount] = useState<number>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet, parentSetters} = props
-  const [maxSlippage,] = useState<number>(maxSlippagePercent)
+  const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
+  const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
   const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(BigNumber.from(0))
 
   const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
@@ -83,7 +84,7 @@ export default function BurnTokens(props: mintProps) {
           ]
           ,
           [
-            "sellTokens(address,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+            "sellTokens(address,uint256,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
           ]
         )).slice(0,4)
   
@@ -97,16 +98,20 @@ export default function BurnTokens(props: mintProps) {
             )
           ).toFixed(reserveAssetDecimals)
           
+        const minReserveLimit = Number(formatEther(bondingCurveParams.reserveAmount)) * (1 - maxReserve / 100)
+
         const payloadBytes = arrayify(abiCoder.encode(
           [
             "address",
             "uint256",
-            "uint256"
+            "uint256",
+            "uint256",
           ], // array of types; make sure to represent complex types as tuples 
           [
             wallet.accounts[0].address,
             decimaledAmount,
-            parseEther(minPriceLimit)
+            parseEther(minPriceLimit),
+            parseEther(minReserveLimit.toFixed(reserveAssetDecimals))
           ] // arg values
         ))
   
@@ -287,9 +292,45 @@ export default function BurnTokens(props: mintProps) {
             }
           </Text> 
         </Stack>
-        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'}>
           <Text align="left">Max Slippage</Text>
-          <Text align="right">{`${maxSlippage}%`}</Text> 
+          <NumberInput
+            value={format(maxSlippage)}
+            onChange={valueString => setMaxSlippage(parse(valueString))}
+            defaultValue={maxSlippagePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
+        </Stack>
+        <Stack direction="row" fontSize='md' justifyContent={'space-between'} mb='7'>
+          <Text align="left">Max Reserve Divergence</Text> 
+          <NumberInput
+            value={format(maxReserve)}
+            onChange={valueString => setMaxReserve(parse(valueString))}
+            defaultValue={maxReserveChangePercent}
+            min={0}
+            max={100}
+            width={`50px`}
+          >
+            <NumberInputField
+              minWidth="auto"
+              border="none"
+              height={`unset`}
+              textAlign={`right`}
+              paddingInline={`unset`}
+              color={colors.TEAL}
+            />
+          </NumberInput>
         </Stack>
           {
             isProcessing &&

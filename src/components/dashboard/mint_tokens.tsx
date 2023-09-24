@@ -6,7 +6,7 @@ import { arrayify, formatUnits, concat, parseUnits, defaultAbiCoder, hexlify, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
-import { explorerUrl, ibcSymbol, maxSlippagePercent, maxReserveChangePercent, reserveAssetDecimals, reserveAssetSymbol } from '../../config/constants'
+import { explorerUrl, ibcSymbol, maxSlippagePercent, maxReserveChangePercent, reserveAssetDecimals, reserveAssetSymbol, format, parse  } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR} from "react-icons/cg"
 
@@ -216,9 +216,6 @@ export default function MintTokens(props: mintProps) {
     }
 
   }
-
-  const format = (val: any) => val + `%`
-  const parse = (val: any) => val.replace(/^\%/, '')
 
   return (
     <>

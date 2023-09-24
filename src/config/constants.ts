@@ -11,3 +11,6 @@ export const actionTypes = [
   "addLiquidity",
   "removeLiquidity",
 ]
+
+export const format = (val: any) => val + `%`
+export const parse = (val: any) => val.replace(/^\%/, '')

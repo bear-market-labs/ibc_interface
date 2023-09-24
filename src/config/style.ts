@@ -4,7 +4,7 @@ export const colors = {
   FADE_GRAY: '#1F2237',
   GRAY: '#1B1E31',
   PURPLE: '#682abf',
-  WHITE: '#FFF',
+  WHITE: '#DDE2EA',
   FADE_WHITE: '#fff9',
   RED: '#E95979',
 
@@ -12,5 +12,6 @@ export const colors = {
   BLUE: '#506cde',
 
   TEAL: '#2087BA',
-  ROYAL: '#1C1931'
+  ROYAL: '#1C1931',
+  GRAYED_OUT_GRAY: '#5F646C',
 }

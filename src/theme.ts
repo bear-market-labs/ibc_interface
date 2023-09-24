@@ -23,20 +23,33 @@ const theme = extendTheme({
 			},
 			variants: {
 				solid: {
-					bg: '#DDE2EA',
-					color: '#1C1931'
+					bg: colors.WHITE,
+					color: colors.ROYAL
 				},
 				outline: {
-					border: '1px solid #DDE2EA',
+					border: `1px solid ${colors.WHITE}`,
 				}
 			},
+		},
+		Tabs: {
+			baseStyle: {
+				tab: {
+					_selected: {
+						color: colors.TEAL
+					}
+				},
+				tablist: {
+					color: colors.GRAYED_OUT_GRAY,
+				}
+			}
+
 		}
 	},
 	styles: {
 		global: (props: any) => ({
 			body: {
-				bg: mode("#DDE2EA", "#1C1931")(props),
-				color: mode("#1C1931", "#DDE2EA")(props),
+				bg: mode(colors.WHITE, colors.ROYAL)(props),
+				color: mode(colors.ROYAL, colors.WHITE)(props),
 			},
 		}),
 	},

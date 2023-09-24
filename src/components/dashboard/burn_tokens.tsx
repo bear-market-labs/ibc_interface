@@ -84,7 +84,7 @@ export default function BurnTokens(props: mintProps) {
           ]
           ,
           [
-            "sellTokens(address,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+            "sellTokens(address,uint256,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
           ]
         )).slice(0,4)
   

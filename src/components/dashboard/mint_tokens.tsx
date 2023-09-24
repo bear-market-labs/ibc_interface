@@ -75,7 +75,7 @@ export default function MintTokens(props: mintProps) {
         ]
         ,
         [
-          "buyTokens(address,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          "buyTokens(address,uint256,uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
         ]
       )).slice(0,4)
 
@@ -92,9 +92,8 @@ export default function MintTokens(props: mintProps) {
           )
         ).toFixed(reserveAssetDecimals)
 
-      const maxReserveLimit = bondingCurveParams.reserveAmount.mul(1 + maxReserve / 100)
+      const maxReserveLimit = Number(formatEther(bondingCurveParams.reserveAmount)) * (1 + maxReserve / 100)
 
-        
       const payloadBytes = arrayify(abiCoder.encode(
         [
           "address",
@@ -104,7 +103,7 @@ export default function MintTokens(props: mintProps) {
         [
           wallet.accounts[0].address,
           parseEther(maxPriceLimit),
-          maxReserveLimit,
+          parseEther(maxReserveLimit.toFixed(reserveAssetDecimals)),
         ] // arg values
       ))
 
@@ -240,7 +239,7 @@ export default function MintTokens(props: mintProps) {
 
         <Stack direction="row" justify="right" fontSize='sm'>
           <Text align="right">{`Balance: ${Number(formatEther(userBalance)).toFixed(1)}`}</Text>
-          <Box as='button' color={colors.TEAL} onClick={() => handleAmountChange(formatEther(userBalance).toString())}>MAX</Box>
+          <Box as="button" color={colors.TEAL} onClick={() => handleAmountChange(formatEther(userBalance).toString())}>MAX</Box>
         </Stack>
 
         <Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5'/>

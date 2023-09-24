@@ -590,7 +590,7 @@ export function Dashboard( props: dashboardProps ){
                   headerTitle === "ADD / REMOVE LIQUIDITY" &&
                   (
                     <>
-                      <Tabs onChange={handleNavInputSwitch}>
+                      <Tabs onChange={handleNavInputSwitch} pl='5' pr='5'>
                         <TabList borderBottom={'none'}>
                           <Tab>Add</Tab>
                           <Tab>Remove</Tab>

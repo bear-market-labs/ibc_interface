@@ -552,7 +552,7 @@ export function Dashboard( props: dashboardProps ){
                   (
                     <>
                       <Tabs onChange={handleNavInputSwitch}>
-                        <TabList>
+                        <TabList borderBottom={'none'}>
                           <Tab>Mint</Tab>
                           <Tab>Burn</Tab>
                         </TabList>
@@ -591,7 +591,7 @@ export function Dashboard( props: dashboardProps ){
                   (
                     <>
                       <Tabs onChange={handleNavInputSwitch}>
-                        <TabList>
+                        <TabList borderBottom={'none'}>
                           <Tab>Add</Tab>
                           <Tab>Remove</Tab>
                         </TabList>

@@ -544,7 +544,6 @@ export default function BondingCurveChart(props: IProps) {
             color: #DDE2EA;
             text-align: right;
             text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-            font-family: Roboto Mono;
             font-size: 14px;
             font-style: normal;
             font-weight: 500;
@@ -562,7 +561,6 @@ export default function BondingCurveChart(props: IProps) {
             color: #DDE2EA;
             text-align: right;
             text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-            font-family: Roboto Mono;
             font-size: 14px;
             font-style: normal;
             font-weight: 500;
@@ -577,7 +575,6 @@ export default function BondingCurveChart(props: IProps) {
         .tooltip-text{
             color: #DDE2EA;
             // text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-            font-family: Roboto Mono;
             font-size: 16px;
             font-style: normal;
             font-weight: 500;

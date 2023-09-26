@@ -130,9 +130,11 @@ export default function UnstakeIbc(props: mintProps) {
               placeholder={`0`}
             />
           </NumberInput>
-          <Text align="right">IBC</Text>
+          <Text
+            fontSize='4xl'
+            align="right">IBC</Text>
         </Stack>
-        <Stack direction={`row`} justifyContent={`flex-end`}>
+        <Stack direction={`row`} justifyContent={`flex-end`} pb='5'>
           <Text fontSize={'xs'}>
             {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
@@ -143,7 +145,7 @@ export default function UnstakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>Unstake</Button>
+        <Button mt='10' alignSelf={'center'} w='100%' onClick={sendTransaction}>Unstake</Button>
       </Stack>
     </>
   )

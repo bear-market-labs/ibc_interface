@@ -164,11 +164,15 @@ export default function StakeIbc(props: mintProps) {
               border="none"
               fontSize='4xl'
               placeholder={`0`}
+              height='auto'
             />
           </NumberInput>
-          <Text align="right" verticalAlign={"center"}>IBC</Text>
+          <Text
+            fontSize='4xl'
+            align="right"
+            >IBC</Text>
         </Stack>
-        <Stack direction={`row`} justifyContent={`flex-end`} >
+        <Stack direction={`row`} justifyContent={`flex-end`} pb='5'>
           <Text fontSize={'xs'}>
             {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
@@ -178,7 +182,7 @@ export default function StakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>
+        <Button mt='10' alignSelf={'center'} w='100%' onClick={sendTransaction}>
         {
               userInverseTokenAllowance.gt(0) ? "Stake" : "Approve IBC"
         }

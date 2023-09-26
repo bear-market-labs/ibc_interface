@@ -418,25 +418,30 @@ export function Dashboard( props: dashboardProps ){
                   <ModalOverlay
                       backdropFilter='blur(20px)' />
                   <ModalContent
+                      borderRadius='0'
                       backgroundColor={colors.ROYAL}
                       boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
-                      <ModalHeader>
+                      <ModalHeader pl='10' pt='7'>
                         <Stack>
                           <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
                           <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
                         </Stack>
                       </ModalHeader>
-                      <ModalCloseButton />
+                      <ModalCloseButton
+                        color={colors.GRAYED_OUT_GRAY}
+                        top='7'
+                        right='7'
+                        fontSize='l'/>
                       <ModalBody pb={6}>
                         {
                           selectedNavItem === "stake" &&
                           <>
                             <Tabs>
-                              <TabList mr='-10%' ml='-10%' pl='5%'>
+                              <TabList mr='-10%' ml='-8%' pl='8%'>
                                 <Tab>Stake</Tab>
                                 <Tab>Unstake</Tab>
                               </TabList>
-                              <TabPanels>
+                              <TabPanels pt='10'>
                                 <TabPanel>
                                   <StakeIbc dashboardDataSet={dashboardDataSet} />
                                 </TabPanel>

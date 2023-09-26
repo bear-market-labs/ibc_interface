@@ -601,7 +601,7 @@ export function Dashboard( props: dashboardProps ){
                           <Tab>Remove</Tab>
                         </TabList>
 
-                        <TabPanels>
+                        <TabPanels pt='5'>
                           <TabPanel>
                             <AddLiquidity
                               dashboardDataSet={dashboardDataSet}

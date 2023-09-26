@@ -117,7 +117,7 @@ export default function UnstakeIbc(props: mintProps) {
   return (
     <>
       <Stack>
-        <Text align="left">YOU UNSTAKE</Text>
+        <Text align="left" fontSize='sm'>YOU UNSTAKE</Text>
         <Stack direction="row">
           <NumberInput
               value={amount}

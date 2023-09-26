@@ -437,7 +437,7 @@ export function Dashboard( props: dashboardProps ){
                           selectedNavItem === "stake" &&
                           <>
                             <Tabs>
-                              <TabList mr='-10%' ml='-8%' pl='8%'>
+                              <TabList mr='-7%' ml='-7%' pl='7%'>
                                 <Tab>Stake</Tab>
                                 <Tab>Unstake</Tab>
                               </TabList>

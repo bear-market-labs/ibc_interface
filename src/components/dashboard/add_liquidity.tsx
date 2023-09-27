@@ -13,6 +13,7 @@ import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
+import { isAbleToSendTransaction } from '../../config/validation'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -229,7 +230,12 @@ export default function AddLiquidity(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button onClick={sendTransaction}>Add Liquidity</Button>
+        <Button
+          onClick={sendTransaction}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+        >
+          Add Liquidity
+        </Button>
       </Stack>
     </>
   )

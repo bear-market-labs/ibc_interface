@@ -13,6 +13,7 @@ import { explorerUrl } from '../../config/constants'
 import { BiLinkExternal } from 'react-icons/bi'
 import { Toast } from '../toast'
 import { error_message } from '../../config/error'
+import { isAbleToSendTransaction } from '../../config/validation'
 
 
 type mintProps = {
@@ -135,17 +136,28 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, provider, ibcContractAddress]);
 
+  const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
+  const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
+   
   return (
     <>
       <Stack p='4'>
         <Text align="left">YOU HAVE ACCRUED</Text>
-        <Text fontSize={'2xl'}>{`${Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)} IBC`}</Text>
-        <Text fontSize={'2xl'}>{`${Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)} ETH`}</Text>
+        <Text fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
+        <Text fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
         {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button mt='7' alignSelf={'center'} w='100%' onClick={sendTransaction}>Claim</Button>
+        <Button 
+          mt='7'
+          alignSelf={'center'}
+          w='100%'
+          onClick={sendTransaction}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards)))}
+          >
+            Claim
+          </Button>
       </Stack>
     </>
   )

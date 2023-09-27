@@ -27,7 +27,7 @@ export default function AddIbc(props: addProps) {
   
     try {
       // 'wasAdded' is a boolean. Like any RPC method, an error can be thrown.
-      const wasAdded = await wallet?.provider.request({
+      await wallet?.provider.request({
         method: 'wallet_watchAsset',
         params: {
           "type": 'ERC20',

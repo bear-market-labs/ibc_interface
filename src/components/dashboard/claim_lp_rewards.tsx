@@ -138,7 +138,7 @@ export default function ClaimLpRewards(props: mintProps) {
   return (
     <>
       <Stack p='4'>
-        <Text align="left">YOU HAVE ACCRUED</Text>
+        <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
         <Text fontSize={'2xl'}>{`${Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)} IBC`}</Text>
         <Text fontSize={'2xl'}>{`${Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)} ETH`}</Text>
         {

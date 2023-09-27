@@ -167,6 +167,10 @@ export function Dashboard( props: dashboardProps ){
         const inverseTokenDecimalsBytes = await provider.call(inverseTokenDecimalsQuery)
         const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
 
+        const inverseTokenSymbolQuery = composeQuery(inverseTokenAddress, "symbol", [], [])
+        const inverseTokenSymbolBytes = await provider.call(inverseTokenSymbolQuery)
+        const inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
+
         const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
         const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
         const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
@@ -209,6 +213,7 @@ export function Dashboard( props: dashboardProps ){
           userIbcTokenBalance: userInverseTokenBalance.toString(),
           inverseTokenDecimals: inverseTokenDecimals.toString(),
           inverseTokenAddress: inverseTokenAddress.toString(),
+          inverseTokenSymbol: inverseTokenSymbol,
           bondingCurveParams: {
             reserveAmount: bondingCurveParams[0][0].toString(),
             inverseTokenSupply: bondingCurveParams[0][1].toString(),

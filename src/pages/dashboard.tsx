@@ -245,24 +245,6 @@ export function Dashboard( props: dashboardProps ){
           }
         });
 
-        console.log('------->set dashboard infor');
-        console.log(dashboardDataSet);
-
-        // compute old k/m params from utilization and invariant
-        let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
-        if (k < 0){
-          k = 0
-        }
-        const m = Number(ethers.utils.formatEther(bondingCurveParams[0][4])) 
-        * 
-        Math.pow(
-          Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
-          k
-        )
-
-        chartParam.curveParameter.parameterK = k;
-        chartParam.curveParameter.parameterM = m;
-        chartParam.currentSupply = Number(bondingCurveParams[0][1].toString())/1e18;
         console.log(chartParam);
       }
     }
@@ -291,56 +273,28 @@ export function Dashboard( props: dashboardProps ){
 
   useEffect(()=>{
     const updateChartParam = _.cloneDeep(chartParam);
+    console.log("update chart parameter")
     console.log(newIbcIssuance);
-    console.log(dashboardDataSet);
-    // if(dashboardDataSet?.bondingCurveParams && dashboardDataSet?.inverseTokenSupply){
-    //   chartParam.curveParameter.parameterK = Number(dashboardDataSet.bondingCurveParams.k)/1e18;
-    //   chartParam.curveParameter.parameterM = Number(dashboardDataSet.bondingCurveParams.m)/1e18;
-    //   chartParam.currentSupply = Number(dashboardDataSet.inverseTokenSupply)/1e18;
-    // }
+    console.log(newReserve);
 
     if (selectedNavItem === "mintBurn" ){
-      updateChartParam.newCurveParam = null;
+      updateChartParam.targetLiquidityChange = null;
       if(newIbcIssuance){
-        updateChartParam.targetSupply = Number(newIbcIssuance)/1e18;
+        updateChartParam.targetSupplyChange = (newIbcIssuance - dashboardDataSet.bondingCurveParams.inverseTokenSupply)/dashboardDataSet.bondingCurveParams.inverseTokenSupply;
       }else{
-        updateChartParam.targetSupply = null; 
+        updateChartParam.targetSupplyChange = null; 
       }
     }else if(selectedNavItem === "lp"){
-      updateChartParam.targetSupply = null; 
+      updateChartParam.targetSupplyChange = null; 
       if(newReserve){
-        console.log(dashboardDataSet.bondingCurveParams);
-        console.log(dashboardDataSet.bondingCurveParams.inverseTokenSupply);
-        console.log(newReserve); 
-        const price = Number(dashboardDataSet.bondingCurveParams.currentTokenPrice)/1e18;
-        const supply = Number(dashboardDataSet.bondingCurveParams.inverseTokenSupply)/1e18;
-        const reserve = Number(newReserve)/1e18;
-        let k = 1 - price * supply / reserve;
-        if (k < 0 || reserve < 0){
-          k = 0
-        }
-        updateChartParam.newCurveParam = {
-          parameterK: k,
-          parameterM: price * (supply ** k)
-        }
-  
-  
-        // _parameterK = ONE_INT - int256((currentPrice.mulDown(currentIbcSupply)).divDown(currentBalance));
-        // require(_parameterK < ONE_INT, ERR_PARAM_UPDATE_FAIL);
-        // _parameterM = currentPrice.mulDown(currentIbcSupply.pow(_parameterK));
+        updateChartParam.targetLiquidityChange = (newReserve - dashboardDataSet.bondingCurveParams.reserveAmount)/dashboardDataSet.bondingCurveParams.reserveAmount;
       }else{
-        updateChartParam.newCurveParam = null;
+        updateChartParam.targetLiquidityChange = null;
       }
     }else{
       return;
     }
-
-
-
-
     
-    console.log("-----------> new chart parameter");
-    console.log(updateChartParam);
     setChartParam(updateChartParam);
   }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve, selectedNavItem])
 

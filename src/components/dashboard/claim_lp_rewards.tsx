@@ -142,7 +142,7 @@ export default function ClaimLpRewards(props: mintProps) {
   return (
     <>
       <Stack p='4'>
-        <Text align="left">YOU HAVE ACCRUED</Text>
+        <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
         <Text fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
         <Text fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
         {

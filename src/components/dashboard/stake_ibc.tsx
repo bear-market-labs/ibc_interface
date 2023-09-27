@@ -154,7 +154,7 @@ export default function StakeIbc(props: mintProps) {
   return (
     <>
       <Stack>
-        <Text align="left">YOU STAKE</Text>
+        <Text align="left" fontSize='sm'>YOU STAKE</Text>
         <Stack direction="row">
           <NumberInput
             value={amount}

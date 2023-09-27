@@ -21,7 +21,7 @@ export default function LpingIssuance(props: mintProps) {
 
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userLpTokenBalance = BigNumber.from("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
-  const userCurrentLpShare = bignumber(userLpTokenBalance.toString()).dividedBy(bignumber(lpTokenSupply.toString())).multipliedBy(100)
+  const userCurrentLpShare = Number(ethers.utils.formatUnits(lpTokenSupply)) > 0 ? bignumber(userLpTokenBalance.toString()).dividedBy(bignumber(lpTokenSupply.toString())).multipliedBy(100) : 0;
 
 
 

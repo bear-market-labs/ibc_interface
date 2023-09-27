@@ -16,6 +16,7 @@ import { Toast } from '../toast'
 import { Link } from "@chakra-ui/react"
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
+import { isAbleToSendTransaction } from '../../config/validation'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -305,7 +306,9 @@ export default function MintTokens(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button onClick={sendTransaction}>MINT</Button>
+        <Button 
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+          onClick={sendTransaction}>MINT</Button>
       </Stack>
     </>
   )

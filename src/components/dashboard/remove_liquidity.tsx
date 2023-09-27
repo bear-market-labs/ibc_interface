@@ -15,6 +15,7 @@ import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
+import { isAbleToSendTransaction } from '../../config/validation'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -273,7 +274,9 @@ export default function RemoveLiquidity(props: mintProps) {
             isProcessing &&
             <DefaultSpinner />
           }
-          <Button onClick={sendTransaction}>
+          <Button 
+            onClick={sendTransaction}
+            isDisabled={!isAbleToSendTransaction(wallet, provider, amount)} >
             {
               userInverseTokenAllowance.gt(0) ? "Remove Liquidity" : "Approve LP"
             }

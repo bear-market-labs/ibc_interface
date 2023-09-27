@@ -11,6 +11,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { colors } from '../../config/style'
+import { isAbleToSendTransaction } from '../../config/validation'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -146,7 +147,15 @@ export default function UnstakeIbc(props: mintProps) {
           isProcessing &&
           <DefaultSpinner />
         }
-        <Button mt='10' alignSelf={'center'} w='100%' onClick={sendTransaction}>Unstake</Button>
+        <Button 
+          mt='10'
+          alignSelf={'center'}
+          w='100%'
+          onClick={sendTransaction}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+          >
+            Unstake
+          </Button>
       </Stack>
     </>
   )

@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
+import { blocksPerDay } from '../../config/constants';
 
 type mintProps = {
   dashboardDataSet: any;
@@ -17,7 +18,11 @@ export default function MintBurnPrice(props: mintProps) {
   const newPrice = BigNumber.from(parentInputDynamicData?.newPrice ? parentInputDynamicData.newPrice : '0')
   const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
   const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : ''; 
-  const inverseTokenSymbol ="inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : ''; 
+  const inverseTokenSymbol = "inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : ''; 
+  const stakingRewardEma = "stakingRewardEma" in dashboardDataSet ? dashboardDataSet.stakingRewardEma : {
+    reserveAsset: 0,
+    ibcAsset: 0
+  }; 
 
   return (
     <>
@@ -46,7 +51,7 @@ export default function MintBurnPrice(props: mintProps) {
           {
             <>
 
-              <Text>6.969 ETH + 4.200 IBC</Text>
+              <Text>{`${Number(Number(ethers.utils.formatEther(stakingRewardEma.reserveAsset))* blocksPerDay).toFixed(3)} ETH + ${Number(Number(ethers.utils.formatUnits(stakingRewardEma.ibcAsset, inverseTokenDecimals))* blocksPerDay).toFixed(3)} IBC`}</Text>
               </>
           }
           <AddIbc 

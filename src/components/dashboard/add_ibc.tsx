@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers, BigNumber } from 'ethers'
 import { Button, Input, Link, Stack } from '@chakra-ui/react'
 import { contracts } from '../../config/contracts'
-import { HiExternalLink } from 'react-icons/hi'
 import { BiLinkExternal } from 'react-icons/bi'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { colors } from '../../config/style'
+import { ibcImageUrl } from '../../config/constants'
 
 type addProps = {
   tokenDecimals: any;
@@ -17,7 +16,7 @@ type addProps = {
 export default function AddIbc(props: addProps) {
   const [{ wallet, }] = useConnectWallet()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const tokenImage = 'http://placekitten.com/200/300';
+  const tokenImage = ibcImageUrl;
   const {tokenDecimals, tokenAddress, tokenSymbol} = props;
 
   const sendTransaction = useCallback(async () => {

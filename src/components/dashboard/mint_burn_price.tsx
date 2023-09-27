@@ -1,7 +1,9 @@
 import { ethers } from 'ethers'
-import { Box, Stack, Text, Icon } from '@chakra-ui/react'
+import { Box, Stack, Text, Icon, Divider, Center } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
+import { colors } from "../../config/style";
+import AddIbc from './add_ibc';
 
 type mintProps = {
   dashboardDataSet: any;
@@ -13,9 +15,13 @@ export default function MintBurnPrice(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const newPrice = BigNumber.from(parentInputDynamicData?.newPrice ? parentInputDynamicData.newPrice : '0')
+  const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
+  const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : ''; 
+  const inverseTokenSymbol ="inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : ''; 
 
   return (
     <>
+    <Stack direction="row">
       <Stack>
         <Text ml={7} mt={7} align="left">MARKET PRICE</Text>
         <Stack direction='row'>
@@ -30,6 +36,26 @@ export default function MintBurnPrice(props: mintProps) {
             </>
           }
         </Stack>
+      </Stack>
+      <Center mt={7} ml={450} height='69px'>
+        <Divider orientation='vertical' colorScheme={'gray'} />
+      </Center>
+      <Stack ml={50} align={'right'}>
+        <Text  mt={7} align="left">APPROX STAKED REWARDS</Text>
+        <Stack  direction='row'>
+          {
+            <>
+
+              <Text>6.969 ETH + 4.200 IBC</Text>
+              </>
+          }
+          <AddIbc 
+            tokenAddress={inverseTokenAddress}
+            tokenDecimals={inverseTokenDecimals}
+            tokenSymbol={inverseTokenSymbol}
+          >Add IBC</AddIbc>
+        </Stack>
+      </Stack>
       </Stack>
     </>
   )

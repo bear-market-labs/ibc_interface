@@ -40,11 +40,6 @@ export default function AddIbc(props: addProps) {
         },
       });
     
-      if (wasAdded) {
-        console.log('Thanks for your interest!');
-      } else {
-        console.log('Your loss!');
-      }
     } catch (error) {
       console.log(error);
     }

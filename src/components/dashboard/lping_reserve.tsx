@@ -20,7 +20,27 @@ export default function LpingReserve(props: mintProps) {
     reserveAsset: 0,
     ibcAsset: 0
   }; 
-  const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
+
+  const virtualLpAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
+  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply).sub(virtualLpAmount) : BigNumber.from('0')
+  const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+
+
+  const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals)) > 0 ? Number(
+    Number(ethers.utils.formatEther(lpRewardEma.reserveAsset)) 
+    * blocksPerDay 
+    / Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals))
+  ).toFixed(3)
+  :
+  '0.000'
+
+  const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals)) > 0 ? Number(
+    Number(ethers.utils.formatEther(lpRewardEma.ibcAsset)) 
+    * blocksPerDay 
+    / Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals))
+  ).toFixed(3)
+  :
+  '0.000'
 
   return (
     <>
@@ -48,7 +68,7 @@ export default function LpingReserve(props: mintProps) {
             {
               <>
 
-                <Text>{`${Number(Number(ethers.utils.formatEther(lpRewardEma.reserveAsset))* blocksPerDay).toFixed(3)} ETH + ${Number(Number(ethers.utils.formatUnits(lpRewardEma.ibcAsset, inverseTokenDecimals))* blocksPerDay).toFixed(3)} IBC`}</Text>
+                <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
                 </>
             }
         </Stack>

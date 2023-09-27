@@ -23,6 +23,25 @@ export default function MintBurnPrice(props: mintProps) {
     reserveAsset: 0,
     ibcAsset: 0
   }; 
+  const virtualInverseTokenAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualInverseTokenAmount) : BigNumber.from('0');
+  const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply).sub(virtualInverseTokenAmount) : BigNumber.from('0'); 
+
+
+  const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
+    Number(ethers.utils.formatEther(stakingRewardEma.reserveAsset)) 
+    * blocksPerDay 
+    / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
+  ).toFixed(3)
+  :
+  '0.000'
+
+  const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
+    Number(ethers.utils.formatEther(stakingRewardEma.ibcAsset)) 
+    * blocksPerDay 
+    / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
+  ).toFixed(3)
+  :
+  '0.000'
 
   return (
     <>
@@ -51,7 +70,7 @@ export default function MintBurnPrice(props: mintProps) {
           {
             <>
 
-              <Text>{`${Number(Number(ethers.utils.formatEther(stakingRewardEma.reserveAsset))* blocksPerDay).toFixed(3)} ETH + ${Number(Number(ethers.utils.formatUnits(stakingRewardEma.ibcAsset, inverseTokenDecimals))* blocksPerDay).toFixed(3)} IBC`}</Text>
+              <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
               </>
           }
           <AddIbc 

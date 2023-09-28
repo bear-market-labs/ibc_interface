@@ -575,13 +575,20 @@ export default function BondingCurveChart(props: IProps) {
 
 
 
-    return (<div className="svg" ref={chartContainerRef}>
+    return (<div className="parent"><div className="svg" ref={chartContainerRef}>
         <div className="text-price">PRICE</div>
         <div className="text-issuance">ISSUANCE</div>
         <svg className="chart-container" ref={chartRef} ></svg>
         <style>{`
+        .parent{
+            width: 100%;
+            height: 100%;
+            text-align: left;
+        }
         .svg{
             position: relative;
+            display: inline-block;
+            max-width: 800px;
             width: 100%;
             height: 100%;
         }
@@ -662,7 +669,7 @@ export default function BondingCurveChart(props: IProps) {
             letter-spacing: -0.32px;
         }
       `}</style>
-    </div>);
+    </div></div>);
 
 }
 

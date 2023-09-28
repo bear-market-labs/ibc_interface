@@ -83,7 +83,7 @@ export function Dashboard( props: dashboardProps ){
     }
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
-
+  
 
   useEffect(() => {
     const fetchIbcMetrics = async() => {
@@ -147,62 +147,160 @@ export function Dashboard( props: dashboardProps ){
         const abiCoder = ethers.utils.defaultAbiCoder
         
         //  user balance info
-        const ethBalance = await provider.getBalance(wallet.accounts[0].address)
+        // const ethBalance = await provider.getBalance(wallet.accounts[0].address)
 
-        // ibc contract state
+
+
+        // // ibc contract state
+        // const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "curveParameters", [], [])
+        // const bondingCurveParamsBytes = await provider.call(bondingCurveParamsQuery)
+        // const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+
+        // const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "inverseTokenAddress", [], [])
+        // const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
+        // const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+
+        // const feeQuery = composeQuery(ibcContractAddress, "feeConfig", [], [])
+        // const feeBytes = await provider.call(feeQuery)
+        // const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
+
+
+
+        // // lp token info
+        // const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
+        // const lpTokenDecimalsBytes = await provider.call(lpTokenDecimalsQuery)
+        // const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
+
+        // const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
+        // const lpTokenSupplyBytes = await provider.call(lpTokenSupplyQuery)
+        // const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
+
+        // const userLpTokenBalanceQuery = composeQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        // const userLpTokenBalanceBytes = await provider.call(userLpTokenBalanceQuery)
+        // const userLpTokenBalance = abiCoder.decode(["uint"], userLpTokenBalanceBytes)[0]
+
+        // // lp approval state
+        // const userLpTokenAllowanceQuery = composeQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        // const userLpTokenAllowanceBytes = await provider.call(userLpTokenAllowanceQuery)
+        // const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
+
+        // // fetch rewards data
+        // const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
+        // const userClaimableRewardsBytes = await provider.call(userClaimableRewardsQuery)
+        // const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
+
+        // // fetch staking balance
+        // const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
+        // const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
+        // const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
+
+
+
+
+
+        // // ibc token info
+        // const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
+        // const inverseTokenDecimalsBytes = await provider.call(inverseTokenDecimalsQuery)
+        // const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+
+        // const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        // const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
+        // const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
+
+        // // ibc approval state
+        // const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        // const userInverseTokenAllowanceBytes = await provider.call(userInverseTokenAllowanceQuery)
+        // const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
+
         const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "curveParameters", [], [])
-        const bondingCurveParamsBytes = await provider.call(bondingCurveParamsQuery)
+        const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "inverseTokenAddress", [], [])
+        const feeQuery = composeQuery(ibcContractAddress, "feeConfig", [], [])
+        const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
+        const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
+        const userLpTokenBalanceQuery = composeQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        const userLpTokenAllowanceQuery = composeQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
+        const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
+
+        const queryResults = await Promise.all([
+          provider.getBalance(wallet.accounts[0].address),
+          provider.call(bondingCurveParamsQuery),
+          provider.call(inverseTokenAddressQuery),
+          provider.call(feeQuery),
+          provider.call(lpTokenDecimalsQuery),
+          provider.call(lpTokenSupplyQuery),
+          provider.call(userLpTokenBalanceQuery),
+          provider.call(userLpTokenAllowanceQuery),
+          provider.call(userClaimableRewardsQuery),
+          provider.call(userStakingBalanceQuery)
+        ]);
+
+        const ethBalance = queryResults[0];
+        // ibc contract state
+        
+        const bondingCurveParamsBytes = queryResults[1];
         const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
 
-        const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "inverseTokenAddress", [], [])
-        const inverseTokenAddressBytes = await provider.call(inverseTokenAddressQuery)
+        
+        const inverseTokenAddressBytes = queryResults[2];
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-        const feeQuery = composeQuery(ibcContractAddress, "feeConfig", [], [])
-        const feeBytes = await provider.call(feeQuery)
+        
+        const feeBytes = queryResults[3];
         const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
 
-        // ibc token info
-        const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
-        const inverseTokenDecimalsBytes = await provider.call(inverseTokenDecimalsQuery)
-        const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
 
-        const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
-        const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
-        const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
-
-        // ibc approval state
-        const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
-        const userInverseTokenAllowanceBytes = await provider.call(userInverseTokenAllowanceQuery)
-        const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
 
         // lp token info
-        const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
-        const lpTokenDecimalsBytes = await provider.call(lpTokenDecimalsQuery)
+        
+        const lpTokenDecimalsBytes = queryResults[4];
         const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
 
-        const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
-        const lpTokenSupplyBytes = await provider.call(lpTokenSupplyQuery)
+        
+        const lpTokenSupplyBytes = queryResults[5];
         const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
 
-        const userLpTokenBalanceQuery = composeQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
-        const userLpTokenBalanceBytes = await provider.call(userLpTokenBalanceQuery)
+        
+        const userLpTokenBalanceBytes = queryResults[6];
         const userLpTokenBalance = abiCoder.decode(["uint"], userLpTokenBalanceBytes)[0]
 
         // lp approval state
-        const userLpTokenAllowanceQuery = composeQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
-        const userLpTokenAllowanceBytes = await provider.call(userLpTokenAllowanceQuery)
+        
+        const userLpTokenAllowanceBytes = queryResults[7];
         const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
 
         // fetch rewards data
-        const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
-        const userClaimableRewardsBytes = await provider.call(userClaimableRewardsQuery)
+        
+        const userClaimableRewardsBytes = queryResults[8];
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
         // fetch staking balance
-        const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
-        const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
+        
+        const userStakingBalanceBytes = queryResults[9];
         const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
+
+        const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
+        const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
+        const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
+        const tokenQueryResults = await Promise.all([
+          provider.call(inverseTokenDecimalsQuery),
+          provider.call(userInverseTokenBalanceQuery),
+          provider.call(userInverseTokenAllowanceQuery)
+        ]);
+
+        // ibc token info        
+        const inverseTokenDecimalsBytes = tokenQueryResults[0];
+        const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+
+        
+        const userInverseTokenBalanceBytes = tokenQueryResults[1];
+        const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
+
+        // ibc approval state        
+        const userInverseTokenAllowanceBytes = tokenQueryResults[2];
+        const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -409,7 +507,7 @@ export function Dashboard( props: dashboardProps ){
                         {
                           selectedNavItem === "claim" &&
                           <>
-                            <ClaimLpRewards dashboardDataSet={dashboardDataSet}/>
+                            <ClaimLpRewards dashboardDataSet={dashboardDataSet} closeParentDialog={handleModalClose}/>
                           </>
                         }
                       </ModalBody>

@@ -152,7 +152,7 @@ export default function UnstakeIbc(props: mintProps) {
           alignSelf={'center'}
           w='100%'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}
           >
             Unstake
           </Button>

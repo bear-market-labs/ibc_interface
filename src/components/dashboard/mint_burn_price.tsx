@@ -77,7 +77,7 @@ export default function MintBurnPrice(props: mintProps) {
             tokenAddress={inverseTokenAddress}
             tokenDecimals={inverseTokenDecimals}
             tokenSymbol={inverseTokenSymbol}
-          >Add IBC</AddIbc>
+          />
         </Stack>
       </Stack>
       </Stack>

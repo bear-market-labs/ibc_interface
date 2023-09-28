@@ -60,7 +60,7 @@ export default function LpingReserve(props: mintProps) {
             }
           </Stack>
         </Stack>
-        <Center mt={7} ml={450} height='69px'>
+        <Center mt={7} ml={346} height='69px'>
           <Divider orientation='vertical' colorScheme={'gray'} />
         </Center>
         <Stack ml={50} align={'right'}>

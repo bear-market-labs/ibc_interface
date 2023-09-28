@@ -26,10 +26,10 @@ export default function AddIbc(props: addProps) {
     }
   
     try {
-      // 'wasAdded' is a boolean. Like any RPC method, an error can be thrown.
       await wallet?.provider.request({
         method: 'wallet_watchAsset',
         params: {
+          // @ts-ignore ethers has wrong params type (Array<any>)
           "type": 'ERC20',
           options: {
             address: tokenAddress, // The address of the token.

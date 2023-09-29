@@ -250,6 +250,8 @@ export function Dashboard( props: dashboardProps ){
         const userLpTokenAllowanceQuery = composeQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
         const userClaimableRewardsQuery = composeQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address])
         const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
+        const stakingRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1])
+        const lpRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
 
         const queryResults = await Promise.all([
           provider.getBalance(wallet.accounts[0].address),
@@ -261,7 +263,9 @@ export function Dashboard( props: dashboardProps ){
           provider.call(userLpTokenBalanceQuery),
           provider.call(userLpTokenAllowanceQuery),
           provider.call(userClaimableRewardsQuery),
-          provider.call(userStakingBalanceQuery)
+          provider.call(userStakingBalanceQuery),
+          provider.call(stakingRewardEmaQuery),
+          provider.call(lpRewardEmaQuery),
         ]);
 
         const ethBalance = queryResults[0];
@@ -300,12 +304,10 @@ export function Dashboard( props: dashboardProps ){
         const userClaimableRewardsBytes = queryResults[8];
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
-        const stakingRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1])
-        const stakingRewardEmaBytes = await nonWalletProvider.call(stakingRewardEmaQuery)
+        const stakingRewardEmaBytes = queryResults[9];
         const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
   
-        const lpRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
-        const lpRewardEmaBytes = await nonWalletProvider.call(lpRewardEmaQuery)
+        const lpRewardEmaBytes = queryResults[10];
         const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
   
         // fetch staking balance

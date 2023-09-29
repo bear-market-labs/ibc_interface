@@ -47,7 +47,7 @@ export default function MintBurnPrice(props: mintProps) {
     <>
     <Stack direction="row">
       <Stack>
-        <Text ml={7} mt={7} align="left">MARKET PRICE</Text>
+        <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row'>
           <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(currentTokenPrice)).toFixed(3)} ETH`}</Text>
           {

@@ -81,9 +81,17 @@ export default function BondingCurveChart(props: IProps) {
             setChartParam(props.chartParam);
 
             const curChartParam = props.chartParam;
-            const resizeObserver = new ResizeObserver(entries => {
-                if (curChartParam && curChartParam.currentSupply) {
-                    buildGraph(curChartParam, true);
+            const previousSize = {
+                width: 0,
+                height: 0
+            }
+            const resizeObserver = new ResizeObserver(entries => {                
+                if(entries[0].contentRect.width != previousSize.width || entries[0].contentRect.height != previousSize.height){
+                    previousSize.width = entries[0].contentRect.width;
+                    previousSize.height = entries[0].contentRect.height;
+                    if (curChartParam && curChartParam.currentSupply) {
+                        buildGraph(curChartParam, true);
+                    }
                 }
             });           
     

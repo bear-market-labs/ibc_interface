@@ -18,6 +18,7 @@ import { isAbleToSendTransaction } from '../../config/validation'
 
 type mintProps = {
   dashboardDataSet: any;
+  closeParentDialog: any;
 }
 
 export default function ClaimLpRewards(props: mintProps) {
@@ -25,6 +26,7 @@ export default function ClaimLpRewards(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {dashboardDataSet} = props
+  let closeParentDialog = props.closeParentDialog;
 
   const userClaimableLpRewards = BigNumber.from("userClaimableLpRewards" in dashboardDataSet ? dashboardDataSet.userClaimableLpRewards : '0')
   const userClaimableLpReserveRewards = BigNumber.from("userClaimableLpReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableLpReserveRewards : '0')
@@ -104,6 +106,7 @@ export default function ClaimLpRewards(props: mintProps) {
 
         if (RewardClaimedDetails){
           description = `Received ${Number(formatUnits(RewardClaimedDetails[0], inverseTokenDecimals)).toFixed(4)} IBC and ${Number(formatEther(RewardClaimedDetails[1])).toFixed(4)} ETH`
+          closeParentDialog();
         }
       } 
 
@@ -117,7 +120,7 @@ export default function ClaimLpRewards(props: mintProps) {
         duration: 5000,
         isClosable: true
       })
-
+      
       console.log(result)
 
     } catch (error:any) {
@@ -143,8 +146,8 @@ export default function ClaimLpRewards(props: mintProps) {
     <>
       <Stack p='4'>
         <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
-        <Text fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
-        <Text fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
+        <Text align="right" fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
+        <Text align="right" fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
         {
           isProcessing &&
           <DefaultSpinner />
@@ -154,7 +157,7 @@ export default function ClaimLpRewards(props: mintProps) {
           alignSelf={'center'}
           w='100%'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards)))}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >
             Claim
           </Button>

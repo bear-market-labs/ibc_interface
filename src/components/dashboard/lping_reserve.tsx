@@ -46,7 +46,7 @@ export default function LpingReserve(props: mintProps) {
     <>
       <Stack direction="row">
         <Stack>
-          <Text ml={7} mt={7} align="left">RESERVE</Text>
+          <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
           <Stack direction="row">
             <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(reserveAmount)).toFixed(3)} ETH`}</Text>
             {

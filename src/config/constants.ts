@@ -14,3 +14,6 @@ export const actionTypes = [
 
 export const format = (val: any) => val + `%`
 export const parse = (val: any) => val.replace(/^\%/, '')
+
+export const ibcImageUrl = 'http://placekitten.com/200/300'
+export const blocksPerDay = 7200

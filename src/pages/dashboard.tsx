@@ -220,7 +220,7 @@ export function Dashboard( props: dashboardProps ){
         // // fetch staking balance
         // const userStakingBalanceQuery = composeQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address])
         // const userStakingBalanceBytes = await provider.call(userStakingBalanceQuery)
-        // const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+        // const userStakingBalance = abuserStakingBalanceQueryiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
 
 
 
@@ -236,7 +236,7 @@ export function Dashboard( props: dashboardProps ){
         // const userInverseTokenBalanceBytes = await provider.call(userInverseTokenBalanceQuery)
         // const userInverseTokenBalance = abiCoder.decode(["uint"], userInverseTokenBalanceBytes)[0]
 
-        // // ibc approval state
+        // // ibc approval stateuserStakingBalanceQuery
         // const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
         // const userInverseTokenAllowanceBytes = await provider.call(userInverseTokenAllowanceQuery)
         // const userInverseTokenAllowance = abiCoder.decode(["uint"], userInverseTokenAllowanceBytes)[0]
@@ -304,10 +304,10 @@ export function Dashboard( props: dashboardProps ){
         const userClaimableRewardsBytes = queryResults[8];
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
-        const stakingRewardEmaBytes = queryResults[9];
+        const stakingRewardEmaBytes = queryResults[10];
         const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
   
-        const lpRewardEmaBytes = queryResults[10];
+        const lpRewardEmaBytes = queryResults[11];
         const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
   
         // fetch staking balance

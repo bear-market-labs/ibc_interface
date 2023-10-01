@@ -33,7 +33,8 @@ export default function ClaimLpRewards(props: mintProps) {
   const userClaimableStakingRewards = BigNumber.from("userClaimableStakingRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingRewards : '0')
   const userClaimableStakingReserveRewards = BigNumber.from("userClaimableStakingReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingReserveRewards : '0')
 
-  const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+  const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0');
+  const contractInverseTokenBalance = BigNumber.from('contractInverseTokenBalance' in dashboardDataSet ? dashboardDataSet.contractInverseTokenBalance : '0')
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -141,13 +142,17 @@ export default function ClaimLpRewards(props: mintProps) {
 
   const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
   const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
-   
+  const contract_inverse_token_balance = Number(formatUnits(contractInverseTokenBalance, inverseTokenDecimals)).toFixed(4)
+  
   return (
     <>
       <Stack p='4'>
         <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
         <Text align="right" fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
         <Text align="right" fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
+        <Text align="left" fontSize='sm' textTransform={'uppercase'}>Total staked amount in contract</Text>
+        <Text align="right" fontSize={'2xl'}>{`${contract_inverse_token_balance} IBC`}</Text>
+
         {
           isProcessing &&
           <DefaultSpinner />

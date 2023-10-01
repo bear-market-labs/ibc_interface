@@ -118,6 +118,10 @@ export function Dashboard( props: dashboardProps ){
       const lpRewardEmaBytes = await nonWalletProvider.call(lpRewardEmaQuery)
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
+      const contractInverseTokenBalanceQuery = composeQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress])
+      const contractInverseTokenBalanceBytes = await nonWalletProvider.call(contractInverseTokenBalanceQuery)
+      const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
+
       dashboardDataSet.stakingRewardEma = {
         reserveAsset: stakingRewardEma[1].toString(),
         ibcAsset: stakingRewardEma[0].toString(),
@@ -142,6 +146,7 @@ export function Dashboard( props: dashboardProps ){
       dashboardDataSet.lpTokenSupply = (lpTokenSupply.add(bondingCurveParams[0][2])).toString();
       dashboardDataSet.inverseTokenDecimals = inverseTokenDecimals.toString();
       dashboardDataSet.inverseTokenAddress = inverseTokenAddress.toString();
+      dashboardDataSet.contractInverseTokenBalance = contractInverseTokenBalance.toString()
 
       // compute old k/m params from utilization and invariant
       let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
@@ -320,11 +325,14 @@ export function Dashboard( props: dashboardProps ){
         const userInverseTokenBalanceQuery = composeQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address])
         const userInverseTokenAllowanceQuery = composeQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress])
         const inverseTokenSymbolQuery = composeQuery(inverseTokenAddress, "symbol", [], [])
+        const contractInverseTokenBalanceQuery = composeQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress])
+        
         const tokenQueryResults = await Promise.all([
           provider.call(inverseTokenDecimalsQuery),
           provider.call(userInverseTokenBalanceQuery),
           provider.call(userInverseTokenAllowanceQuery),
-          provider.call(inverseTokenSymbolQuery)
+          provider.call(inverseTokenSymbolQuery),
+          provider.call(contractInverseTokenBalanceQuery)
         ]);
 
         // ibc token info        
@@ -341,6 +349,9 @@ export function Dashboard( props: dashboardProps ){
 
         const inverseTokenSymbolBytes = tokenQueryResults[3];
         const inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
+
+        const contractInverseTokenBalanceBytes = tokenQueryResults[4];
+        const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -390,6 +401,7 @@ export function Dashboard( props: dashboardProps ){
             reserveAsset: lpRewardEma[1].toString(),
             ibcAsset: lpRewardEma[0].toString(),
           },
+          contractInverseTokenBalance
         });
 
         console.log(chartParam);

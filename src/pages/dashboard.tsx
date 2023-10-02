@@ -675,7 +675,7 @@ export function Dashboard( props: dashboardProps ){
                           <Tab>Burn</Tab>
                         </TabList>
 
-                        <TabPanels pt='5'>
+                        <TabPanels pt='4'>
                           <TabPanel>
                             <MintTokens
                               dashboardDataSet={dashboardDataSet}
@@ -714,7 +714,7 @@ export function Dashboard( props: dashboardProps ){
                           <Tab>Remove</Tab>
                         </TabList>
 
-                        <TabPanels pt='5'>
+                        <TabPanels pt='4'>
                           <TabPanel>
                             <AddLiquidity
                               dashboardDataSet={dashboardDataSet}

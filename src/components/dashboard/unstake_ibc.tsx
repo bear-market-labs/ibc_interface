@@ -130,6 +130,7 @@ export default function UnstakeIbc(props: mintProps) {
               fontSize='4xl'
               placeholder={`0`}
               height='auto'
+              pl='0'
             />
           </NumberInput>
           <Text

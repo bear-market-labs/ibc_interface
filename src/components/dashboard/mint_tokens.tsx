@@ -233,6 +233,7 @@ export default function MintTokens(props: mintProps) {
               border="none"
               fontSize='4xl'
               placeholder={`0`}
+              pl='0'
             />
           </NumberInput>
           <Text align="right" fontSize='4xl'>{reserveAssetSymbol}</Text>

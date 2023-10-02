@@ -6,7 +6,7 @@ import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
 import { ethers } from 'ethers'
 import { contracts } from "../config/contracts";
-import { composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
+import { composeMulticallQuery, composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
 import BurnTokens from "../components/dashboard/burn_tokens";
 import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
@@ -89,37 +89,51 @@ export function Dashboard( props: dashboardProps ){
     const fetchIbcMetrics = async() => {
       const abiCoder = ethers.utils.defaultAbiCoder
 
+      let multicallQueries = [
+        composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
+        composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
+        composeMulticallQuery(ibcContractAddress, "decimals", [], []),
+        composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
+        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
+        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+      ]
+
+      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      let multicallBytes = await nonWalletProvider.call(multicallQuery)
+      let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
       // fetch/set main panel metrics data
-      const bondingCurveParamsQuery = composeQuery(ibcContractAddress, "curveParameters", [], [])
-      const bondingCurveParamsBytes = await nonWalletProvider.call(bondingCurveParamsQuery)
+      const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0,0,0]]
       const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
 
-      const lpTokenSupplyQuery = composeQuery(ibcContractAddress, "totalSupply", [], [])
-      const lpTokenSupplyBytes = await nonWalletProvider.call(lpTokenSupplyQuery)
+      const lpTokenSupplyBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
       const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
 
-      const lpTokenDecimalsQuery = composeQuery(ibcContractAddress, "decimals", [], [])
-      const lpTokenDecimalsBytes = await nonWalletProvider.call(lpTokenDecimalsQuery)
+      const lpTokenDecimalsBytes = multicallResults[2][0] ? multicallResults[2][1] : [0]
       const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
 
-      const inverseTokenAddressQuery = composeQuery(ibcContractAddress, "inverseTokenAddress", [], [])
-      const inverseTokenAddressBytes = await nonWalletProvider.call(inverseTokenAddressQuery)
+      const inverseTokenAddressBytes = multicallResults[3][0] ? multicallResults[3][1] : [""]
       const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-      const inverseTokenDecimalsQuery = composeQuery(inverseTokenAddress, "decimals", [], [])
-      const inverseTokenDecimalsBytes = await nonWalletProvider.call(inverseTokenDecimalsQuery)
-      const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
-
-      const stakingRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1])
-      const stakingRewardEmaBytes = await nonWalletProvider.call(stakingRewardEmaQuery)
+      const stakingRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
       const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
-      const lpRewardEmaQuery = composeQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
-      const lpRewardEmaBytes = await nonWalletProvider.call(lpRewardEmaQuery)
+      const lpRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
-      const contractInverseTokenBalanceQuery = composeQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress])
-      const contractInverseTokenBalanceBytes = await nonWalletProvider.call(contractInverseTokenBalanceQuery)
+      multicallQueries = [
+        composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
+        composeMulticallQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress])
+      ]
+
+      multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      multicallBytes = await nonWalletProvider.call(multicallQuery)
+      multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+      const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
+      const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+
+      const contractInverseTokenBalanceBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
       const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
 
       dashboardDataSet.stakingRewardEma = {

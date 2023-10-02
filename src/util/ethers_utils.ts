@@ -14,14 +14,24 @@ export function getFunctionDescriptorBytes(functionName: string, argTypes: strin
   return functionDescriptorBytes
 }
 
-export function composeQuery(contractAddress: string, functionName: string, argTypes: string[], args: any[]){
+export function getCallData(functionName: string, argTypes: string[], args: any[]){
   const functionDescriptorBytes = getFunctionDescriptorBytes(functionName, argTypes)
   const queryArgBytes = arrayify(defaultAbiCoder.encode(argTypes, args))
+  return hexlify(concat([functionDescriptorBytes, queryArgBytes]))
+}
+
+export function composeQuery(contractAddress: string, functionName: string, argTypes: string[], args: any[]){
+  const callDataBytes = getCallData(functionName, argTypes, args)
 
   const queryDetails = {
     to: contractAddress,
-    data: hexlify(concat([functionDescriptorBytes, queryArgBytes]))
+    data: callDataBytes,
   }
 
   return queryDetails
+}
+
+export function composeMulticallQuery(contractAddress: string, functionName: string, argTypes: string[], args: any[]){
+  const callDataBytes = getCallData(functionName, argTypes, args)
+  return [contractAddress, true, callDataBytes]
 }

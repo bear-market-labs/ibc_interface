@@ -1,4 +1,6 @@
 import { arrayify, concat, defaultAbiCoder, hexlify, Interface, parseEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { multicallContinueOnErrorFlag } from '../config/constants'
+import { contracts } from '../config/contracts'
 
 export function getFunctionDescriptorBytes(functionName: string, argTypes: string[]){
   const functionDescriptorBytes = arrayify(solidityKeccak256(
@@ -31,7 +33,7 @@ export function composeQuery(contractAddress: string, functionName: string, argT
   return queryDetails
 }
 
-export function composeMulticallQuery(contractAddress: string, functionName: string, argTypes: string[], args: any[]){
+export function composeMulticallQuery(contractAddress: string, functionName: string, argTypes: string[], args: any[], continueOnError=multicallContinueOnErrorFlag){
   const callDataBytes = getCallData(functionName, argTypes, args)
-  return [contractAddress, true, callDataBytes]
+  return [contractAddress, continueOnError, callDataBytes]
 }

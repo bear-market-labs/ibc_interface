@@ -342,7 +342,11 @@ export default function MintTokens(props: mintProps) {
 					YOU PAY
 				</Text>
 
-				<Stack direction='row' justifyContent={'space-between'}>
+				<Stack
+					direction='row'
+					justifyContent={'space-between'}
+					alignItems='center'
+				>
 					<NumberInput
 						value={amount}
 						onChange={(valueString) => handleAmountChange(valueString)}
@@ -376,8 +380,8 @@ export default function MintTokens(props: mintProps) {
 				</Stack>
 
 				<Icon as={CgArrowDownR} fontSize='3xl' alignSelf={'center'} m='5' />
-				
-        <Text align='left' fontSize='sm'>
+
+				<Text align='left' fontSize='sm'>
 					YOU RECEIVE
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>

@@ -275,7 +275,11 @@ export default function AddLiquidity(props: mintProps) {
 					YOU PAY
 				</Text>
 
-				<Stack direction='row' justifyContent={'space-between'}>
+				<Stack
+					direction='row'
+					justifyContent={'space-between'}
+					alignItems='center'
+				>
 					<NumberInput
 						value={amount}
 						onChange={(valueString) => handleAmountChange(valueString)}

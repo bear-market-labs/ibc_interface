@@ -542,7 +542,7 @@ export function Dashboard( props: dashboardProps ){
             </Stack>
           </GridItem>
 
-          <GridItem area={'main'}>
+          <GridItem area={'main'} pb='40px'>
             <Stack>
               {
                   headerTitle === "MINT / BURN" &&
@@ -602,8 +602,8 @@ export function Dashboard( props: dashboardProps ){
                   </>
               }
             </Stack>
-
           </GridItem>
+
           <GridItem area={'sideinput'} mt='-42px'>
               <Stack>
                 {

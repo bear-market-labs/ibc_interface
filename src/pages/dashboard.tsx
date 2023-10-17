@@ -22,7 +22,7 @@ import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/
 import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
-import { actionTypes } from "../config/constants";
+import { actionTypes, curveUtiliization, curveUtilization, lpTokenDecimals } from "../config/constants";
 import ExternalLinks from '../components/dashboard/external_links'
 
 type dashboardProps = {
@@ -59,7 +59,7 @@ export function Dashboard( props: dashboardProps ){
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -89,10 +89,12 @@ export function Dashboard( props: dashboardProps ){
     const fetchIbcMetrics = async() => {
       const abiCoder = ethers.utils.defaultAbiCoder
 
+      // refresh
+
+
       let multicallQueries = [
         composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
-        composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
-        composeMulticallQuery(ibcContractAddress, "decimals", [], []),
+        composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
@@ -103,22 +105,19 @@ export function Dashboard( props: dashboardProps ){
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
       // fetch/set main panel metrics data
-      const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0,0,0]]
-      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+      const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
+      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
 
-      const lpTokenSupplyBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
-      const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
-
-      const lpTokenDecimalsBytes = multicallResults[2][0] ? multicallResults[2][1] : [0]
-      const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
-
-      const inverseTokenAddressBytes = multicallResults[3][0] ? multicallResults[3][1] : [""]
+      const reserveTokenAddressBytes = multicallResults[1][0] ? multicallResults[1][1] : [""]
+      const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0]
+      
+      const inverseTokenAddressBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
       const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-      const stakingRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
+      const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0]
       const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
-      const lpRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
+      const lpRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
       multicallQueries = [
@@ -148,26 +147,25 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.bondingCurveParams = {
         reserveAmount: bondingCurveParams[0][0].toString(),
-        inverseTokenSupply: bondingCurveParams[0][1].toString(),
-        virtualReserveAmount: bondingCurveParams[0][2].toString(),
-        virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
-        currentTokenPrice: bondingCurveParams[0][4].toString(),
-        invariant: bondingCurveParams[0][5].toString(),
-        utilization: bondingCurveParams[0][6].toString()
+        inverseTokenSupply: bondingCurveParams[0][1].toString(), // this is supply + virtual credits via lp
+        lpSupply: bondingCurveParams[0][2].toString(), // lp tokens no longer exist
+        currentTokenPrice: bondingCurveParams[0][3].toString(),
+        invariant: bondingCurveParams[0][4].toString(),
+        utilization: ethers.utils.parseUnits(curveUtilization.toString(), 18).toString(),
       };
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
-      dashboardDataSet.lpTokenSupply = (lpTokenSupply.add(bondingCurveParams[0][2])).toString();
+      dashboardDataSet.lpTokenSupply = dashboardDataSet.bondingCurveParams.lpSupply;
       dashboardDataSet.inverseTokenDecimals = inverseTokenDecimals.toString();
       dashboardDataSet.inverseTokenAddress = inverseTokenAddress.toString();
       dashboardDataSet.contractInverseTokenBalance = contractInverseTokenBalance.toString()
 
       // compute old k/m params from utilization and invariant
-      let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
+      let k = 1 - curveUtilization
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][4])) 
+      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][3])) 
       * 
       Math.pow(
         Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),

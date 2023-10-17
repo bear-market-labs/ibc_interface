@@ -22,7 +22,7 @@ import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/
 import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
-import { actionTypes, curveUtiliization, curveUtilization, lpTokenDecimals } from "../config/constants";
+import { actionTypes, curveUtilization, lpTokenDecimals } from "../config/constants";
 import ExternalLinks from '../components/dashboard/external_links'
 
 type dashboardProps = {
@@ -60,6 +60,8 @@ export function Dashboard( props: dashboardProps ){
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -191,20 +193,21 @@ export function Dashboard( props: dashboardProps ){
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
+        const feeQueries = actionTypes.map((_x, i, _array) => composeMulticallQuery(ibcAdminAddress, "feeConfig", ["uint8"], [i]))
         let multicallQueries = [
           composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
           composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
-          composeMulticallQuery(ibcContractAddress, "feeConfig", [], []),
-          composeMulticallQuery(ibcContractAddress, "decimals", [], []),
-          composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
-          composeMulticallQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
+          //composeMulticallQuery(ibcAdminAddress, "feeConfig", ["uint8"], [0]),
+          //composeMulticallQuery(ibcContractAddress, "decimals", [], []),
+          //composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
+          composeMulticallQuery(ibcContractAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),//composeMulticallQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
+          //composeMulticallQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
           composeMulticallQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
-        ]
-  
+        ].concat(feeQueries)
+
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
         const queryResults = await Promise.all([
@@ -218,49 +221,44 @@ export function Dashboard( props: dashboardProps ){
         let multicallBytes = queryResults[1]
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-        const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0,0,0]]
-        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+        const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
+        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
 
         
         const inverseTokenAddressBytes = multicallResults[1][0] ? multicallResults[1][1] : ['']
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-        const feeBytes = multicallResults[2][0] ? multicallResults[2][1] : [Array(actionTypes.length), Array(actionTypes.length), Array(actionTypes.length)]
-        const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
-
-        // lp token info
+        // lp info
         
-        const lpTokenDecimalsBytes = multicallResults[3][0] ? multicallResults[3][1] : [0]
-        const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
-
+        const userLpPositionBytes = multicallResults[2][0] ? multicallResults[2][1] : [0,0]
+        const userLpPosition = abiCoder.decode(["uint256", "uint256"], userLpPositionBytes)
         
-        const lpTokenSupplyBytes = multicallResults[4][0] ? multicallResults[4][1] : [0]
-        const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
-
-        
-        const userLpTokenBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0]
-        const userLpTokenBalance = abiCoder.decode(["uint"], userLpTokenBalanceBytes)[0]
-
-        // lp approval state
-        
-        const userLpTokenAllowanceBytes = multicallResults[6][0] ? multicallResults[6][1] : [0]
-        const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
+        const userLpTokenBalance = userLpPosition[0]
+        const userLpIbcCredit = userLpPosition[1]
 
         // fetch rewards data
         
-        const userClaimableRewardsBytes = multicallResults[7][0] ? multicallResults[7][1] : [0,0,0,0]
+        const userClaimableRewardsBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0,0,0]
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
-        const stakingRewardEmaBytes = multicallResults[9][0] ? multicallResults[9][1] : [0,0]
+        const stakingRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
         const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
   
-        const lpRewardEmaBytes = multicallResults[10][0] ? multicallResults[10][1] : [0,0]
+        const lpRewardEmaBytes = multicallResults[6][0] ? multicallResults[6][1] : [0,0]
         const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
   
         // fetch staking balance
         
-        const userStakingBalanceBytes = multicallResults[8][0] ? multicallResults[8][1] : [0]
+        const userStakingBalanceBytes = multicallResults[4][0] ? multicallResults[4][1] : [0]
         const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
+        // fee info
+
+        //const feeBytes = multicallResults[7][0] ? multicallResults[7][1] : [0, 0, 0]
+        //const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
+        //const fees = abiCoder.decode(["uint256","uint256","uint256"], feeBytes)
+
+        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[7+i][0] ? multicallResults[7+i][1] : [0, 0, 0]))
 
         multicallQueries = [
           composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
@@ -300,18 +298,17 @@ export function Dashboard( props: dashboardProps ){
           inverseTokenSymbol: inverseTokenSymbol,
           bondingCurveParams: {
             reserveAmount: bondingCurveParams[0][0].toString(),
-            inverseTokenSupply: bondingCurveParams[0][1].toString(),
-            virtualReserveAmount: bondingCurveParams[0][2].toString(),
-            virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
-            currentTokenPrice: bondingCurveParams[0][4].toString(),
-            invariant: bondingCurveParams[0][5].toString(),
-            utilization: bondingCurveParams[0][6].toString()
+            inverseTokenSupply: bondingCurveParams[0][1].toString(), // this is supply + virtual credits via lp
+            lpSupply: bondingCurveParams[0][2].toString(), // lp tokens no longer exist
+            currentTokenPrice: bondingCurveParams[0][3].toString(),
+            invariant: bondingCurveParams[0][4].toString(),
+            utilization: ethers.utils.parseUnits(curveUtilization.toString(), 18).toString(),
           },
           userInverseTokenAllowance: userInverseTokenAllowance.toString(),
           lpTokenDecimals: lpTokenDecimals.toString(),
           userLpTokenBalance: userLpTokenBalance.toString(),
-          userLpTokenAllowance: userLpTokenAllowance.toString(),
-          lpTokenSupply: (lpTokenSupply.add(bondingCurveParams[0][2])).toString(),
+          userLpIbcCredit: userLpIbcCredit.toString(),
+          lpTokenSupply:  bondingCurveParams[0][2].toString(),
           userClaimableLpRewards: userClaimableRewards[0].toString(),
           userClaimableStakingRewards: userClaimableRewards[1].toString(),
           userClaimableLpReserveRewards: userClaimableRewards[2].toString(),
@@ -319,16 +316,16 @@ export function Dashboard( props: dashboardProps ){
           forceUpdate: forceUpdate,
           userStakingBalance: userStakingBalance.toString(),
           fees:{
-            lpFee: fees[0].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            lpFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][0].toString();
               return acc;
             }, {}),
-            stakingFee: fees[1].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            stakingFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][1].toString();
               return acc;
             }, {}),
-            protocolFee: fees[2].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            protocolFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][2].toString();
               return acc;
             }, {}),
           },

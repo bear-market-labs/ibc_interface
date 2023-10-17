@@ -48,7 +48,7 @@ export const App = () => {
   };
   
   const eventFilter = {
-    address: contracts.tenderly.ibcContract,
+    address: contracts.tenderly.ibcETHCurveContract,
   };
   
   provider.on(eventFilter, handleLog);

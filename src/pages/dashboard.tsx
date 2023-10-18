@@ -263,7 +263,7 @@ export function Dashboard( props: dashboardProps ){
         multicallQueries = [
           composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
           composeMulticallQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
+          composeMulticallQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
           composeMulticallQuery(inverseTokenAddress, "symbol", [], []),
           composeMulticallQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
         ]
@@ -347,7 +347,7 @@ export function Dashboard( props: dashboardProps ){
     fetchWalletInfo()
       .then()
       .catch((err) => console.log("error", err))
-  }, [wallet, ibcContractAddress, forceUpdate, updated])
+  }, [wallet, ibcContractAddress, forceUpdate, updated, ibcAdminAddress, ibcRouterAddress])
 
   // data to generate
   // curve graph plot points

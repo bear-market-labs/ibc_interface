@@ -36,6 +36,7 @@ import {
 	reserveAssetSymbol,
 	format,
 	parse,
+	commandTypes,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -57,7 +58,8 @@ export default function BurnTokens(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcContract)
+	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -152,7 +154,7 @@ export default function BurnTokens(props: mintProps) {
 					solidityKeccak256(
 						['string'],
 						[
-							'sellTokens(address,uint256,uint256,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+							'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 						]
 					)
 				).slice(0, 4)
@@ -162,8 +164,24 @@ export default function BurnTokens(props: mintProps) {
 					inverseTokenDecimals.toNumber()
 				)
 
+				// fee adjustment
+				const fee = parseUnits(
+					Number(
+						Number(formatUnits(decimaledAmount, inverseTokenDecimals)) *
+							totalFeePercent
+					).toFixed(Number(inverseTokenDecimals)),
+					inverseTokenDecimals
+				)
+
+				decimaledAmount = decimaledAmount.sub(fee)
+
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
+					.dividedBy(bignumber(decimaledAmount.toString()))
+					.toFixed(reserveAssetDecimals)
+
+				const maxPriceLimit = bignumber(liquidityReceived.toString())
+					.multipliedBy(1 + maxSlippage / 100)
 					.dividedBy(bignumber(decimaledAmount.toString()))
 					.toFixed(reserveAssetDecimals)
 
@@ -171,20 +189,37 @@ export default function BurnTokens(props: mintProps) {
 					Number(formatEther(bondingCurveParams.reserveAmount)) *
 					(1 - maxReserve / 100)
 
+				const maxReserveLimit =
+					Number(formatEther(bondingCurveParams.reserveAmount)) *
+					(1 + maxReserve / 100)
+
+				const commandBytes = arrayify(
+					abiCoder.encode(
+						['address', 'uint256', 'uint256[2]', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
+						[
+							wallet.accounts[0].address, //ignored by router
+							decimaledAmount,
+							[parseEther(minPriceLimit),parseEther(maxPriceLimit)],
+							[parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),parseEther(maxReserveLimit.toFixed(reserveAssetDecimals))],
+						] // arg values
+					)
+				)
+
 				const payloadBytes = arrayify(
 					abiCoder.encode(
-						['address', 'uint256', 'uint256', 'uint256'], // array of types; make sure to represent complex types as tuples
+						['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address,
-							decimaledAmount,
-							parseEther(minPriceLimit),
-							parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),
+							ibcContractAddress,
+							true,
+							commandTypes.sellTokens,
+							commandBytes,
 						] // arg values
 					)
 				)
 
 				txDetails = {
-					to: ibcContractAddress,
+					to: ibcRouterAddress,
 					data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
 				}
 			} else {
@@ -200,7 +235,7 @@ export default function BurnTokens(props: mintProps) {
 				const payloadBytes = arrayify(
 					abiCoder.encode(
 						['address', 'uint'], // array of types; make sure to represent complex types as tuples
-						[ibcContractAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+						[ibcRouterAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
 					)
 				)
 
@@ -284,6 +319,7 @@ export default function BurnTokens(props: mintProps) {
 		liquidityReceived,
 		userInverseTokenAllowance,
 		inverseTokenAddress,
+		ibcRouterAddress,
 	])
 
 	const handleAmountChange = (val: any) => {

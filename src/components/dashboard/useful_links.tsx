@@ -3,17 +3,25 @@ import { colors } from '../../config/style'
 
 export default function UsefulLinks() {
 	const links = [
-		{ text: 'Gitbook Docs', link: '' },
-		{ text: 'What is a Bonding Curve?', link: '' },
-		{ text: 'What is an Inverse Bonding Curve?', link: '' },
-		{ text: 'The IBC Token', link: '' },
-		{ text: 'Math on Mint / Burn', link: '' },
-		{ text: 'Math on Add / Remove Liquidity', link: '' },
-		{ text: 'GitHub Repositories', link: '' },
+		{
+			text: 'Gitbook Docs',
+			address: 'https://docs.inversebondingcurve.com/',
+			isExternal: true,
+		},
+		{ text: 'What is a Bonding Curve?', address: '', isExternal: false },
+		{
+			text: 'What is an Inverse Bonding Curve?',
+			address: '',
+			isExternal: false,
+		},
+		{ text: 'The IBC Token', address: '', isExternal: false },
+		{ text: 'Math on Mint / Burn', address: '', isExternal: false },
+		{ text: 'Math on Add / Remove Liquidity', address: '', isExternal: false },
+		{ text: 'GitHub Repositories', address: '', isExternal: true },
 	]
 	return (
 		<Stack textAlign='left'>
-			<Text fontSize='sm' p='2' pl='7'>
+			<Text fontSize='xs' p='2' pl='7'>
 				Useful Links
 			</Text>
 			<Stack>
@@ -24,7 +32,13 @@ export default function UsefulLinks() {
 						pb='5'
 						pt='3'
 					>
-						<Link fontSize='lg'>{link.text}</Link>
+						<Link
+							fontSize='lg'
+							href={link.address}
+							isExternal={link.isExternal}
+						>
+							{link.text}
+						</Link>
 					</Box>
 				))}
 			</Stack>

@@ -337,16 +337,11 @@ export default function BurnTokens(props: mintProps) {
 					).toFixed(reserveAssetDecimals)
 				)
 
-				const newPriceQuery = composeQuery(
-					ibcContractAddress,
-					'priceOf',
-					['uint256'],
-					[inverseTokenSupply.sub(burnedAmount)]
-				)
-				const newPriceBytes = await provider.call(newPriceQuery)
-				const newPrice = BigNumber.from(
-					abiCoder.decode(['uint256'], newPriceBytes)[0].toString()
-				)
+				// calculate spot price post mint
+				const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
+				const newPrice = curveInvariant * Number(formatEther(utilization)) 
+				/
+				Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
 
 				// calculate resulting price
 				//setResultPrice((decimaledParsedAmount.toString() / liquidityReceived.toString()).toString())
@@ -357,7 +352,7 @@ export default function BurnTokens(props: mintProps) {
 				setResultPrice(bignumber(resultPriceInWei.toString()))
 				setLiquidityReceived(liquidityReceived)
 
-				parentSetters?.setNewPrice(newPrice.toString())
+				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
 				parentSetters?.setNewIbcIssuance(
 					inverseTokenSupply.sub(burnedAmount).toString()
 				)

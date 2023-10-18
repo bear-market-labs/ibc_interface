@@ -14,6 +14,17 @@ export const actionTypes = [
   "removeLiquidity",
 ]
 
+export const commandTypes = {
+  "buyTokens": 0,
+  "sellTokens": 1,
+  "addLiquidity": 2,
+  "removeLiquidity": 3,
+  "claimRewards": 4,
+  "stake": 5,
+  "unstake": 6,
+}
+
+
 export const format = (val: any) => val + `%`
 export const parse = (val: any) => val.replace(/^\%/, '')
 

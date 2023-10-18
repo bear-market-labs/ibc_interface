@@ -35,6 +35,7 @@ import {
 	parse,
 	format,
 	commandTypes,
+	reserveAssetDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -300,48 +301,16 @@ export default function RemoveLiquidity(props: mintProps) {
 		userLpIbcPayment,
 	])
 
-	const handleAmountChange = (val: any) => {
-		const parsedAmount = val
-		setAmount(parsedAmount)
-
-		if (isNaN(val) || val.trim() === '') {
-			return
-		}
-
-		const decimaledParsedAmount = parseUnits(
-			val === '' ? '0' : val,
-			lpTokenDecimals.toNumber()
-		)
-
-		const price = formatUnits(
-			bondingCurveParams.inverseTokenSupply,
-			bondingCurveParams.inverseTokenDecimals
-		)
-		const price_supply_product = bignumber(
-			bondingCurveParams.currentTokenPrice
-		).multipliedBy(price)
-
-		const liquidityRetrieved = bignumber(
-			decimaledParsedAmount
-				.mul(
-					BigNumber.from(bondingCurveParams.reserveAmount).sub(
-						price_supply_product.toFixed(0)
-					)
-				)
-				.toString()
-		)
-			.dividedBy(bignumber(lpTokenSupply.toString()))
-			.toFixed(0)
-
-		parentSetters?.setNewLpIssuance(
-			lpTokenSupply.sub(decimaledParsedAmount).toString()
-		)
-		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount)
-				.sub(BigNumber.from(liquidityRetrieved))
-				.toString()
-		)
-	}
+	/*
+	parentSetters?.setNewLpIssuance(
+		lpTokenSupply.sub(userLpTokenBalance).toString()
+	)
+	parentSetters?.setNewReserve(
+		BigNumber.from(bondingCurveParams.reserveAmount)
+			.sub(parseUnits(userLpRedeemableReserves, reserveAssetDecimals))
+			.toString()
+	)
+	*/
 
 	return (
 		<Stack justifyContent={'space-between'} h='calc(100vh - 220px)'>
@@ -357,7 +326,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				>
 					<NumberInput
 						value={amount}
-						onChange={(valueString) => handleAmountChange(valueString)}
+						isDisabled={true}
 					>
 						<NumberInputField
 							minWidth='auto'

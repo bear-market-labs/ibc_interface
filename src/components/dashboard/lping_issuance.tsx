@@ -55,7 +55,7 @@ export default function LpingIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${userCurrentLpShare.toFixed(2)} %`}</Text>
           {
-            userNewLpShare.gt(0) && !userNewLpShare.eq(userCurrentLpShare) &&
+            userNewLpShare.isFinite() && !userNewLpShare.eq(userCurrentLpShare) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>

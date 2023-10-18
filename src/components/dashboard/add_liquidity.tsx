@@ -75,7 +75,7 @@ export default function AddLiquidity(props: mintProps) {
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
+	const userLpTokenBalance = bignumber(
 		'userLpTokenBalance' in dashboardDataSet
 			? dashboardDataSet.userLpTokenBalance
 			: '0'
@@ -335,7 +335,7 @@ export default function AddLiquidity(props: mintProps) {
 					</Text>
 					<Text align='right'>LP</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${userIbcBalance
+				<Text align='right' fontSize='sm'>{`Balance: ${userLpTokenBalance
 					.dividedBy(Math.pow(10, lpTokenDecimals.toNumber()))
 					.toFixed(2)}`}</Text>
 			</Stack>
@@ -380,9 +380,9 @@ export default function AddLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+					isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || userLpTokenBalance.gt(0)}
 				>
-					Add Liquidity
+					{userLpTokenBalance.gt(0) ? `Removal Required` : `Add Liquidity`}
 				</Button>
 			</Stack>
 		</Stack>

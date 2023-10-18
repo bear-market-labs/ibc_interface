@@ -35,7 +35,7 @@ export default function ClaimLpRewards(props: mintProps) {
   const userClaimableStakingReserveRewards = BigNumber.from("userClaimableStakingReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingReserveRewards : '0')
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0');
-  const contractInverseTokenBalance = BigNumber.from('contractInverseTokenBalance' in dashboardDataSet ? dashboardDataSet.contractInverseTokenBalance : '0')
+  const totalStakingBalance = 'totalStakingBalance' in dashboardDataSet ? dashboardDataSet.totalStakingBalance : '0'
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -155,7 +155,7 @@ export default function ClaimLpRewards(props: mintProps) {
 
   const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
   const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
-  const contract_inverse_token_balance = Number(formatUnits(contractInverseTokenBalance, inverseTokenDecimals)).toFixed(4)
+  const contract_inverse_token_balance = Number(formatUnits(totalStakingBalance, inverseTokenDecimals)).toFixed(4)
   
   return (
     <>

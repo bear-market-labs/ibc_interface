@@ -212,7 +212,8 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
+          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+          composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
         ].concat(feeQueries)
 
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -259,13 +260,16 @@ export function Dashboard( props: dashboardProps ){
         const userStakingBalanceBytes = multicallResults[4][0] ? multicallResults[4][1] : [0]
         const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
 
+        const totalStakingBalanceBytes = multicallResults[7][0] ? multicallResults[7][1] : [0];
+        const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
+        
         // fee info
 
         //const feeBytes = multicallResults[7][0] ? multicallResults[7][1] : [0, 0, 0]
         //const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
         //const fees = abiCoder.decode(["uint256","uint256","uint256"], feeBytes)
 
-        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[7+i][0] ? multicallResults[7+i][1] : [0, 0, 0]))
+        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[8+i][0] ? multicallResults[8+i][1] : [0, 0, 0]))
 
         multicallQueries = [
           composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
@@ -297,6 +301,11 @@ export function Dashboard( props: dashboardProps ){
         const contractInverseTokenBalanceBytes = multicallResults[4][1];
         const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
 
+        // downstream calculation for lp removal, all in formatted (or sane) decimals
+        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][0])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+
+        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][1])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -314,7 +323,7 @@ export function Dashboard( props: dashboardProps ){
           userInverseTokenAllowance: userInverseTokenAllowance.toString(),
           lpTokenDecimals: lpTokenDecimals.toString(),
           userLpTokenBalance: userLpTokenBalance.toString(),
-          userLpIbcCredit: userLpIbcCredit.toString(),
+          userLpIbcCredit: userLpIbcCredit,
           lpTokenSupply:  bondingCurveParams[0][2].toString(),
           userClaimableLpRewards: userClaimableRewards[0].toString(),
           userClaimableStakingRewards: userClaimableRewards[1].toString(),
@@ -344,7 +353,10 @@ export function Dashboard( props: dashboardProps ){
             reserveAsset: lpRewardEma[1].toString(),
             ibcAsset: lpRewardEma[0].toString(),
           },
-          contractInverseTokenBalance
+          contractInverseTokenBalance,
+          userLpRedeemableReserves: userLpRedeemableReserves.toString(),
+          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals),
+          totalStakingBalance: totalStakingBalance,
         });
 
         console.log(chartParam);

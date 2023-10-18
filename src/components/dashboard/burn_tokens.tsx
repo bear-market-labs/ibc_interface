@@ -173,16 +173,17 @@ export default function BurnTokens(props: mintProps) {
 					inverseTokenDecimals
 				)
 
-				decimaledAmount = decimaledAmount.sub(fee)
+				// must use burned amount for min/max price limits
+				const burnAmount = decimaledAmount.sub(fee)
 
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
-					.dividedBy(bignumber(decimaledAmount.toString()))
+					.dividedBy(bignumber(burnAmount.toString()))
 					.toFixed(reserveAssetDecimals)
 
 				const maxPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 + maxSlippage / 100)
-					.dividedBy(bignumber(decimaledAmount.toString()))
+					.dividedBy(bignumber(burnAmount.toString()))
 					.toFixed(reserveAssetDecimals)
 
 				const minReserveLimit =

@@ -24,6 +24,8 @@ import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
 import { actionTypes, curveUtilization, lpTokenDecimals } from "../config/constants";
 import ExternalLinks from '../components/dashboard/external_links'
+import HowItWorks from "../components/dashboard/how_it_works";
+import UsefulLinks from '../components/dashboard/useful_links'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -53,7 +55,12 @@ export function Dashboard( props: dashboardProps ){
       value: 'claim',
       displayText: 'Claim',
       description: 'Claim trading fees'
-    }
+    },
+    {
+      value:'how',
+      displayText: 'How It Works',
+      description: 'Learn the basics of inverse bonding curves'
+  }    
   ]
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
@@ -596,6 +603,10 @@ export function Dashboard( props: dashboardProps ){
                     />
                   </>
               }
+              {
+                headerTitle === 'HOW IT WORKS' &&
+                <HowItWorks/>
+              }
             </Stack>
           </GridItem>
 
@@ -690,6 +701,10 @@ export function Dashboard( props: dashboardProps ){
                   Provide / Withdraw
 
                 */}
+                {
+                  headerTitle === 'HOW IT WORKS' &&
+                  <UsefulLinks/>
+                }
 
                 <Spacer/>
               </Stack>

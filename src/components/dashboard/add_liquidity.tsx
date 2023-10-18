@@ -33,6 +33,7 @@ import {
 	reserveAssetSymbol,
 	format,
 	parse,
+	commandTypes,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -53,7 +54,8 @@ export default function AddLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcContract)
+	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
@@ -127,7 +129,7 @@ export default function AddLiquidity(props: mintProps) {
 				solidityKeccak256(
 					['string'],
 					[
-						'addLiquidity(address,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+						'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 					]
 				)
 			).slice(0, 4)
@@ -138,15 +140,38 @@ export default function AddLiquidity(props: mintProps) {
 					.toFixed(0)
 			)
 
+			const maxPriceLimit = BigNumber.from(
+				bignumber(currentTokenPrice.toString())
+					.multipliedBy(1 + maxSlippage / 100)
+					.toFixed(0)
+			)
+
+			const commandBytes = arrayify(
+				abiCoder.encode(
+					['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address, // ignored by router
+						parseEther(amount.toString()),
+						[minPriceLimit, maxPriceLimit],
+					] // arg values
+				)
+			)
+
 			const payloadBytes = arrayify(
 				abiCoder.encode(
-					['address', 'uint256'], // array of types; make sure to represent complex types as tuples
-					[wallet.accounts[0].address, minPriceLimit] // arg values
+					['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address,
+						ibcContractAddress,
+						true,
+						commandTypes.addLiquidity,
+						commandBytes,
+					] // arg values
 				)
 			)
 
 			const txDetails = {
-				to: ibcContractAddress,
+				to: ibcRouterAddress,
 				data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
 				value: parseEther(amount.toString()),
 			}
@@ -162,7 +187,7 @@ export default function AddLiquidity(props: mintProps) {
 				result.logs.find((x) => {
 					try {
 						LiquidityAddedDetails = abiCoder.decode(
-							['uint256', 'uint256', 'uint256', 'uint256'],
+							['uint256', 'uint256', 'uint256'],
 							x.data
 						)
 						return true
@@ -242,20 +267,10 @@ export default function AddLiquidity(props: mintProps) {
 			).toFixed(reserveAssetDecimals)
 		)
 
-		const supply = formatUnits(
-			bondingCurveParams.inverseTokenSupply,
-			bondingCurveParams.inverseTokenDecimals
-		)
-		const price_supply_product = bignumber(
-			bondingCurveParams.currentTokenPrice
-		).multipliedBy(supply)
-
 		const mintAmount = BigNumber.from(
 			bignumber(lpTokenSupply.mul(feeAdjustedAmount).toString())
 				.dividedBy(
-					bignumber(bondingCurveParams.reserveAmount).minus(
-						price_supply_product
-					)
+					bignumber(bondingCurveParams.reserveAmount)
 				)
 				.toFixed(0)
 		)

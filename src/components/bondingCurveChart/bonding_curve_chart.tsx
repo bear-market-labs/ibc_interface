@@ -2,6 +2,7 @@ import React from 'react';
 import * as d3 from 'd3';
 import * as _ from "lodash";
 import { useCallback, useEffect, useState, useRef } from 'react';
+import { curveUtilization } from '../../config/constants';
 
 interface ICurveParam {
     parameterK: number;
@@ -258,23 +259,13 @@ export default function BondingCurveChart(props: IProps) {
     }
 
     function getProperParameter(liquidityChange: number){
-        let targetParamK = 0.5 * (1 + liquidityChange);
-        if(targetParamK> 0.5){
-            if(targetParamK < MAX_PARAMETER_K[0]){
-                targetParamK = MAX_PARAMETER_K[0];
-            }else if( targetParamK > MAX_PARAMETER_K[1]){
-                targetParamK = MAX_PARAMETER_K[1];
-            }
-        }else{
-            if(targetParamK > MIN_PARAMETER_K[1]){
-                targetParamK = MIN_PARAMETER_K[1];
-            }else if( targetParamK < MIN_PARAMETER_K[0]){
-                targetParamK = MIN_PARAMETER_K[0];
-            }  
-        }
+        //display a smooth curve "shift", with bounds
+        let k = 1 - curveUtilization;
+        let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), 100) : Math.max(Math.log(Math.E - liquidityChange), 0.3);
+
         let newCurveParam = {
-          parameterK: targetParamK,
-          parameterM: 1 * (1 ** targetParamK)
+          parameterK: k,
+          parameterM: m,
         }
 
         return newCurveParam;         

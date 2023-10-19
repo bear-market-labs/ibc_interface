@@ -59,6 +59,7 @@ export default function AddLiquidity(props: mintProps) {
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
+	const [ibcCredit, setIbcCredit] = useState<number>(0)
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -67,6 +68,11 @@ export default function AddLiquidity(props: mintProps) {
 	const lpTokenDecimals = BigNumber.from(
 		'lpTokenDecimals' in dashboardDataSet
 			? dashboardDataSet.lpTokenDecimals
+			: '0'
+	)
+	const inverseTokenDecimals = BigNumber.from(
+		'inverseTokenDecimals' in dashboardDataSet
+			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
 	const lpTokenSupply = BigNumber.from(
@@ -275,7 +281,11 @@ export default function AddLiquidity(props: mintProps) {
 				.toFixed(0)
 		)
 
+		//calculate ibc credit
+		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, reserveAssetDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, reserveAssetDecimals))
+
 		setMintAmount(mintAmount)
+		setIbcCredit(lpIbcCredit)
 
 		parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
 		parentSetters?.setNewReserve(
@@ -331,13 +341,15 @@ export default function AddLiquidity(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(2)}
+						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(3)}
 					</Text>
 					<Text align='right'>LP</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${userLpTokenBalance
-					.dividedBy(Math.pow(10, lpTokenDecimals.toNumber()))
-					.toFixed(2)}`}</Text>
+				<Text align='right' fontSize='sm'>
+					{
+						`+ ${ibcCredit.toFixed(3)} IBC bound to position`
+					}
+				</Text>
 			</Stack>
 
 			<Stack>

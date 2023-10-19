@@ -92,7 +92,7 @@ export default function RemoveLiquidity(props: mintProps) {
 			? dashboardDataSet.userLpIbcDebit
 			: BigNumber.from(0)
 
-	const userLpIbcPayment = userLpIbcDebit.gt(userLpIbcCredit) ? userLpIbcDebit.sub(userLpIbcCredit): BigNumber.from(0)
+	const userLpIbcPayment = userLpIbcDebit.sub(userLpIbcCredit)
 
 	const userLpRedeemableReserves = 'userLpRedeemableReserves' in dashboardDataSet ? dashboardDataSet.userLpRedeemableReserves : '0'
 	
@@ -175,7 +175,7 @@ export default function RemoveLiquidity(props: mintProps) {
 						['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address, //ignored by router
-							userLpIbcPayment,
+							userLpIbcPayment.gt(0) ? userLpIbcPayment : 0,
 							[minPriceLimit, maxPriceLimit],
 						] // arg values
 					)
@@ -344,7 +344,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				<Stack direction='row' justify='right' fontSize='sm'>
 					<Text align='right'>
 						{
-							`+ ${Number(formatUnits(userLpIbcPayment, lpTokenDecimals)).toFixed(3)} IBC for withdrawal`
+							userLpIbcPayment.gt(0) ? `+ ${Number(formatUnits(userLpIbcPayment, lpTokenDecimals)).toFixed(3)} IBC for withdrawal` : ` ` 
 						}
 					</Text>
 				</Stack>
@@ -364,9 +364,11 @@ export default function RemoveLiquidity(props: mintProps) {
 					</Text>
 					<Text align='right'>{reserveAssetSymbol}</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${Number(
-					formatEther(userBalance)
-				).toFixed(1)}`}</Text>
+				<Text align='right' fontSize='sm'>
+					{
+						userLpIbcPayment.lt(0) ? `+ ${Number(Number(formatUnits(userLpIbcPayment.abs(), lpTokenDecimals)) * (1 - totalFeePercent)).toFixed(3)} IBC made available` : ` ` 
+					}
+				</Text>
 			</Stack>
 
 			<Stack>

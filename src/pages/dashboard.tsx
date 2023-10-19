@@ -214,6 +214,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
           composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
+          composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         ].concat(feeQueries)
 
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -263,13 +264,11 @@ export function Dashboard( props: dashboardProps ){
         const totalStakingBalanceBytes = multicallResults[7][0] ? multicallResults[7][1] : [0];
         const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
         
+        const reserveTokenAddressBytes = multicallResults[8][0] ? multicallResults[8][1] : [0];
+        const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0]
+
         // fee info
-
-        //const feeBytes = multicallResults[7][0] ? multicallResults[7][1] : [0, 0, 0]
-        //const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
-        //const fees = abiCoder.decode(["uint256","uint256","uint256"], feeBytes)
-
-        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[8+i][0] ? multicallResults[8+i][1] : [0, 0, 0]))
+        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[9+i][0] ? multicallResults[9+i][1] : [0, 0, 0]))
 
         multicallQueries = [
           composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
@@ -277,6 +276,9 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
           composeMulticallQuery(inverseTokenAddress, "symbol", [], []),
           composeMulticallQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
+          composeMulticallQuery(reserveTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
+          composeMulticallQuery(reserveTokenAddress, "decimals", [], []),
+          composeMulticallQuery(reserveTokenAddress, "symbol", [], []),
         ]
   
         multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -300,6 +302,15 @@ export function Dashboard( props: dashboardProps ){
 
         const contractInverseTokenBalanceBytes = multicallResults[4][1];
         const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
+
+        const contractReserveTokenBalanceBytes = multicallResults[5][1];
+        const contractReserveTokenBalance = abiCoder.decode(["uint"], contractReserveTokenBalanceBytes)[0]
+
+        const reserveTokenDecimalsBytes = multicallResults[6][1];
+        const reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+
+        const reserveTokenSymbolBytes = multicallResults[7][1];
+        const reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
 
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][0])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
@@ -357,6 +368,9 @@ export function Dashboard( props: dashboardProps ){
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
           userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals),
           totalStakingBalance: totalStakingBalance,
+          contractReserveTokenBalance: contractReserveTokenBalance,
+          reserveTokenDecimals: reserveTokenDecimals,
+          reserveTokenSymbol: reserveTokenSymbol,
         });
 
         console.log(chartParam);

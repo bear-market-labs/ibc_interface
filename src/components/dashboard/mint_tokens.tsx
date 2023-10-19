@@ -101,6 +101,10 @@ export default function MintTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
+
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserverTokenDecimals : reserveAssetDecimals;
+	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
+
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())
 	)
@@ -157,11 +161,11 @@ export default function MintTokens(props: mintProps) {
         .toFixed(reserveAssetDecimals)
 
 			const maxReserveLimit =
-				Number(formatEther(bondingCurveParams.reserveAmount)) *
+				Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
 				(1 + maxReserve / 100)
 
       const minReserveLimit =
-				Number(formatEther(bondingCurveParams.reserveAmount)) *
+				Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
 				(1 - maxReserve / 100)
 
 			const commandBytes = arrayify(
@@ -270,7 +274,8 @@ export default function MintTokens(props: mintProps) {
 		inverseTokenDecimals,
 		totalFeePercent,
 		maxReserve,
-		bondingCurveParams,
+		reserveTokenDecimals,
+		contractReserveTokenBalance
 	])
 
 	const handleAmountChange = (val: any) => {

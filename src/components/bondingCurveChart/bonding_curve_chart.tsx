@@ -259,9 +259,9 @@ export default function BondingCurveChart(props: IProps) {
     }
 
     function getProperParameter(liquidityChange: number){
-        //display a smooth curve "shift", with bounds
+        //display a smooth curve "shift", with bounds 
         let k = 1 - curveUtilization;
-        let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), 100) : Math.max(Math.log(Math.E - liquidityChange), 0.3);
+        let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), 100) : Math.log(Math.E + liquidityChange);
 
         let newCurveParam = {
           parameterK: k,

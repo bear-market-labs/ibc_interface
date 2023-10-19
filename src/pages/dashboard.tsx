@@ -451,6 +451,22 @@ export function Dashboard( props: dashboardProps ){
     setNewReserve(null)
   }
 
+  const handleLiquidityNavInputSwitch = async(index:any) => {
+
+    if (index === 1 && "lpTokenSupply" in dashboardDataSet && "userLpTokenBalance" in dashboardDataSet && "userLpRedeemableReserves" in dashboardDataSet){
+      const newLpSupply = ethers.BigNumber.from(dashboardDataSet.lpTokenSupply).sub(dashboardDataSet.userLpTokenBalance)
+      const newReserve = ethers.BigNumber.from(dashboardDataSet.bondingCurveParams.reserveAmount).sub(ethers.utils.parseUnits(dashboardDataSet.userLpRedeemableReserves, dashboardDataSet.reserveTokenDecimals))
+
+      setNewLpIssuance(newLpSupply.toString())
+      setNewReserve(newReserve.toString())
+    }else {
+      setNewLpIssuance(null)
+      setNewReserve(null)
+    }
+    setNewIbcIssuance(null)
+    setNewPrice(null)
+  }
+
   const handleModalClose = async() => {
     const preModalSelectedNavItem = navOptions.find(x => x.displayText.toUpperCase() === headerTitle.toUpperCase())?.value
     setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
@@ -681,7 +697,7 @@ export function Dashboard( props: dashboardProps ){
                   headerTitle === "ADD / REMOVE LIQUIDITY" &&
                   (
                     <>
-                      <Tabs onChange={handleNavInputSwitch} pl='5' pr='5'>
+                      <Tabs onChange={handleLiquidityNavInputSwitch} pl='5' pr='5'>
                         <TabList borderBottom={'none'}>
                           <Tab>Add</Tab>
                           <Tab>Remove</Tab>

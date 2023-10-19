@@ -82,6 +82,7 @@ export default function RemoveLiquidity(props: mintProps) {
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
 	const userLpTokenBalance = 'userLpTokenBalance' in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'
+	const userIbcTokenBalance = 'userIbcTokenBalance' in dashboardDataSet ? BigNumber.from(dashboardDataSet.userIbcTokenBalance) : BigNumber.from(0)
 
 	const userLpIbcCredit = 'userLpIbcCredit' in dashboardDataSet
 			? dashboardDataSet.userLpIbcCredit
@@ -408,9 +409,9 @@ export default function RemoveLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals)))}
+					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
-					{userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
+					{userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>
 			</Stack>
 		</Stack>

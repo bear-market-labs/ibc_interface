@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { Button, Input, Link, Stack } from '@chakra-ui/react'
+import { Box, Button, IconButton, Image, Input, Link, Stack } from '@chakra-ui/react'
 import { contracts } from '../../config/contracts'
 import { BiLinkExternal } from 'react-icons/bi'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { colors } from '../../config/style'
 import { ibcImageUrl } from '../../config/constants'
+
+import ib_eth_logo from '../../assets/ib_eth_logo.png'
 
 type addProps = {
   tokenDecimals: any;
@@ -49,10 +51,10 @@ export default function AddIbc(props: addProps) {
     <>
       {
         isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
-          <Link onClick={sendTransaction} isExternal>
-          <BiLinkExternal></BiLinkExternal>
-          </Link>
-        )
+          <Box as='button'>
+            <Image src={ib_eth_logo} onClick={sendTransaction} />
+          </Box>
+          )
       }
 
       {

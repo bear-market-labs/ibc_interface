@@ -26,6 +26,7 @@ import { actionTypes, curveUtilization, lpTokenDecimals } from "../config/consta
 import ExternalLinks from '../components/dashboard/external_links'
 import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
+import AddIbc from "../components/dashboard/add_ibc";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -581,7 +582,14 @@ export function Dashboard( props: dashboardProps ){
                 <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
-                <ConnectWallet />
+                <Stack direction="row">
+                  <AddIbc 
+                    tokenAddress={dashboardDataSet.inverseTokenAddress}
+                    tokenDecimals={dashboardDataSet.inverseTokenDecimals}
+                    tokenSymbol={dashboardDataSet.inverseTokenSymbol}
+                  />
+                  <ConnectWallet />
+                </Stack>
               </Stack>
             </Stack>
           </GridItem>

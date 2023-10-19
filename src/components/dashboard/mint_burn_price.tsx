@@ -72,11 +72,6 @@ export default function MintBurnPrice(props: mintProps) {
               <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
               </>
           }
-          <AddIbc 
-            tokenAddress={inverseTokenAddress}
-            tokenDecimals={inverseTokenDecimals}
-            tokenSymbol={inverseTokenSymbol}
-          />
         </Stack>
       </Stack>
       </Stack>

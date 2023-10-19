@@ -59,7 +59,9 @@ export default function AddIbc(props: addProps) {
 
       {
         !isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
-          <BiLinkExternal color={colors.GRAYED_OUT_GRAY}></BiLinkExternal>
+          <Box >
+            <Image src={ib_eth_logo} />
+          </Box>
         )
       }
 

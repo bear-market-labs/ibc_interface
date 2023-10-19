@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Link, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Divider, Input, Link, Spacer, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
@@ -163,8 +163,6 @@ export default function ClaimLpRewards(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
         <Text align="right" fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
         <Text align="right" fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
-        <Text align="left" fontSize='sm' textTransform={'uppercase'}>Total staked amount in contract</Text>
-        <Text align="right" fontSize={'2xl'}>{`${contract_inverse_token_balance} IBC`}</Text>
 
         {
           isProcessing &&
@@ -177,7 +175,7 @@ export default function ClaimLpRewards(props: mintProps) {
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >
-            Claim
+            CLAIM
           </Button>
       </Stack>
     </>

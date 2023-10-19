@@ -2,6 +2,8 @@ import React from 'react';
 import * as d3 from 'd3';
 import * as _ from "lodash";
 import { useCallback, useEffect, useState, useRef } from 'react';
+import { curveUtilization } from '../../config/constants';
+import { RiNewspaperLine } from 'react-icons/ri';
 
 interface ICurveParam {
     parameterK: number;
@@ -27,6 +29,8 @@ interface IChartState {
     chart?: d3.Selection<SVGGElement, unknown, null, undefined>;
     xScale: d3.ScaleLinear<number, number, never>;
     yScale: d3.ScaleLinear<number, number, never>;
+    maxM: number;
+    minM: number;
 }
 
 export default function BondingCurveChart(props: IProps) {
@@ -60,11 +64,7 @@ export default function BondingCurveChart(props: IProps) {
 
     useEffect(() => {
 
-        console.log('<-------parameter change:');
-        console.log(props);
-
         if (props && props.chartParam && props.chartParam.currentSupply) {
-            console.log(props);
             let forceRefresh = false, refreshCurve = false, refreshArea = false, refreshNewCurve = false;
             if(chartParam && initialized){
                 if(_.isEqual(chartParam, props.chartParam)){
@@ -161,6 +161,10 @@ export default function BondingCurveChart(props: IProps) {
         yDomain[1] = (curChartParam.curveParameter.parameterM / ((dataRange[0]) ** curChartParam.curveParameter.parameterK)) * 1.05;
         yDomain[0] = (curChartParam.curveParameter.parameterM / ((dataRange[dataRange.length -1]) ** curChartParam.curveParameter.parameterK)) * 0.6;
 
+        let currentY = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterK);
+        let maxM = currentY * ((dataRange[dataRange.length -1]) ** curChartParam.curveParameter.parameterK);
+        // let minM = currentY * ((dataRange[0]) ** curChartParam.curveParameter.parameterK);
+
         const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
         const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
 
@@ -171,6 +175,8 @@ export default function BondingCurveChart(props: IProps) {
             xScale: xScale,
             yScale: yScale,
             chart: chartState?.chart,
+            maxM: maxM,
+            minM: 0.65 // proper number to avoid y value lower than y domain bound
         }
 
         setChartState(curChartState);
@@ -257,32 +263,40 @@ export default function BondingCurveChart(props: IProps) {
         }        
     }
 
-    function getProperParameter(liquidityChange: number){
-        let targetParamK = 0.5 * (1 + liquidityChange);
-        if(targetParamK> 0.5){
-            if(targetParamK < MAX_PARAMETER_K[0]){
-                targetParamK = MAX_PARAMETER_K[0];
-            }else if( targetParamK > MAX_PARAMETER_K[1]){
-                targetParamK = MAX_PARAMETER_K[1];
+    function getProperParameter(chartState: IChartState, curChartParam: IChartParam){
+        //display a smooth curve "shift", with bounds 
+        let k = 1 - curveUtilization;
+        let liquidityChange = curChartParam.targetLiquidityChange ?? 0;
+        let m = Math.log(Math.E + liquidityChange);
+
+        // limit the range of m to make the curve show properly with the old curve
+        if(liquidityChange  > 0){
+            if(m < 1.05 ){
+                m = 1.05;
+            }else if(m > chartState.maxM){
+                m = chartState.maxM;
             }
         }else{
-            if(targetParamK > MIN_PARAMETER_K[1]){
-                targetParamK = MIN_PARAMETER_K[1];
-            }else if( targetParamK < MIN_PARAMETER_K[0]){
-                targetParamK = MIN_PARAMETER_K[0];
-            }  
+            if(m > 0.95 ){
+                m = 0.95;
+            }else if(m < chartState.minM){
+                m = chartState.minM;
+            }
         }
-        let newCurveParam = {
-          parameterK: targetParamK,
-          parameterM: 1 * (1 ** targetParamK)
-        }
+        let currentPrice = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterM / curChartParam.currentSupply);
+        let newSupply = (m / currentPrice) ** (1/k);
+        // let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), chartState.maxM) : Math.log(Math.E + liquidityChange);
 
-        return newCurveParam;         
+        return {
+            currentSupply: newSupply,
+            curveParameter: {
+                parameterK: k,
+                parameterM: m,
+            }
+        }      
     }
     function drawBondingCurve(curChartParam: IChartParam, curChartState: IChartState, refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
         let currentCurvePainted = false, liquidityAreaPainted = false, newCurvePainted = false;
-        console.log('drawBondingCurve')
-        console.log(curChartParam)
         if(curChartParam){
             if (refreshCurve) {
                 drawCurve(curChartState, curChartParam.curveParameter, 'line');
@@ -291,11 +305,10 @@ export default function BondingCurveChart(props: IProps) {
             }
     
             if (curChartParam.targetLiquidityChange && refreshNewCurve) {
-                let newCurveParam = getProperParameter(curChartParam.targetLiquidityChange);
-
-                drawCurve(curChartState, newCurveParam, 'target-line');
-                newCurvePainted = true;
-                
+                let newChartParam = getProperParameter(curChartState, curChartParam);                
+                drawCurve(curChartState, newChartParam.curveParameter, 'target-line');
+                drawDot(curChartState, newChartParam.curveParameter, newChartParam.currentSupply, 'dot-target');
+                newCurvePainted = true;                
             }
     
             if(refreshArea){
@@ -306,11 +319,7 @@ export default function BondingCurveChart(props: IProps) {
             }
 
             if(!liquidityAreaPainted){
-                if(newCurvePainted){
-                    drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
-                }else if(currentCurvePainted){
-                    drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-target');
-                }
+                drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
             }
         }
     }
@@ -320,42 +329,6 @@ export default function BondingCurveChart(props: IProps) {
     }
 
     function drawLiquidityArea(curChartParam: IChartParam, curChartState: IChartState) {
-
-        // if (curChartState && curChartState.chart && curChartParam && curChartParam.targetSupply) {
-        //     const supplyRange = curChartState?.supplyRange;
-        //     let minSupply = 0, maxSupply = 0;
-        //     if (curChartParam.currentSupply < curChartParam.targetSupply) {
-        //         minSupply = curChartParam.currentSupply;
-        //         maxSupply = curChartParam.targetSupply;
-        //     } else {
-        //         minSupply = curChartParam.targetSupply;
-        //         maxSupply = curChartParam.currentSupply;
-        //     }
-
-        //     let beginIndex = _.findIndex(supplyRange, item => {
-        //         return item >= minSupply;
-        //     });
-
-        //     let endIndex = _.findIndex(supplyRange, item => {
-        //         return item >= maxSupply;
-        //     });
-
-        //     if (beginIndex < 0) {
-        //         beginIndex = 0;
-        //     }
-
-        //     if (endIndex < 0) {
-        //         endIndex = supplyRange.length;
-        //     }
-
-        //     let areaDataRange = _.slice(supplyRange, beginIndex, endIndex);
-        //     areaDataRange.splice(0, 0, minSupply);
-        //     areaDataRange.push(maxSupply);
-
-        //     drawArea(curChartState, curChartParam, areaDataRange);
-        //     drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
-        //     drawDot(curChartState, curChartParam.curveParameter, curChartParam.targetSupply, 'dot-target');            
-        // }
         const maxChangePercent = (curChartState.xDomain[1] - curChartParam.currentSupply) / curChartParam.currentSupply;
         const minChangePercent = -(curChartParam.currentSupply - curChartState.xDomain[0]) / curChartParam.currentSupply;
         if (curChartState && curChartState.chart && curChartParam && curChartParam.targetSupplyChange) {

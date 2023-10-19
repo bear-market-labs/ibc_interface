@@ -34,6 +34,7 @@ import {
 	reserveAssetSymbol,
 	format,
 	parse,
+  commandTypes,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -56,7 +57,8 @@ export default function MintTokens(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcContract)
+	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -99,6 +101,10 @@ export default function MintTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
+
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserverTokenDecimals : reserveAssetDecimals;
+	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
+
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())
 	)
@@ -133,7 +139,7 @@ export default function MintTokens(props: mintProps) {
 				solidityKeccak256(
 					['string'],
 					[
-						'buyTokens(address,uint256,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+						'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 					]
 				)
 			).slice(0, 4)
@@ -148,23 +154,48 @@ export default function MintTokens(props: mintProps) {
 				.dividedBy(bignumber(receivedAmount))
 				.toFixed(reserveAssetDecimals)
 
+      const minPriceLimit = bignumber(
+        Number(amount.toString()) * (1 - maxSlippage / 100)
+      )
+        .dividedBy(bignumber(receivedAmount))
+        .toFixed(reserveAssetDecimals)
+
 			const maxReserveLimit =
-				Number(formatEther(bondingCurveParams.reserveAmount)) *
+				Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
 				(1 + maxReserve / 100)
 
-			const payloadBytes = arrayify(
+      const minReserveLimit =
+				Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
+				(1 - maxReserve / 100)
+
+			const commandBytes = arrayify(
 				abiCoder.encode(
-					['address', 'uint256', 'uint256'], // array of types; make sure to represent complex types as tuples
+					['address', 'uint256', 'uint256', 'uint256[2]', "uint256[2]"], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address, // unused when going thru router
+            parseEther(amount.toString()), // reserve in
+            0, // exact out arg not used in frontend
+						[parseEther(minPriceLimit), parseEther(maxPriceLimit)],
+						[parseEther(minReserveLimit.toFixed(reserveAssetDecimals)), parseEther(maxReserveLimit.toFixed(reserveAssetDecimals))],
+					] 
+				)
+			)
+
+      const payloadBytes = arrayify(
+				abiCoder.encode(
+					['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
 					[
 						wallet.accounts[0].address,
-						parseEther(maxPriceLimit),
-						parseEther(maxReserveLimit.toFixed(reserveAssetDecimals)),
+            ibcContractAddress,
+            true,
+            commandTypes.buyTokens,
+            commandBytes,
 					] // arg values
 				)
 			)
 
 			const txDetails = {
-				to: ibcContractAddress,
+				to: ibcRouterAddress,
 				data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
 				value: parseEther(amount.toString()),
 			}
@@ -243,7 +274,8 @@ export default function MintTokens(props: mintProps) {
 		inverseTokenDecimals,
 		totalFeePercent,
 		maxReserve,
-		bondingCurveParams,
+		reserveTokenDecimals,
+		contractReserveTokenBalance
 	])
 
 	const handleAmountChange = (val: any) => {
@@ -292,16 +324,13 @@ export default function MintTokens(props: mintProps) {
 
 				const newSupply = mintAmount.add(inverseTokenSupply)
 
-				const newPriceQuery = composeQuery(
-					ibcContractAddress,
-					'priceOf',
-					['uint256'],
-					[newSupply]
-				)
-				const newPriceBytes = await provider.call(newPriceQuery)
-				const newPrice = BigNumber.from(
-					abiCoder.decode(['uint256'], newPriceBytes)[0].toString()
-				)
+
+        // calculate spot price post mint
+        const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
+
+        const newPrice = curveInvariant * Number(formatEther(utilization)) 
+        /
+        Math.pow(Number(formatUnits(newSupply, inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
 
 				// this is the minter's price, not the resulting bonding curve price!!!
 				const resultPriceInEth = bignumber(decimaledParsedAmount.toString())
@@ -311,7 +340,7 @@ export default function MintTokens(props: mintProps) {
 				setResultPrice(bignumber(resultPriceInWei.toString()))
 				setMintAmount(mintAmount)
 
-				parentSetters?.setNewPrice(newPrice.toString())
+				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
 				parentSetters?.setNewIbcIssuance(newSupply.toString())
 				parentSetters?.setNewReserve(
 					reserveAmount.add(decimaledParsedAmount).toString()

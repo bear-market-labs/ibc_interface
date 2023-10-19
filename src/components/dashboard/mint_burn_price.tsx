@@ -23,8 +23,7 @@ export default function MintBurnPrice(props: mintProps) {
     reserveAsset: 0,
     ibcAsset: 0
   }; 
-  const virtualInverseTokenAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualInverseTokenAmount) : BigNumber.from('0');
-  const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply).sub(virtualInverseTokenAmount) : BigNumber.from('0'); 
+  const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply): BigNumber.from('0'); 
 
 
   const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
@@ -65,7 +64,7 @@ export default function MintBurnPrice(props: mintProps) {
         <Divider orientation='vertical' colorScheme={'gray'} />
       </Center>
       <Stack ml={50} align={'right'}>
-        <Text mt={7} align="left" fontSize='md'>APPROX STAKED REWARDS</Text>
+        <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
         <Stack  direction='row'>
           {
             <>
@@ -73,11 +72,6 @@ export default function MintBurnPrice(props: mintProps) {
               <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
               </>
           }
-          <AddIbc 
-            tokenAddress={inverseTokenAddress}
-            tokenDecimals={inverseTokenDecimals}
-            tokenSymbol={inverseTokenSymbol}
-          />
         </Stack>
       </Stack>
       </Stack>

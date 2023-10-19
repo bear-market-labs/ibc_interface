@@ -9,7 +9,7 @@ import { contracts } from '../../config/contracts'
 
 import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
-import { explorerUrl } from '../../config/constants'
+import { commandTypes, explorerUrl } from '../../config/constants'
 import { BiLinkExternal } from 'react-icons/bi'
 import { Toast } from '../toast'
 import { error_message } from '../../config/error'
@@ -24,7 +24,8 @@ type mintProps = {
 export default function ClaimLpRewards(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
   let closeParentDialog = props.closeParentDialog;
 
@@ -34,7 +35,7 @@ export default function ClaimLpRewards(props: mintProps) {
   const userClaimableStakingReserveRewards = BigNumber.from("userClaimableStakingReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingReserveRewards : '0')
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0');
-  const contractInverseTokenBalance = BigNumber.from('contractInverseTokenBalance' in dashboardDataSet ? dashboardDataSet.contractInverseTokenBalance : '0')
+  const totalStakingBalance = 'totalStakingBalance' in dashboardDataSet ? dashboardDataSet.totalStakingBalance : '0'
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -64,17 +65,16 @@ export default function ClaimLpRewards(props: mintProps) {
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
-      const functionDescriptorBytes = arrayify(solidityKeccak256(
-        [
-          "string"
-        ]
-        ,
-        [
-          "claimReward(address)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-        ]
-      )).slice(0,4)
+			const functionDescriptorBytes = arrayify(
+				solidityKeccak256(
+					['string'],
+					[
+						'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+					]
+				)
+			).slice(0, 4)
         
-      const payloadBytes = arrayify(abiCoder.encode(
+      const commandBytes = arrayify(abiCoder.encode(
         [
           "address"
         ], // array of types; make sure to represent complex types as tuples 
@@ -83,8 +83,21 @@ export default function ClaimLpRewards(props: mintProps) {
         ] // arg values
       ))
 
+      const payloadBytes = arrayify(
+				abiCoder.encode(
+					['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address,
+            ibcContractAddress,
+            true,
+            commandTypes.claimRewards,
+            commandBytes,
+					] // arg values
+				)
+			)
+
       const txDetails = {
-        to: ibcContractAddress,
+        to: ibcRouterAddress,
         data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
       }
 
@@ -138,11 +151,11 @@ export default function ClaimLpRewards(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, ibcContractAddress]);
+  }, [wallet, provider, ibcContractAddress, ibcRouterAddress]);
 
   const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
   const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
-  const contract_inverse_token_balance = Number(formatUnits(contractInverseTokenBalance, inverseTokenDecimals)).toFixed(4)
+  const contract_inverse_token_balance = Number(formatUnits(totalStakingBalance, inverseTokenDecimals)).toFixed(4)
   
   return (
     <>

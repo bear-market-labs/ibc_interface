@@ -6,7 +6,7 @@ import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { explorerUrl } from '../../config/constants'
+import { commandTypes, explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
@@ -20,7 +20,8 @@ type mintProps = {
 export default function UnstakeIbc(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>('')
 
@@ -55,27 +56,41 @@ export default function UnstakeIbc(props: mintProps) {
       const signer = provider?.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
-      const functionDescriptorBytes = arrayify(solidityKeccak256(
-        [
-          "string"
-        ]
-        ,
-        [
-          "unstake(uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-        ]
-      )).slice(0,4)
+      const functionDescriptorBytes = arrayify(
+        solidityKeccak256(
+          ['string'],
+          [
+            'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+          ]
+        )
+      ).slice(0, 4)
         
-      const payloadBytes = arrayify(abiCoder.encode(
+      const commandBytes = arrayify(abiCoder.encode(
         [
+          "address",
           "uint256",
         ], // array of types; make sure to represent complex types as tuples 
         [
+          wallet.accounts[0].address, //ignored via router
           parseUnits(amount.toString(), inverseTokenDecimals)
         ] // arg values
       ))
 
+      const payloadBytes = arrayify(
+        abiCoder.encode(
+          ['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+          [
+            wallet.accounts[0].address,
+            ibcContractAddress,
+            true,
+            commandTypes.unstake,
+            commandBytes,
+          ] // arg values
+        )
+      )
+
       const txDetails = {
-        to: ibcContractAddress,
+        to: ibcRouterAddress,
         data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
       }
 
@@ -113,7 +128,7 @@ export default function UnstakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals]);
+  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, ibcRouterAddress]);
 
   return (
     <>

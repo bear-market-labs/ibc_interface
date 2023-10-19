@@ -15,9 +15,8 @@ export default function LpingIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const virtualLpAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
 
-  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply).sub(virtualLpAmount) : BigNumber.from('0')
+  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply) : BigNumber.from('0')
 
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userLpTokenBalance = BigNumber.from("userLpTokenBalance" in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'); 
@@ -25,7 +24,7 @@ export default function LpingIssuance(props: mintProps) {
 
 
 
-  let newLpIssuance = parentInputDynamicData?.newLpIssuance ? BigNumber.from(parentInputDynamicData.newLpIssuance).sub(virtualLpAmount) : BigNumber.from('0')
+  let newLpIssuance = parentInputDynamicData?.newLpIssuance ? BigNumber.from(parentInputDynamicData.newLpIssuance) : BigNumber.from('0')
 
   if (Math.abs(Number(ethers.utils.formatUnits(lpTokenSupply.sub(newLpIssuance), lpTokenDecimals))) < issuanceDiffTolerance){
     newLpIssuance = lpTokenSupply
@@ -56,7 +55,7 @@ export default function LpingIssuance(props: mintProps) {
         <Stack direction="row">
           <Text ml={7} align="left">{`${userCurrentLpShare.toFixed(2)} %`}</Text>
           {
-            userNewLpShare.gt(0) && !userNewLpShare.eq(userCurrentLpShare) &&
+            userNewLpShare.isFinite() && !userNewLpShare.eq(userCurrentLpShare) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>

@@ -1,9 +1,11 @@
 export const reserveAssetSymbol = "ETH"
 export const reserveAssetDecimals = 18
+export const lpTokenDecimals = 18
 export const ibcSymbol = "IBC"
 export const maxSlippagePercent = 1
 export const maxReserveChangePercent = 1
 export const explorerUrl = "https://etherscan.io/tx/"
+export const curveUtilization = 0.5
 
 export const actionTypes = [
   "buyTokens",
@@ -11,6 +13,17 @@ export const actionTypes = [
   "addLiquidity",
   "removeLiquidity",
 ]
+
+export const commandTypes = {
+  "buyTokens": 0,
+  "sellTokens": 1,
+  "addLiquidity": 2,
+  "removeLiquidity": 3,
+  "claimRewards": 4,
+  "stake": 5,
+  "unstake": 6,
+}
+
 
 export const format = (val: any) => val + `%`
 export const parse = (val: any) => val.replace(/^\%/, '')

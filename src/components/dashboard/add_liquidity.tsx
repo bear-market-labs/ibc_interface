@@ -33,6 +33,7 @@ import {
 	reserveAssetSymbol,
 	format,
 	parse,
+	commandTypes,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -53,10 +54,12 @@ export default function AddLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcContract)
+	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
+	const [ibcCredit, setIbcCredit] = useState<number>(0)
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -67,13 +70,18 @@ export default function AddLiquidity(props: mintProps) {
 			? dashboardDataSet.lpTokenDecimals
 			: '0'
 	)
+	const inverseTokenDecimals = BigNumber.from(
+		'inverseTokenDecimals' in dashboardDataSet
+			? dashboardDataSet.inverseTokenDecimals
+			: '0'
+	)
 	const lpTokenSupply = BigNumber.from(
 		'lpTokenSupply' in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'
 	)
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
+	const userLpTokenBalance = bignumber(
 		'userLpTokenBalance' in dashboardDataSet
 			? dashboardDataSet.userLpTokenBalance
 			: '0'
@@ -127,7 +135,7 @@ export default function AddLiquidity(props: mintProps) {
 				solidityKeccak256(
 					['string'],
 					[
-						'addLiquidity(address,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+						'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 					]
 				)
 			).slice(0, 4)
@@ -138,15 +146,38 @@ export default function AddLiquidity(props: mintProps) {
 					.toFixed(0)
 			)
 
+			const maxPriceLimit = BigNumber.from(
+				bignumber(currentTokenPrice.toString())
+					.multipliedBy(1 + maxSlippage / 100)
+					.toFixed(0)
+			)
+
+			const commandBytes = arrayify(
+				abiCoder.encode(
+					['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address, // ignored by router
+						parseEther(amount.toString()),
+						[minPriceLimit, maxPriceLimit],
+					] // arg values
+				)
+			)
+
 			const payloadBytes = arrayify(
 				abiCoder.encode(
-					['address', 'uint256'], // array of types; make sure to represent complex types as tuples
-					[wallet.accounts[0].address, minPriceLimit] // arg values
+					['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+					[
+						wallet.accounts[0].address,
+						ibcContractAddress,
+						true,
+						commandTypes.addLiquidity,
+						commandBytes,
+					] // arg values
 				)
 			)
 
 			const txDetails = {
-				to: ibcContractAddress,
+				to: ibcRouterAddress,
 				data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
 				value: parseEther(amount.toString()),
 			}
@@ -162,7 +193,7 @@ export default function AddLiquidity(props: mintProps) {
 				result.logs.find((x) => {
 					try {
 						LiquidityAddedDetails = abiCoder.decode(
-							['uint256', 'uint256', 'uint256', 'uint256'],
+							['uint256', 'uint256', 'uint256'],
 							x.data
 						)
 						return true
@@ -242,25 +273,19 @@ export default function AddLiquidity(props: mintProps) {
 			).toFixed(reserveAssetDecimals)
 		)
 
-		const supply = formatUnits(
-			bondingCurveParams.inverseTokenSupply,
-			bondingCurveParams.inverseTokenDecimals
-		)
-		const price_supply_product = bignumber(
-			bondingCurveParams.currentTokenPrice
-		).multipliedBy(supply)
-
 		const mintAmount = BigNumber.from(
 			bignumber(lpTokenSupply.mul(feeAdjustedAmount).toString())
 				.dividedBy(
-					bignumber(bondingCurveParams.reserveAmount).minus(
-						price_supply_product
-					)
+					bignumber(bondingCurveParams.reserveAmount)
 				)
 				.toFixed(0)
 		)
 
+		//calculate ibc credit
+		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, reserveAssetDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, reserveAssetDecimals))
+
 		setMintAmount(mintAmount)
+		setIbcCredit(lpIbcCredit)
 
 		parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
 		parentSetters?.setNewReserve(
@@ -316,13 +341,15 @@ export default function AddLiquidity(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(2)}
+						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(3)}
 					</Text>
 					<Text align='right'>LP</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${userIbcBalance
-					.dividedBy(Math.pow(10, lpTokenDecimals.toNumber()))
-					.toFixed(2)}`}</Text>
+				<Text align='right' fontSize='sm'>
+					{
+						`+ ${ibcCredit.toFixed(3)} IBC bound to position`
+					}
+				</Text>
 			</Stack>
 
 			<Stack>
@@ -365,9 +392,9 @@ export default function AddLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+					isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || userLpTokenBalance.gt(0)}
 				>
-					Add Liquidity
+					{userLpTokenBalance.gt(0) ? `Removal Required` : `Add Liquidity`}
 				</Button>
 			</Stack>
 		</Stack>

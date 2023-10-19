@@ -12,17 +12,15 @@ type mintProps = {
 export default function LpingReserve(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-  const virtualReserveAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
 
-  const reserveAmount = "reserveAmount" in bondingCurveParams ? BigNumber.from(bondingCurveParams.reserveAmount).sub(virtualReserveAmount) : BigNumber.from('0'); 
-  const newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve).sub(virtualReserveAmount) : BigNumber.from('0'); 
+  const reserveAmount = "reserveAmount" in bondingCurveParams ? BigNumber.from(bondingCurveParams.reserveAmount) : BigNumber.from('0'); 
+  const newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0'); 
   const lpRewardEma = "lpRewardEma" in dashboardDataSet ? dashboardDataSet.lpRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0
   }; 
 
-  const virtualLpAmount = Object.keys(bondingCurveParams).length > 0 ? BigNumber.from(bondingCurveParams?.virtualReserveAmount) : BigNumber.from('0');
-  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply).sub(virtualLpAmount) : BigNumber.from('0')
+  const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply) : BigNumber.from('0')
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
 
 
@@ -64,7 +62,7 @@ export default function LpingReserve(props: mintProps) {
           <Divider orientation='vertical' colorScheme={'gray'} />
         </Center>
         <Stack ml={50} align={'right'}>
-          <Text  mt={7} align="left" fontSize='md'>APPROX LP REWARDS</Text>
+          <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
             {
               <>
 

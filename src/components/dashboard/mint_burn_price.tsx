@@ -44,8 +44,8 @@ export default function MintBurnPrice(props: mintProps) {
 
   return (
     <>
-    <Stack direction="row">
-      <Stack>
+    <Stack direction="row" pr='7'>
+      <Stack w='50%'>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row'>
           <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(currentTokenPrice)).toFixed(3)} ETH`}</Text>
@@ -60,18 +60,18 @@ export default function MintBurnPrice(props: mintProps) {
           }
         </Stack>
       </Stack>
-      <Center mt={7} ml={283} height='69px'>
-        <Divider orientation='vertical' colorScheme={'gray'} />
-      </Center>
-      <Stack ml={50} align={'right'}>
-        <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
-        <Stack  direction='row'>
-          {
-            <>
+      <Stack w='50%' direction='row'>
+        <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+        <Stack align={'right'}>
+          <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
+          <Stack direction='row'>
+            {
+              <>
 
-              <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
-              </>
-          }
+                <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
+                </>
+            }
+          </Stack>
         </Stack>
       </Stack>
       </Stack>

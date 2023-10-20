@@ -46,6 +46,7 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -76,11 +77,10 @@ export default function MintTokens(props: mintProps) {
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
+	const userIbcBalance =
 		'userIbcTokenBalance' in dashboardDataSet
-			? dashboardDataSet.userIbcTokenBalance
-			: '0'
-	)
+			? BigNumber.from(dashboardDataSet.userIbcTokenBalance)
+			: BigNumber.from('0')
 	const totalFeePercent =
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
@@ -328,9 +328,9 @@ export default function MintTokens(props: mintProps) {
         // calculate spot price post mint
         const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
 
-        const newPrice = curveInvariant * Number(formatEther(utilization)) 
+        const newPrice = Number(curveInvariant * Number(formatEther(utilization)) 
         /
-        Math.pow(Number(formatUnits(newSupply, inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
+        Math.pow(Number(formatUnits(newSupply, inverseTokenDecimals)), 1 - Number(formatEther(utilization)))).toFixed(inverseTokenDecimals.toNumber())
 
 				// this is the minter's price, not the resulting bonding curve price!!!
 				const resultPriceInEth = bignumber(decimaledParsedAmount.toString())
@@ -340,7 +340,7 @@ export default function MintTokens(props: mintProps) {
 				setResultPrice(bignumber(resultPriceInWei.toString()))
 				setMintAmount(mintAmount)
 
-				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
+				parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
 				parentSetters?.setNewIbcIssuance(newSupply.toString())
 				parentSetters?.setNewReserve(
 					reserveAmount.add(decimaledParsedAmount).toString()
@@ -394,9 +394,9 @@ export default function MintTokens(props: mintProps) {
 				</Stack>
 
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${Number(
+					<Text align='right'>{`Balance: ${formatBalanceNumber(
 						formatEther(userBalance)
-					).toFixed(1)}`}</Text>
+					)}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
@@ -415,16 +415,14 @@ export default function MintTokens(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{(
-							Number(formatUnits(mintAmount, inverseTokenDecimals)) *
-							(1 - totalFeePercent)
-						).toFixed(2)}
+						{
+							formatReceiveNumber((Number(formatUnits(mintAmount, inverseTokenDecimals)) *
+							(1 - totalFeePercent)).toString()
+						)}
 					</Text>
 					<Text align='right'>{ibcSymbol}</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${userIbcBalance
-					.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-					.toFixed(2)}`}</Text>
+				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(formatUnits(userIbcBalance.toString(), inverseTokenDecimals))}`}</Text>
 			</Stack>
 
 			<Stack>

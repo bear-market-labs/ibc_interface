@@ -43,6 +43,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -322,9 +323,9 @@ export default function AddLiquidity(props: mintProps) {
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${Number(
+					<Text align='right'>{`Balance: ${formatBalanceNumber(
 						formatEther(userBalance)
-					).toFixed(1)}`}</Text>
+					)}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
@@ -341,13 +342,13 @@ export default function AddLiquidity(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(3)}
+						{formatReceiveNumber(formatUnits(mintAmount, lpTokenDecimals))}
 					</Text>
 					<Text align='right'>LP</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${ibcCredit.toFixed(3)} IBC bound to position`
+						`+ ${formatNumber(ibcCredit.toString(), "IBC")} bound to position`
 					}
 				</Text>
 			</Stack>

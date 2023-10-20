@@ -47,6 +47,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -88,11 +89,9 @@ export default function BurnTokens(props: mintProps) {
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
-		'userIbcTokenBalance' in dashboardDataSet
-			? dashboardDataSet.userIbcTokenBalance
-			: '0'
-	)
+	const userIbcBalance ='userIbcTokenBalance' in dashboardDataSet
+			? BigNumber.from(dashboardDataSet.userIbcTokenBalance)
+			: BigNumber.from('0')
 	const totalFeePercent =
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
@@ -448,17 +447,13 @@ export default function BurnTokens(props: mintProps) {
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${userIbcBalance
-						.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-						.toFixed(2)}`}</Text>
+					<Text align='right'>{`Balance: ${formatBalanceNumber(formatUnits(userIbcBalance, inverseTokenDecimals))}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
 						onClick={() =>
 							handleAmountChange(
-								userIbcBalance
-									.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-									.toString()
+								formatUnits(userIbcBalance, inverseTokenDecimals)
 							)
 						}
 					>
@@ -471,16 +466,16 @@ export default function BurnTokens(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{(
-							Number(formatEther(liquidityReceived).toString()) *
-							(1 - totalFeePercent)
-						).toFixed(2)}
+						{
+							formatReceiveNumber((Number(formatEther(liquidityReceived)) *
+							(1 - totalFeePercent)).toString()
+						)}
 					</Text>
 					<Text align='right'>{reserveAssetSymbol}</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${Number(
+				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(
 					formatEther(userBalance)
-				).toFixed(1)}`}</Text>
+				)}`}</Text>
 			</Stack>
 			<Stack>
 				<Stack

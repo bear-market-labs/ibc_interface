@@ -5,6 +5,7 @@ import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
 import { blocksPerDay } from '../../config/constants';
+import { formatNumber } from '../../util/display_formatting';
 
 type mintProps = {
   dashboardDataSet: any;
@@ -48,14 +49,14 @@ export default function MintBurnPrice(props: mintProps) {
       <Stack>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row'>
-          <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(currentTokenPrice)).toFixed(3)} ETH`}</Text>
+          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(currentTokenPrice), "ETH")}`}</Text>
           {
             newPrice.gt(0) && !newPrice.eq(currentTokenPrice) && 
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
               </Box>
-              <Text>{`${Number(ethers.utils.formatEther(newPrice)).toFixed(3)} ETH`}</Text>
+              <Text>{`${formatNumber(ethers.utils.formatEther(newPrice), "ETH")}`}</Text>
             </>
           }
         </Stack>
@@ -69,7 +70,7 @@ export default function MintBurnPrice(props: mintProps) {
           {
             <>
 
-              <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
+              <Text>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
               </>
           }
         </Stack>

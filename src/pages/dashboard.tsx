@@ -372,7 +372,7 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals),
+          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(inverseTokenDecimals.gt(13) ? ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) : ethers.BigNumber.from(0)), // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust
           totalStakingBalance: totalStakingBalance,
           contractReserveTokenBalance: contractReserveTokenBalance,
           reserveTokenDecimals: reserveTokenDecimals,

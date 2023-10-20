@@ -591,7 +591,7 @@ export function Dashboard( props: dashboardProps ){
                 <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
-                <Stack direction="row">
+                <Stack direction="row" align='center' gap='5'>
                   <AddIbc 
                     tokenAddress={dashboardDataSet.inverseTokenAddress}
                     tokenDecimals={dashboardDataSet.inverseTokenDecimals}

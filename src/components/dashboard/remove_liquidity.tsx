@@ -413,7 +413,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
-					{userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
+					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>
 			</Stack>
 		</Stack>

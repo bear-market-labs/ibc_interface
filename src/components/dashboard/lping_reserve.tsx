@@ -43,8 +43,8 @@ export default function LpingReserve(props: mintProps) {
 
   return (
     <>
-      <Stack direction="row">
-        <Stack>
+      <Stack direction="row" pr='7'>
+        <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
           <Stack direction="row">
             <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(reserveAmount), "ETH")}`}</Text>
@@ -59,17 +59,17 @@ export default function LpingReserve(props: mintProps) {
             }
           </Stack>
         </Stack>
-        <Center mt={7} ml={346} height='69px'>
-          <Divider orientation='vertical' colorScheme={'gray'} />
-        </Center>
-        <Stack ml={50} align={'right'}>
-          <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
-            {
-              <>
+        <Stack direction='row' w='50%'>
+          <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+          <Stack>
+            <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
+              {
+                <>
 
                 <Text>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
                 </>
-            }
+              }
+          </Stack>
         </Stack>
       </Stack>
     </>

@@ -108,6 +108,7 @@ export function Dashboard( props: dashboardProps ){
         composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+        composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
       let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -129,6 +130,9 @@ export function Dashboard( props: dashboardProps ){
 
       const lpRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
+
+      const totalStakingBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0];
+      const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
 
       multicallQueries = [
         composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
@@ -169,6 +173,7 @@ export function Dashboard( props: dashboardProps ){
       dashboardDataSet.inverseTokenDecimals = inverseTokenDecimals.toString();
       dashboardDataSet.inverseTokenAddress = inverseTokenAddress.toString();
       dashboardDataSet.contractInverseTokenBalance = contractInverseTokenBalance.toString()
+      dashboardDataSet.totalStakingBalance = totalStakingBalance;
 
       // compute old k/m params from utilization and invariant
       let k = 1 - curveUtilization
@@ -535,20 +540,24 @@ export function Dashboard( props: dashboardProps ){
                         {
                           selectedNavItem === "stake" &&
                           <>
-                            <Tabs>
-                              <TabList mr='-7%' ml='-7%' pl='7%'>
-                                <Tab>Stake</Tab>
-                                <Tab>Unstake</Tab>
-                              </TabList>
-                              <TabPanels pt='10'>
-                                <TabPanel>
-                                  <StakeIbc dashboardDataSet={dashboardDataSet} />
-                                </TabPanel>
-                                <TabPanel>
-                                  <UnstakeIbc dashboardDataSet={dashboardDataSet} />
-                                </TabPanel>
-                              </TabPanels>
-                            </Tabs>
+                            <Stack>
+                              <Text ml={4}>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? Number(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals)).toFixed(1) : '0'} IBC`}</Text>
+                              <Tabs>
+                                <TabList mr='-7%' ml='-7%' pl='7%'>
+                                  <Tab>Stake</Tab>
+                                  <Tab>Unstake</Tab>
+                                </TabList>
+                                <TabPanels pt='10'>
+                                  <TabPanel>
+                                    <StakeIbc dashboardDataSet={dashboardDataSet} />
+                                  </TabPanel>
+                                  <TabPanel>
+                                    <UnstakeIbc dashboardDataSet={dashboardDataSet} />
+                                  </TabPanel>
+                                </TabPanels>
+                              </Tabs>
+                            </Stack>
+
                           </>
                         }
                         {
@@ -582,7 +591,7 @@ export function Dashboard( props: dashboardProps ){
                 <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
-                <Stack direction="row">
+                <Stack direction="row" align='center' gap='5'>
                   <AddIbc 
                     tokenAddress={dashboardDataSet.inverseTokenAddress}
                     tokenDecimals={dashboardDataSet.inverseTokenDecimals}

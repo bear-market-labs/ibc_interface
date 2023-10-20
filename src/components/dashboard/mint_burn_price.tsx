@@ -31,17 +31,17 @@ export default function MintBurnPrice(props: mintProps) {
     Number(ethers.utils.formatEther(stakingRewardEma.reserveAsset)) 
     * blocksPerDay 
     / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
-  ).toFixed(3)
+  ).toString()
   :
-  '0.000'
+  '0'
 
   const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
     Number(ethers.utils.formatEther(stakingRewardEma.ibcAsset)) 
     * blocksPerDay 
     / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
-  ).toFixed(3)
+  ).toString()
   :
-  '0.000'
+  '0'
 
   return (
     <>

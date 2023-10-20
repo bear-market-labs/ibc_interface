@@ -40,3 +40,11 @@ export function formatNumber(number: string, unit: string){
     return `${displayNumber}E99+ ${displayUnit}`;
   }
 }
+
+export function formatBalanceNumber(number: string){
+  return Number(number).toFixed(2)
+}
+
+export function formatReceiveNumber(number: string){
+  return Number(number).toFixed(3)
+}

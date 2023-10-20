@@ -46,6 +46,7 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -76,11 +77,10 @@ export default function MintTokens(props: mintProps) {
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
+	const userIbcBalance =
 		'userIbcTokenBalance' in dashboardDataSet
-			? dashboardDataSet.userIbcTokenBalance
-			: '0'
-	)
+			? BigNumber.from(dashboardDataSet.userIbcTokenBalance)
+			: BigNumber.from('0')
 	const totalFeePercent =
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
@@ -394,9 +394,9 @@ export default function MintTokens(props: mintProps) {
 				</Stack>
 
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${Number(
+					<Text align='right'>{`Balance: ${formatBalanceNumber(
 						formatEther(userBalance)
-					).toFixed(1)}`}</Text>
+					)}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
@@ -415,16 +415,14 @@ export default function MintTokens(props: mintProps) {
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
 					<Text>
-						{(
-							Number(formatUnits(mintAmount, inverseTokenDecimals)) *
-							(1 - totalFeePercent)
-						).toFixed(2)}
+						{
+							formatReceiveNumber((Number(formatUnits(mintAmount, inverseTokenDecimals)) *
+							(1 - totalFeePercent)).toString()
+						)}
 					</Text>
 					<Text align='right'>{ibcSymbol}</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${userIbcBalance
-					.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-					.toFixed(2)}`}</Text>
+				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(formatUnits(userIbcBalance.toString(), inverseTokenDecimals))}`}</Text>
 			</Stack>
 
 			<Stack>

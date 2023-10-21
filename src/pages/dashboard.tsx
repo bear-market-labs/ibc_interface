@@ -544,9 +544,9 @@ export function Dashboard( props: dashboardProps ){
                             <Stack>
                               <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
                               <Tabs>
-                                <TabList mr='-7%' ml='-7%' pl='7%'>
-                                  <Tab>Stake</Tab>
-                                  <Tab>Unstake</Tab>
+                                <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Unstake</Tab>
                                 </TabList>
                                 <TabPanels pt='10'>
                                   <TabPanel>

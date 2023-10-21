@@ -50,5 +50,6 @@ export function formatBalanceNumber(number: string){
 }
 
 export function formatReceiveNumber(number: string){
-  return Number(number).toFixed(3)
+  // "you receive" box always has sufficient space to assume smaller ticker length
+  return formatNumber(number, "AAA", false)
 }

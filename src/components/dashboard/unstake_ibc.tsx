@@ -131,8 +131,7 @@ export default function UnstakeIbc(props: mintProps) {
   }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, ibcRouterAddress]);
 
   return (
-    <>
-      <Stack>
+      <Stack fontWeight='500'>
         <Text align="left" fontSize='sm'>YOU UNSTAKE</Text>
         <Stack direction="row">
           <NumberInput
@@ -142,21 +141,21 @@ export default function UnstakeIbc(props: mintProps) {
             <NumberInputField
               minWidth="auto"
               border="none"
-              fontSize='4xl'
+              fontSize='5xl'
               placeholder={`0`}
               height='auto'
               pl='0'
             />
           </NumberInput>
           <Text
-            fontSize='4xl'
+            fontSize='5xl'
             align="right">IBC</Text>
         </Stack>
-        <Stack direction={`row`} justifyContent={`flex-end`} pb='5'>
-          <Text fontSize={'xs'}>
+        <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
+          <Text>
             {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
-          <Box as='button' fontSize={'xs'}  color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())}>MAX</Box>
         </Stack>
 
         {
@@ -167,12 +166,12 @@ export default function UnstakeIbc(props: mintProps) {
           mt='10'
           alignSelf={'center'}
           w='100%'
+          fontSize='lg'
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}
           >
             UNSTAKE
           </Button>
       </Stack>
-    </>
   )
 }

@@ -383,12 +383,12 @@ export default function MintTokens(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						{reserveAssetSymbol}
 					</Text>
 				</Stack>
@@ -413,7 +413,7 @@ export default function MintTokens(props: mintProps) {
 				<Text align='left' fontSize='sm'>
 					YOU RECEIVE
 				</Text>
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
 						{
 							formatReceiveNumber((Number(formatUnits(mintAmount, inverseTokenDecimals)) *

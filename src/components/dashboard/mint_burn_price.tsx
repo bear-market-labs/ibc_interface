@@ -48,7 +48,11 @@ export default function MintBurnPrice(props: mintProps) {
     <Stack direction="row" pr='7'>
       <Stack w='50%'>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
+<<<<<<< HEAD
         <Stack direction='row'>
+=======
+        <Stack direction='row' fontSize='2xl' fontWeight='700'>
+>>>>>>> main
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(currentTokenPrice), "ETH")}`}</Text>
           {
             newPrice.gt(0) && !newPrice.eq(currentTokenPrice) && 
@@ -69,7 +73,11 @@ export default function MintBurnPrice(props: mintProps) {
             {
               <>
 
+<<<<<<< HEAD
                 <Text>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+=======
+                <Text fontSize='2xl' fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+>>>>>>> main
                 </>
             }
           </Stack>

@@ -27,6 +27,7 @@ import ExternalLinks from '../components/dashboard/external_links'
 import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
 import AddIbc from "../components/dashboard/add_ibc";
+import { formatNumber } from "../util/display_formatting";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -525,10 +526,10 @@ export function Dashboard( props: dashboardProps ){
                       borderRadius='0'
                       backgroundColor={colors.ROYAL}
                       boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
-                      <ModalHeader pl='10' pt='7'>
+                      <ModalHeader pl='10' pt='7' borderBottom={selectedNavItem === "claim" ? `0.5px solid ${colors.GRAYED_OUT_GRAY}` : 'none'}>
                         <Stack>
-                          <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
-                          <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
+                          <Text fontSize='2xl'>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
+                          <Text fontSize='sm'>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
                         </Stack>
                       </ModalHeader>
                       <ModalCloseButton
@@ -541,11 +542,11 @@ export function Dashboard( props: dashboardProps ){
                           selectedNavItem === "stake" &&
                           <>
                             <Stack>
-                              <Text ml={4}>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? Number(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals)).toFixed(1) : '0'} IBC`}</Text>
+                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
                               <Tabs>
-                                <TabList mr='-7%' ml='-7%' pl='7%'>
-                                  <Tab>Stake</Tab>
-                                  <Tab>Unstake</Tab>
+                                <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Unstake</Tab>
                                 </TabList>
                                 <TabPanels pt='10'>
                                   <TabPanel>
@@ -584,11 +585,11 @@ export function Dashboard( props: dashboardProps ){
             <Divider orientation={'vertical'} colorScheme={'gray'}/>
           </GridItem>
 
-          <GridItem area={'header'}>
+          <GridItem area={'header'} fontWeight='500'>
             <Stack ml={7} direction="row" justifyContent={'space-between'}>
               <Stack direction="column" mt='70px'>
-                <Text fontSize='xl' textAlign={'left'}>{headerTitle}</Text>            
-                <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
+                <Text fontSize='2xl' textAlign={'left'}>{headerTitle}</Text>            
+                <Text fontSize={'sm'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
                 <Stack direction="row" align='center' gap='5'>
@@ -603,7 +604,7 @@ export function Dashboard( props: dashboardProps ){
             </Stack>
           </GridItem>
 
-          <GridItem area={'main'} pb='40px'>
+          <GridItem area={'main'} pb='40px' fontWeight='500'>
             <Stack>
               {
                   headerTitle === "MINT / BURN" &&
@@ -669,7 +670,7 @@ export function Dashboard( props: dashboardProps ){
             </Stack>
           </GridItem>
 
-          <GridItem area={'sideinput'} mt='-42px'>
+          <GridItem area={'sideinput'} mt='-42px' fontWeight='500'>
               <Stack>
                 {
                   headerTitle === "MINT / BURN" &&

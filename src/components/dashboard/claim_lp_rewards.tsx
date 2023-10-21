@@ -14,6 +14,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { Toast } from '../toast'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatNumber } from '../../util/display_formatting'
 
 
 type mintProps = {
@@ -153,25 +154,31 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, provider, ibcContractAddress, ibcRouterAddress]);
 
-  const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
-  const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
-  const contract_inverse_token_balance = Number(formatUnits(totalStakingBalance, inverseTokenDecimals)).toFixed(4)
+  const IBC_rewards = formatNumber((Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toString(), "IBC", false)
+  const ETH_rewards = formatNumber((Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toString(), "ETH", false)
   
   return (
     <>
-      <Stack p='4'>
-        <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
-        <Text align="right" fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
-        <Text align="right" fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
+      <Stack p='4' mt='50px' textAlign='left' fontWeight='500' >
+        <Text fontSize='sm' mb='3'>YOU HAVE ACCRUED</Text>
+          <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
+            <Text>{IBC_rewards}</Text>
+            <Text>IBC</Text>
+          </Stack>
+          <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
+            <Text>{ETH_rewards}</Text>
+            <Text>ETH</Text>
+          </Stack>
 
         {
           isProcessing &&
           <DefaultSpinner />
         }
         <Button 
-          mt='7'
+          mt='70px'
           alignSelf={'center'}
           w='100%'
+          fontSize='lg'
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >

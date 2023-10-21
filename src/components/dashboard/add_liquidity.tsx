@@ -313,12 +313,12 @@ export default function AddLiquidity(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						{reserveAssetSymbol}
 					</Text>
 				</Stack>
@@ -340,7 +340,7 @@ export default function AddLiquidity(props: mintProps) {
 				<Text align='left' fontSize='sm'>
 					YOU RECEIVE
 				</Text>
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
 						{formatReceiveNumber(formatUnits(mintAmount, lpTokenDecimals))}
 					</Text>
@@ -371,7 +371,7 @@ export default function AddLiquidity(props: mintProps) {
 					justifyContent={'space-between'}
 					mb='7'
 				>
-					<Text align='left'>Max Slippage</Text>
+					<Text align='left'>Max Price Divergence</Text>
 					<NumberInput
 						value={format(maxSlippage)}
 						onChange={(valueString) => setMaxSlippage(parse(valueString))}

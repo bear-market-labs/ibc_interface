@@ -333,12 +333,12 @@ export default function RemoveLiquidity(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={Number(formatUnits(userLpTokenBalance, lpTokenDecimals)).toFixed(3)}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						LP
 					</Text>
 				</Stack>
@@ -356,7 +356,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					YOU RECEIVE
 				</Text>
 
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
 						{formatReceiveNumber(
 							(Number(userLpRedeemableReserves) *

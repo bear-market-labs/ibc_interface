@@ -27,6 +27,7 @@ import ExternalLinks from '../components/dashboard/external_links'
 import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
 import AddIbc from "../components/dashboard/add_ibc";
+import { formatNumber } from "../util/display_formatting";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -541,7 +542,7 @@ export function Dashboard( props: dashboardProps ){
                           selectedNavItem === "stake" &&
                           <>
                             <Stack>
-                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? Number(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals)).toFixed(1) : '0'} IBC`}</Text>
+                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
                               <Tabs>
                                 <TabList mr='-7%' ml='-7%' pl='7%'>
                                   <Tab>Stake</Tab>

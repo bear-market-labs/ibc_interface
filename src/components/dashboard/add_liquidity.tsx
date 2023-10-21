@@ -371,7 +371,7 @@ export default function AddLiquidity(props: mintProps) {
 					justifyContent={'space-between'}
 					mb='7'
 				>
-					<Text align='left'>Max Slippage</Text>
+					<Text align='left'>Max Price Divergence</Text>
 					<NumberInput
 						value={format(maxSlippage)}
 						onChange={(valueString) => setMaxSlippage(parse(valueString))}

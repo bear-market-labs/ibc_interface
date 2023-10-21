@@ -14,6 +14,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { Toast } from '../toast'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatNumber } from '../../util/display_formatting'
 
 
 type mintProps = {
@@ -153,9 +154,8 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, provider, ibcContractAddress, ibcRouterAddress]);
 
-  const IBC_rewards = Number(Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toFixed(4)
-  const ETH_rewards = Number(Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toFixed(4)
-  const contract_inverse_token_balance = Number(formatUnits(totalStakingBalance, inverseTokenDecimals)).toFixed(4)
+  const IBC_rewards = formatNumber((Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toString(), "IBC", false)
+  const ETH_rewards = formatNumber((Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toString(), "ETH", false)
   
   return (
     <>

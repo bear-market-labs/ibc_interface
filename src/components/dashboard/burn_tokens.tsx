@@ -37,6 +37,7 @@ import {
 	format,
 	parse,
 	commandTypes,
+	sanitizeNumberInput,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -327,7 +328,7 @@ export default function BurnTokens(props: mintProps) {
 	])
 
 	const handleAmountChange = (val: any) => {
-		const parsedAmount = val
+		const parsedAmount = sanitizeNumberInput(val)
 		setAmount(parsedAmount)
 
 		if (isNaN(val) || val.trim() === '') {

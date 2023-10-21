@@ -34,6 +34,7 @@ import {
 	format,
 	parse,
 	commandTypes,
+	sanitizeNumberInput,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -260,7 +261,7 @@ export default function AddLiquidity(props: mintProps) {
 	])
 
 	const handleAmountChange = (val: any) => {
-		const parsedAmount = val
+		const parsedAmount = sanitizeNumberInput(val)
 		setAmount(parsedAmount)
 
 		if (isNaN(val) || val.trim() === '') {

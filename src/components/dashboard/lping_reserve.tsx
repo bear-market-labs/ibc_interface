@@ -3,6 +3,7 @@ import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { blocksPerDay } from '../../config/constants'
+import { formatNumber } from '../../util/display_formatting'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -42,33 +43,33 @@ export default function LpingReserve(props: mintProps) {
 
   return (
     <>
-      <Stack direction="row">
-        <Stack>
+      <Stack direction="row" pr='7'>
+        <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
-          <Stack direction="row">
-            <Text ml={7} align="left">{`${Number(ethers.utils.formatEther(reserveAmount)).toFixed(3)} ETH`}</Text>
+          <Stack direction="row" fontSize='2xl' fontWeight='700'>
+            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(reserveAmount), "ETH")}`}</Text>
             {
               newReserve.gt(0) && !newReserve.eq(reserveAmount) && 
               <>
                 <Box ml='7' mr='7'>
                   <Icon as={HiOutlineArrowRight} h='100%'/>
                 </Box>
-                <Text>{`${Number(ethers.utils.formatEther(newReserve)).toFixed(3)} ETH`}</Text>
+                <Text>{`${formatNumber(ethers.utils.formatEther(newReserve), "ETH")}`}</Text>
               </>
             }
           </Stack>
         </Stack>
-        <Center mt={7} ml={346} height='69px'>
-          <Divider orientation='vertical' colorScheme={'gray'} />
-        </Center>
-        <Stack ml={50} align={'right'}>
-          <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
-            {
-              <>
+        <Stack direction='row' w='50%'>
+          <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+          <Stack>
+            <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
+              {
+                <>
 
-                <Text>{`${reserve24HReward} ETH + ${ibc24HReward} IBC`}</Text>
+                <Text fontSize='2xl' fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
                 </>
-            }
+              }
+          </Stack>
         </Stack>
       </Stack>
     </>

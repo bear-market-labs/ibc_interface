@@ -43,6 +43,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -312,19 +313,19 @@ export default function AddLiquidity(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						{reserveAssetSymbol}
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${Number(
+					<Text align='right'>{`Balance: ${formatBalanceNumber(
 						formatEther(userBalance)
-					).toFixed(1)}`}</Text>
+					)}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
@@ -339,15 +340,15 @@ export default function AddLiquidity(props: mintProps) {
 				<Text align='left' fontSize='sm'>
 					YOU RECEIVE
 				</Text>
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
-						{Number(formatUnits(mintAmount, lpTokenDecimals)).toFixed(3)}
+						{formatReceiveNumber(formatUnits(mintAmount, lpTokenDecimals))}
 					</Text>
 					<Text align='right'>LP</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${ibcCredit.toFixed(3)} IBC bound to position`
+						`+ ${formatNumber(ibcCredit.toString(), "IBC")} bound to position`
 					}
 				</Text>
 			</Stack>
@@ -370,7 +371,7 @@ export default function AddLiquidity(props: mintProps) {
 					justifyContent={'space-between'}
 					mb='7'
 				>
-					<Text align='left'>Max Slippage</Text>
+					<Text align='left'>Max Price Divergence</Text>
 					<NumberInput
 						value={format(maxSlippage)}
 						onChange={(valueString) => setMaxSlippage(parse(valueString))}

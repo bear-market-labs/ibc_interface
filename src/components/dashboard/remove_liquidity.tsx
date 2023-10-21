@@ -45,6 +45,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -332,19 +333,19 @@ export default function RemoveLiquidity(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={Number(formatUnits(userLpTokenBalance, lpTokenDecimals)).toFixed(3)}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						LP
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
 					<Text align='right'>
 						{
-							userLpIbcPayment.gt(0) ? `+ ${Number(formatUnits(userLpIbcPayment, lpTokenDecimals)).toFixed(3)} IBC for withdrawal` : ` ` 
+							userLpIbcPayment.gt(0) ? `+ ${formatNumber(formatUnits(userLpIbcPayment, lpTokenDecimals), "IBC")} for withdrawal` : ` ` 
 						}
 					</Text>
 				</Stack>
@@ -355,12 +356,12 @@ export default function RemoveLiquidity(props: mintProps) {
 					YOU RECEIVE
 				</Text>
 
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
-						{Number(
-							Number(userLpRedeemableReserves) *
-								(1 - totalFeePercent)
-						).toFixed(3)}
+						{formatReceiveNumber(
+							(Number(userLpRedeemableReserves) *
+								(1 - totalFeePercent)).toString()
+						)}
 					</Text>
 					<Text align='right'>{reserveAssetSymbol}</Text>
 				</Stack>
@@ -389,7 +390,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					justifyContent={'space-between'}
 					mb='7'
 				>
-					<Text align='left'>Max Slippage</Text>
+					<Text align='left'>Max Price Divergence</Text>
 					<NumberInput
 						value={format(maxSlippage)}
 						onChange={(valueString) => setMaxSlippage(parse(valueString))}
@@ -413,7 +414,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
-					{userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
+					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>
 			</Stack>
 		</Stack>

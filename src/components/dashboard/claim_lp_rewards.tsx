@@ -159,23 +159,30 @@ export default function ClaimLpRewards(props: mintProps) {
   
   return (
     <>
-      <Stack p='4'>
-        <Text align="left" fontSize='sm'>YOU HAVE ACCRUED</Text>
-        <Text align="right" fontSize={'2xl'}>{`${IBC_rewards} IBC`}</Text>
-        <Text align="right" fontSize={'2xl'}>{`${ETH_rewards} ETH`}</Text>
+      <Stack p='4' mt='50px' textAlign='left' fontWeight='500' >
+        <Text fontSize='sm' mb='3'>YOU HAVE ACCRUED</Text>
+          <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
+            <Text>{IBC_rewards}</Text>
+            <Text>IBC</Text>
+          </Stack>
+          <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
+            <Text>{ETH_rewards}</Text>
+            <Text>ETH</Text>
+          </Stack>
 
         {
           isProcessing &&
           <DefaultSpinner />
         }
         <Button 
-          mt='7'
+          mt='70px'
           alignSelf={'center'}
           w='100%'
+          fontSize='lg'
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >
-            CLAIM
+            Claim
           </Button>
       </Stack>
     </>

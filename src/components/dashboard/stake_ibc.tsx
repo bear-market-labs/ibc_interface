@@ -167,8 +167,7 @@ export default function StakeIbc(props: mintProps) {
   }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress]);
 
   return (
-    <>
-      <Stack>
+      <Stack fontWeight='500'>
         <Text align="left" fontSize='sm'>YOU STAKE</Text>
         <Stack direction="row">
           <NumberInput
@@ -178,22 +177,22 @@ export default function StakeIbc(props: mintProps) {
             <NumberInputField
               minWidth="auto"
               border="none"
-              fontSize='4xl'
+              fontSize='5xl'
               placeholder={`0`}
               height='auto'
               pl='0'
             />
           </NumberInput>
           <Text
-            fontSize='4xl'
+            fontSize='5xl'
             align="right"
             >IBC</Text>
         </Stack>
-        <Stack direction={`row`} justifyContent={`flex-end`} pb='5'>
-          <Text fontSize={'xs'}>
+        <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
+          <Text>
             {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
-          <Box as='button' fontSize={'xs'} color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
         </Stack>
         {
           isProcessing &&
@@ -203,13 +202,13 @@ export default function StakeIbc(props: mintProps) {
           mt='10'
           alignSelf={'center'}
           w='100%'
+          fontSize='lg'
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
         {
-              userInverseTokenAllowance.gt(0) ? "STAKE" : "Approve IBC"
+              userInverseTokenAllowance.gt(0) ? "Stake" : "Approve IBC"
         }
         </Button>
       </Stack>
-    </>
   )
 }

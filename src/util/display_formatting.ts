@@ -1,3 +1,5 @@
+import { symbolWye } from "d3";
+
 export const maxTickerLength = 5
 export const targetNumCharacters = 9
 
@@ -15,7 +17,11 @@ export function formatNumber(number: string, unit: string, showUnit=true){
 
   let retVal;
 
-  if (num < 1000) {
+  if (num < 1){
+    const numDecimals = targetNumCharacters - tickerLength - 2 // 1 for the decimal, 1 for the leading integer 0
+    const formattedNumber = num.toFixed(numDecimals)
+    retVal = Number(formattedNumber)
+  } else if (num < 1000) {
       const numDecimals = targetNumCharacters - tickerLength - integerLength
       const formattedNumber = num.toFixed(numDecimals);
       retVal = `${Number(formattedNumber)}`;
@@ -52,4 +58,32 @@ export function formatBalanceNumber(number: string){
 export function formatReceiveNumber(number: string){
   // "you receive" box always has sufficient space to assume smaller ticker length
   return formatNumber(number, "AAA", false)
+}
+
+export function formatPriceNumber(number: string, symbol: string, showSymbol=false){
+  let num = parseFloat(number);
+  const formattedSymbol = symbol.length > maxTickerLength ? 'ASSET' : symbol;
+
+  // three special cases for values under 1
+  if (num > 0 && num < 1){
+    const exponent = Number(num.toExponential().split('e')[1]) // includes negative sign
+    
+    if (exponent <= -9){
+      const numDecimals = targetNumCharacters - Math.min(symbol.length, maxTickerLength) - 4 // 4 for [0, ., E, -]
+      let formattedNumber = num.toExponential(numDecimals).toUpperCase()
+      return showSymbol ? formattedNumber + formattedSymbol : formattedNumber
+    } else if (exponent <= -3){
+      //javascript behavior at underflow is to roundup
+      //we'll multiply this by 10**10, and manually construct the number string
+      let magnifiedNumber = parseInt((num * 1e9).toString())
+      let numSignificantZeros = 9 - magnifiedNumber.toString().length
+      let formatttedNumber = '0.' + '0'.repeat(numSignificantZeros) + magnifiedNumber
+      return showSymbol ? formatttedNumber+ ' ' + formattedSymbol : formatttedNumber
+    } else {
+      return showSymbol ? num.toFixed(3) + ' ' + formattedSymbol : num.toFixed(3)
+    }
+  }
+  
+  // default to > 1 handling
+  return formatNumber(number, symbol, showSymbol)
 }

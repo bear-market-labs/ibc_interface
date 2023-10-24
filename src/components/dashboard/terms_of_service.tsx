@@ -1,9 +1,18 @@
-import { Box, Heading, Stack, Text, Link } from '@chakra-ui/react'
+import {
+	Box,
+	Heading,
+	Stack,
+	Text,
+	UnorderedList,
+	ListItem,
+} from '@chakra-ui/react'
 
 export default function TermsOfService() {
 	return (
-		<Stack>
-			<Heading>Terms of Service</Heading>
+		<Stack textAlign='left' p='7' fontSize='md' spacing='7'>
+			<Heading as='h4' size='sm' mb='-6'>
+				Terms of Service
+			</Heading>
 			<Text>
 				https://inversebondingcurve.com/ is a website (“Site”) that provides
 				access to https://app.inversebondingcurve.com/, a website-hosted user
@@ -39,11 +48,13 @@ export default function TermsOfService() {
 				Please read this Agreement carefully. This Agreement applies to you
 				(“You”, “User”, or “Users”) as a user of the Interface, including all
 				the products, services, tools, and information made available on
-				app.inversebondingcurve.com or on inversebondingcurve.com. This
-				Agreement contains a mandatory individual arbitration and class
-				action/jury trial waiver provision that requires the use of arbitration
-				on an individual basis to resolve disputes, rather than jury trials or
-				class actions.
+				app.inversebondingcurve.com or on inversebondingcurve.com.{' '}
+				<Text as='i'>
+					This Agreement contains a mandatory individual arbitration and class
+					action/jury trial waiver provision that requires the use of
+					arbitration on an individual basis to resolve disputes, rather than
+					jury trials or class actions.
+				</Text>
 			</Text>
 			<Text>
 				To use the Interface, you must be able to form a legally binding
@@ -71,30 +82,10 @@ export default function TermsOfService() {
 				understand, and agree to be bound by this Agreement in its entirety. If
 				you do not agree, you are not authorized to access or use the Interface.
 			</Text>
-			<Heading>Interface</Heading>
-			<Text>
-				The Interface provides access to a decentralized protocol on the
-				Ethereum blockchain that enables minters, burners, and liquidity
-				providers of digital assets to interact with the Protocol and transact
-				using smart contracts (”Smart Contracts”).
-			</Text>
-			<Text>
-				Using the Protocol may require that you pay a fee on the Ethereum
-				network to perform a transaction. You acknowledge and agree that we have
-				no control over any transactions, the method of payment of any
-				transactions, or any actual payments of transactions and has no ability
-				to reverse or refund any amounts paid in error. You must ensure that you
-				have a sufficient balance to complete any transaction on the Protocol
-				before initiating such transaction.
-			</Text>
-			<Text>
-				When the Interface is used by users to access the Protocol and transact
-				using Smart Contracts, there are no legal agreements, promises of
-				payment, or courts of law, and therefore there are no debts, loans, or
-				other traditional finance transactions involved.
-			</Text>
 
-			<Heading>Access</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Access
+			</Heading>
 			<Text>
 				Access to the Interface is provided “as is” and on an “as available”
 				basis only. We do not guarantee that the Interface, or any content on
@@ -120,7 +111,9 @@ export default function TermsOfService() {
 				result of the Interface being unavailable at any time for any reason.
 			</Text>
 
-			<Heading>Eligibility</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Eligibility
+			</Heading>
 			<Text>
 				To access or use the Interface, you must be able to form a legally
 				binding contract with us. Accordingly, you represent that you are at
@@ -137,7 +130,9 @@ export default function TermsOfService() {
 				illegal activity.
 			</Text>
 
-			<Heading>Modification of this Agreement</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Modification of this Agreement
+			</Heading>
 
 			<Text>
 				We reserve the right, in our sole discretion, to modify this Agreement
@@ -154,7 +149,9 @@ export default function TermsOfService() {
 				using the Interface.
 			</Text>
 
-			<Heading>Proprietary Rights</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Proprietary Rights
+			</Heading>
 			<Text>
 				We own all intellectual property and other rights in the Interface and
 				its contents, including (but not limited to) software, text, images,
@@ -166,19 +163,23 @@ export default function TermsOfService() {
 				to access and use the Interface. This license is non-exclusive,
 				non-transferable, and freely revocable by us at any time without notice
 				or cause. Use of the Interface or its contents for any purpose not
-				expressly permitted by this Agreement is strictly prohibited. Unlike the
-				Interface, the Protocol is comprised entirely of open-source software
-				running on the public Ethereum blockchain and is made available under
-				separate open source licenses, such as the MIT License and other open
-				source licenses. You agree not to violate the terms of any such open
-				source licenses. In the event of a conflict between the license granted
-				to you in these Terms and any separate licenses for any software
-				components underlying the Protocol, the separate license will prevail
-				with respect to the software that is the subject of the separate
-				license.
+				expressly permitted by this Agreement is strictly prohibited.{' '}
+				<Text as='i'>
+					Unlike the Interface, the Protocol is comprised entirely of
+					open-source software running on the public Ethereum blockchain and is
+					made available under separate open source licenses, such as the MIT
+					License and other open source licenses.
+				</Text>{' '}
+				You agree not to violate the terms of any such open source licenses. In
+				the event of a conflict between the license granted to you in these
+				Terms and any separate licenses for any software components underlying
+				the Protocol, the separate license will prevail with respect to the
+				software that is the subject of the separate license.
 			</Text>
 
-			<Heading>Privacy Policy</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Privacy Policy
+			</Heading>
 			<Text>
 				The Interface may directly or indirectly collect and temporarily store
 				personally identifiable information for operational purposes, including
@@ -189,43 +190,68 @@ export default function TermsOfService() {
 				Interface.
 			</Text>
 
-			<Heading>Prohibited Activity</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Prohibited Activity
+			</Heading>
 			<Text>
 				You agree not to engage in, or attempt to engage in, any of the
 				following categories of prohibited activity in relation to your access
-				and use of the Interface: Intellectual Property Infringement. Activity
-				that infringes on or violates any copyright, trademark, service mark,
-				patent, right of publicity, right of privacy, or other proprietary or
-				intellectual property rights under the law. Cyberattack. Activity that
-				seeks to interfere with or compromise the integrity, security, or proper
-				functioning of any computer, server, network, personal device, or other
-				information technology system, including (but not limited to) the
-				deployment of viruses and denial of service attacks. Fraud and
-				Misrepresentation. Activity that seeks to defraud us or any other person
-				or entity, including (but not limited to) providing any false,
-				inaccurate, or misleading information in order to unlawfully obtain the
-				property of another. Market Manipulation. Activity that violates any
-				applicable law, rule, or regulation concerning the integrity of trading
-				markets, including (but not limited to) the manipulative tactics
-				commonly known as spoofing and wash trading. Other Harmful Acts.
-				Attempts to engage in or engage in, any potentially harmful acts that
-				are directed against us, including but not limited to violating or
-				attempting to violate any security features of the App, Interface,
-				Protocol, or Site, using manual or automated software or other means to
-				access, “scrape,” “crawl” or “spider” any pages contained in or on the
-				Interface, introducing viruses, worms, or similar harmful code into the
-				Interface, or interfering or attempting to interfere with use of the
-				Interface by any other user, host or network, including by means of
-				overloading, “flooding,” “spamming,” “mail bombing,” or “crashing” the
-				Interface or any other properties of us. Any Other Unlawful Conduct.
-				Activity that violates any applicable Law, including, without
-				limitation, any relevant and applicable anti-money laundering and
-				anti-terrorist financing laws and any relevant and applicable privacy
-				and data collection laws, in each case as may be amended. encourage or
-				enable any other person to do any of the foregoing.
+				and use of the Interface:
+				<UnorderedList>
+					<ListItem>
+						Intellectual Property Infringement. Activity that infringes on or
+						violates any copyright, trademark, service mark, patent, right of
+						publicity, right of privacy, or other proprietary or intellectual
+						property rights under the law.
+					</ListItem>
+					<ListItem>
+						Cyberattack. Activity that seeks to interfere with or compromise the
+						integrity, security, or proper functioning of any computer, server,
+						network, personal device, or other information technology system,
+						including (but not limited to) the deployment of viruses and denial
+						of service attacks.
+					</ListItem>
+					<ListItem>
+						Fraud and Misrepresentation. Activity that seeks to defraud us or
+						any other person or entity, including (but not limited to) providing
+						any false, inaccurate, or misleading information in order to
+						unlawfully obtain the property of another.
+					</ListItem>
+					<ListItem>
+						Market Manipulation. Activity that violates any applicable law,
+						rule, or regulation concerning the integrity of trading markets,
+						including (but not limited to) the manipulative tactics commonly
+						known as spoofing and wash trading.
+					</ListItem>
+					<ListItem>
+						Other Harmful Acts. Attempts to engage in or engage in, any
+						potentially harmful acts that are directed against us, including but
+						not limited to violating or attempting to violate any security
+						features of the App, Interface, Protocol, or Site, using manual or
+						automated software or other means to access, “scrape,” “crawl” or
+						“spider” any pages contained in or on the Interface, introducing
+						viruses, worms, or similar harmful code into the Interface, or
+						interfering or attempting to interfere with use of the Interface by
+						any other user, host or network, including by means of overloading,
+						“flooding,” “spamming,” “mail bombing,” or “crashing” the Interface
+						or any other properties of us.
+					</ListItem>
+					<ListItem>
+						Any Other Unlawful Conduct. Activity that violates any applicable
+						Law, including, without limitation, any relevant and applicable
+						anti-money laundering and anti-terrorist financing laws and any
+						relevant and applicable privacy and data collection laws, in each
+						case as may be amended.
+					</ListItem>
+					<ListItem>
+						encourage or enable any other person to do any of the foregoing.
+					</ListItem>
+				</UnorderedList>
 			</Text>
 
-			<Heading>No Professional Advice</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				No Professional Advice
+			</Heading>
 			<Text>
 				All information provided by the Interface is for informational purposes
 				only and should not be construed as professional advice. In particular,
@@ -278,7 +304,9 @@ export default function TermsOfService() {
 				distributed to you pursuant to the rewards) declines during the period.
 			</Text>
 
-			<Heading>Third-Party Links</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Third-Party Links
+			</Heading>
 
 			<Text>
 				The Interface may contain hyperlinks or references to third party
@@ -292,7 +320,9 @@ export default function TermsOfService() {
 				site.
 			</Text>
 
-			<Heading>No Warranties</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				No Warranties
+			</Heading>
 			<Text>
 				The Interface is provided on an “AS IS” and “AS AVAILABLE” basis. To the
 				fullest extent permitted by law, we disclaim any representations and
@@ -310,7 +340,9 @@ export default function TermsOfService() {
 				statements made by third parties concerning the Interface.
 			</Text>
 
-			<Heading>Trading</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Trading
+			</Heading>
 			<Text>
 				You agree and understand that: (a) all interactions, including but not
 				limited to, trades, mints, burns, liquidity providings, staking,
@@ -321,7 +353,9 @@ export default function TermsOfService() {
 				not conduct a suitability review of any interactions you submit.
 			</Text>
 
-			<Heading>No Fiduciary Duties</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				No Fiduciary Duties
+			</Heading>
 			<Text>
 				This Agreement is not intended to, and does not, create or impose any
 				fiduciary duties on us. To the fullest extent permitted by law, you
@@ -333,7 +367,9 @@ export default function TermsOfService() {
 				out expressly in this Agreement.
 			</Text>
 
-			<Heading>Assumption of Risk</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Assumption of Risk
+			</Heading>
 			<Text>
 				By accessing and using the Interface, you represent that you understand
 				the inherent risks associated with using cryptographic and
@@ -381,7 +417,9 @@ export default function TermsOfService() {
 				with the Protocol.
 			</Text>
 
-			<Heading>Release of Claims</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Release of Claims
+			</Heading>
 			<Text>
 				You expressly agree that you assume all risks in connection with your
 				access and use of the Interface and your interaction with the Protocol.
@@ -395,8 +433,10 @@ export default function TermsOfService() {
 				release and that, if known by him or her, would have materially affected
 				his or her settlement with the debtor or released party.”
 			</Text>
-			<Heading>Indemnity</Heading>
 
+			<Heading as='h5' size='sm' mb='-6'>
+				Indemnity
+			</Heading>
 			<Text>
 				You agree to hold harmless, release, defend, and indemnify us and our
 				officers, directors, employees, contractors, agents, affiliates, and
@@ -409,8 +449,9 @@ export default function TermsOfService() {
 				own or control.
 			</Text>
 
-			<Heading>Limitation of Liability</Heading>
-
+			<Heading as='h5' size='sm' mb='-6'>
+				Limitation of Liability
+			</Heading>
 			<Text>
 				Under no circumstances shall we or any of our officers, directors,
 				employees, contractors, agents, affiliates, or subsidiaries be liable to
@@ -447,7 +488,9 @@ export default function TermsOfService() {
 				law.
 			</Text>
 
-			<Heading>Dispute Resolution</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Dispute Resolution
+			</Heading>
 			<Text>
 				Any dispute, claim, controversy, or difference arising out of or
 				relating to the Interface, this Agreement, including any question
@@ -474,7 +517,9 @@ export default function TermsOfService() {
 				by the arbitrator may be entered in any court of competent jurisdiction.
 			</Text>
 
-			<Heading>Class Action and Jury Trial Waiver</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Class Action and Jury Trial Waiver
+			</Heading>
 
 			<Text>
 				You must bring any and all Disputes against us in your individual
@@ -486,7 +531,9 @@ export default function TermsOfService() {
 				to demand a trial by jury.
 			</Text>
 
-			<Heading>Governing Law</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Governing Law
+			</Heading>
 
 			<Text>
 				You agree that the laws of Singapore, without regard to principles of
@@ -497,7 +544,9 @@ export default function TermsOfService() {
 				specific personal jurisdiction in any forum outside of Singapore.
 			</Text>
 
-			<Heading>Miscellaneous</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Miscellaneous
+			</Heading>
 			<Text>
 				We may perform any of our obligations, and exercise any of the rights
 				granted to us under this Agreement, through a third-party. We may assign
@@ -529,7 +578,9 @@ export default function TermsOfService() {
 				for you to use for any reason whatsoever.
 			</Text>
 
-			<Heading>Entire Agreement</Heading>
+			<Heading as='h5' size='sm' mb='-6'>
+				Entire Agreement
+			</Heading>
 			<Text>
 				These Terms, our Privacy Policy, and any disclosure and disclaimers
 				incorporated by reference constitute the sole and entire agreement

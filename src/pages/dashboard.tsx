@@ -28,6 +28,7 @@ import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
 import AddIbc from "../components/dashboard/add_ibc";
 import { formatNumber } from "../util/display_formatting";
+import TermsOfService from '../components/dashboard/terms_of_service'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -62,7 +63,12 @@ export function Dashboard( props: dashboardProps ){
       value:'how',
       displayText: 'How It Works',
       description: 'Learn the basics of inverse bonding curves'
-  }    
+    },
+    {
+      value:'terms',
+      displayText: 'Terms of Service',
+      description: 'Last Updated: October 10th, 2023'
+    }
   ]
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
@@ -505,7 +511,7 @@ export function Dashboard( props: dashboardProps ){
                 {navOptions.map((item) => {
                   const radio = getRadioProps({ value: item.value })
                   return(
-                    <RadioCard key={item.value} {...radio}>
+                    <RadioCard mt={item.value === 'terms' ? 'auto':0} key={item.value} {...radio} >
                       <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                     </RadioCard>
                   )
@@ -666,6 +672,10 @@ export function Dashboard( props: dashboardProps ){
               {
                 headerTitle === 'HOW IT WORKS' &&
                 <HowItWorks/>
+              }
+              {
+                headerTitle === 'TERMS OF SERVICE' &&
+                <TermsOfService />
               }
             </Stack>
           </GridItem>

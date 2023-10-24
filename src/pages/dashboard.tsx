@@ -618,8 +618,8 @@ export function Dashboard( props: dashboardProps ){
                         newReserve: newReserve
                       }}
                     />
-
-                    <Box width="100%" height="400px" padding="10px 20px">
+                    {/* max-width = max-height * 2, max-width = viwport-width * ((0.5 + 1)/(0.5 + 1 + 2)) (defined on line495, choose 28% and 56% for some buffer), 470px = top(150px) + price(100px) + bottom(220px) */}
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 
@@ -648,7 +648,7 @@ export function Dashboard( props: dashboardProps ){
                       }}
                     />
 
-                    <Box width="100%" height="400px" padding="10px 20px">
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 

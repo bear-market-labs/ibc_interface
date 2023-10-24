@@ -510,8 +510,17 @@ export function Dashboard( props: dashboardProps ){
               <Stack {...group} spacing='5' mt='7' flexGrow={1}>
                 {navOptions.map((item) => {
                   const radio = getRadioProps({ value: item.value })
+                  if(item.value === 'terms') {
+                    return (
+                      <Box mt='auto'>
+                        <RadioCard key={item.value} {...radio}>
+                        <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
+                        </RadioCard>
+                      </Box>
+                    )
+                  }
                   return(
-                    <RadioCard mt={item.value === 'terms' ? 'auto':0} key={item.value} {...radio} >
+                    <RadioCard key={item.value} {...radio} >
                       <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                     </RadioCard>
                   )

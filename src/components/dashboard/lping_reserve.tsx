@@ -66,7 +66,7 @@ export default function LpingReserve(props: mintProps) {
               {
                 <>
 
-                <Text fontSize='2xl' fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
                 </>
               }
           </Stack>

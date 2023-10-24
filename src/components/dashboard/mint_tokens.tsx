@@ -430,7 +430,7 @@ export default function MintTokens(props: mintProps) {
 					direction='row'
 					fontSize='md'
 					justifyContent={'space-between'}
-					mt='12'
+					mt={{base:4, xl:4, "2xl": 12}}
 				>
 					<Text align='left'>Price Impact</Text>
 					<Text align='right'>

@@ -22,10 +22,12 @@ import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/
 import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
-import { actionTypes } from "../config/constants";
+import { actionTypes, curveUtilization, lpTokenDecimals } from "../config/constants";
 import ExternalLinks from '../components/dashboard/external_links'
 import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
+import AddIbc from "../components/dashboard/add_ibc";
+import { formatNumber } from "../util/display_formatting";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -66,7 +68,9 @@ export function Dashboard( props: dashboardProps ){
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -96,13 +100,16 @@ export function Dashboard( props: dashboardProps ){
     const fetchIbcMetrics = async() => {
       const abiCoder = ethers.utils.defaultAbiCoder
 
+      // refresh
+
+
       let multicallQueries = [
         composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
-        composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
-        composeMulticallQuery(ibcContractAddress, "decimals", [], []),
+        composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
         composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+        composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
       let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -110,23 +117,23 @@ export function Dashboard( props: dashboardProps ){
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
       // fetch/set main panel metrics data
-      const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0,0,0]]
-      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+      const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
+      const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
 
-      const lpTokenSupplyBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
-      const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
-
-      const lpTokenDecimalsBytes = multicallResults[2][0] ? multicallResults[2][1] : [0]
-      const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
-
-      const inverseTokenAddressBytes = multicallResults[3][0] ? multicallResults[3][1] : [""]
+      const reserveTokenAddressBytes = multicallResults[1][0] ? multicallResults[1][1] : [""]
+      const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0]
+      
+      const inverseTokenAddressBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
       const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-      const stakingRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
+      const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0]
       const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
-      const lpRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
+      const lpRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
+
+      const totalStakingBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0];
+      const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
 
       multicallQueries = [
         composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
@@ -155,26 +162,26 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.bondingCurveParams = {
         reserveAmount: bondingCurveParams[0][0].toString(),
-        inverseTokenSupply: bondingCurveParams[0][1].toString(),
-        virtualReserveAmount: bondingCurveParams[0][2].toString(),
-        virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
-        currentTokenPrice: bondingCurveParams[0][4].toString(),
-        invariant: bondingCurveParams[0][5].toString(),
-        utilization: bondingCurveParams[0][6].toString()
+        inverseTokenSupply: bondingCurveParams[0][1].toString(), // this is supply + virtual credits via lp
+        lpSupply: bondingCurveParams[0][2].toString(), // lp tokens no longer exist
+        currentTokenPrice: bondingCurveParams[0][3].toString(),
+        invariant: bondingCurveParams[0][4].toString(),
+        utilization: ethers.utils.parseUnits(curveUtilization.toString(), 18).toString(),
       };
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
-      dashboardDataSet.lpTokenSupply = (lpTokenSupply.add(bondingCurveParams[0][2])).toString();
+      dashboardDataSet.lpTokenSupply = dashboardDataSet.bondingCurveParams.lpSupply;
       dashboardDataSet.inverseTokenDecimals = inverseTokenDecimals.toString();
       dashboardDataSet.inverseTokenAddress = inverseTokenAddress.toString();
       dashboardDataSet.contractInverseTokenBalance = contractInverseTokenBalance.toString()
+      dashboardDataSet.totalStakingBalance = totalStakingBalance;
 
       // compute old k/m params from utilization and invariant
-      let k = 1 - Number(ethers.utils.formatUnits(bondingCurveParams[0][6], 18))
+      let k = 1 - curveUtilization
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][4])) 
+      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][3])) 
       * 
       Math.pow(
         Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
@@ -200,20 +207,23 @@ export function Dashboard( props: dashboardProps ){
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
+        const feeQueries = actionTypes.map((_x, i, _array) => composeMulticallQuery(ibcAdminAddress, "feeConfig", ["uint8"], [i]))
         let multicallQueries = [
           composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
           composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
-          composeMulticallQuery(ibcContractAddress, "feeConfig", [], []),
-          composeMulticallQuery(ibcContractAddress, "decimals", [], []),
-          composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
-          composeMulticallQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
+          //composeMulticallQuery(ibcAdminAddress, "feeConfig", ["uint8"], [0]),
+          //composeMulticallQuery(ibcContractAddress, "decimals", [], []),
+          //composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
+          composeMulticallQuery(ibcContractAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),//composeMulticallQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
+          //composeMulticallQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
           composeMulticallQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0])
-        ]
-  
+          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+          composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
+          composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
+        ].concat(feeQueries)
+
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
         const queryResults = await Promise.all([
@@ -227,56 +237,55 @@ export function Dashboard( props: dashboardProps ){
         let multicallBytes = queryResults[1]
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-        const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0,0,0]]
-        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256,int256,uint256)"], bondingCurveParamsBytes)
+        const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
+        const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
 
         
         const inverseTokenAddressBytes = multicallResults[1][0] ? multicallResults[1][1] : ['']
         const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
 
-        const feeBytes = multicallResults[2][0] ? multicallResults[2][1] : [Array(actionTypes.length), Array(actionTypes.length), Array(actionTypes.length)]
-        const fees = abiCoder.decode([`uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`, `uint256[${actionTypes.length}]`], feeBytes)
-
-        // lp token info
+        // lp info
         
-        const lpTokenDecimalsBytes = multicallResults[3][0] ? multicallResults[3][1] : [0]
-        const lpTokenDecimals = abiCoder.decode(["uint"], lpTokenDecimalsBytes)[0]
-
+        const userLpPositionBytes = multicallResults[2][0] ? multicallResults[2][1] : [0,0]
+        const userLpPosition = abiCoder.decode(["uint256", "uint256"], userLpPositionBytes)
         
-        const lpTokenSupplyBytes = multicallResults[4][0] ? multicallResults[4][1] : [0]
-        const lpTokenSupply = abiCoder.decode(["uint"], lpTokenSupplyBytes)[0]
-
-        
-        const userLpTokenBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0]
-        const userLpTokenBalance = abiCoder.decode(["uint"], userLpTokenBalanceBytes)[0]
-
-        // lp approval state
-        
-        const userLpTokenAllowanceBytes = multicallResults[6][0] ? multicallResults[6][1] : [0]
-        const userLpTokenAllowance = abiCoder.decode(["uint"], userLpTokenAllowanceBytes)[0]
+        const userLpTokenBalance = userLpPosition[0]
+        const userLpIbcCredit = userLpPosition[1]
 
         // fetch rewards data
         
-        const userClaimableRewardsBytes = multicallResults[7][0] ? multicallResults[7][1] : [0,0,0,0]
+        const userClaimableRewardsBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0,0,0]
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
-        const stakingRewardEmaBytes = multicallResults[9][0] ? multicallResults[9][1] : [0,0]
+        const stakingRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
         const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
   
-        const lpRewardEmaBytes = multicallResults[10][0] ? multicallResults[10][1] : [0,0]
+        const lpRewardEmaBytes = multicallResults[6][0] ? multicallResults[6][1] : [0,0]
         const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
   
         // fetch staking balance
         
-        const userStakingBalanceBytes = multicallResults[8][0] ? multicallResults[8][1] : [0]
+        const userStakingBalanceBytes = multicallResults[4][0] ? multicallResults[4][1] : [0]
         const userStakingBalance = abiCoder.decode(["uint256"], userStakingBalanceBytes)[0]
+
+        const totalStakingBalanceBytes = multicallResults[7][0] ? multicallResults[7][1] : [0];
+        const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
+        
+        const reserveTokenAddressBytes = multicallResults[8][0] ? multicallResults[8][1] : [0];
+        const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0]
+
+        // fee info
+        const fees = actionTypes.map((_x, i, _array) => abiCoder.decode(["uint256","uint256","uint256"], multicallResults[9+i][0] ? multicallResults[9+i][1] : [0, 0, 0]))
 
         multicallQueries = [
           composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
           composeMulticallQuery(inverseTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
+          composeMulticallQuery(inverseTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
           composeMulticallQuery(inverseTokenAddress, "symbol", [], []),
           composeMulticallQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
+          composeMulticallQuery(reserveTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
+          composeMulticallQuery(reserveTokenAddress, "decimals", [], []),
+          composeMulticallQuery(reserveTokenAddress, "symbol", [], []),
         ]
   
         multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -301,6 +310,20 @@ export function Dashboard( props: dashboardProps ){
         const contractInverseTokenBalanceBytes = multicallResults[4][1];
         const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
 
+        const contractReserveTokenBalanceBytes = multicallResults[5][1];
+        const contractReserveTokenBalance = abiCoder.decode(["uint"], contractReserveTokenBalanceBytes)[0]
+
+        const reserveTokenDecimalsBytes = multicallResults[6][1];
+        const reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+
+        const reserveTokenSymbolBytes = multicallResults[7][1];
+        const reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
+
+        // downstream calculation for lp removal, all in formatted (or sane) decimals
+        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][0])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+
+        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][1])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
           userIbcTokenBalance: userInverseTokenBalance.toString(),
@@ -309,18 +332,17 @@ export function Dashboard( props: dashboardProps ){
           inverseTokenSymbol: inverseTokenSymbol,
           bondingCurveParams: {
             reserveAmount: bondingCurveParams[0][0].toString(),
-            inverseTokenSupply: bondingCurveParams[0][1].toString(),
-            virtualReserveAmount: bondingCurveParams[0][2].toString(),
-            virtualInverseTokenAmount: bondingCurveParams[0][3].toString(),
-            currentTokenPrice: bondingCurveParams[0][4].toString(),
-            invariant: bondingCurveParams[0][5].toString(),
-            utilization: bondingCurveParams[0][6].toString()
+            inverseTokenSupply: bondingCurveParams[0][1].toString(), // this is supply + virtual credits via lp
+            lpSupply: bondingCurveParams[0][2].toString(), // lp tokens no longer exist
+            currentTokenPrice: bondingCurveParams[0][3].toString(),
+            invariant: bondingCurveParams[0][4].toString(),
+            utilization: ethers.utils.parseUnits(curveUtilization.toString(), 18).toString(),
           },
           userInverseTokenAllowance: userInverseTokenAllowance.toString(),
           lpTokenDecimals: lpTokenDecimals.toString(),
           userLpTokenBalance: userLpTokenBalance.toString(),
-          userLpTokenAllowance: userLpTokenAllowance.toString(),
-          lpTokenSupply: (lpTokenSupply.add(bondingCurveParams[0][2])).toString(),
+          userLpIbcCredit: userLpIbcCredit,
+          lpTokenSupply:  bondingCurveParams[0][2].toString(),
           userClaimableLpRewards: userClaimableRewards[0].toString(),
           userClaimableStakingRewards: userClaimableRewards[1].toString(),
           userClaimableLpReserveRewards: userClaimableRewards[2].toString(),
@@ -328,16 +350,16 @@ export function Dashboard( props: dashboardProps ){
           forceUpdate: forceUpdate,
           userStakingBalance: userStakingBalance.toString(),
           fees:{
-            lpFee: fees[0].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            lpFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][0].toString();
               return acc;
             }, {}),
-            stakingFee: fees[1].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            stakingFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][1].toString();
               return acc;
             }, {}),
-            protocolFee: fees[2].reduce( (acc: any, x:any, i:any) => {
-              acc[actionTypes[i]] = x.toString();
+            protocolFee: fees.reduce((acc: any, _, i: any) => {
+              acc[actionTypes[i]] = fees[i][2].toString();
               return acc;
             }, {}),
           },
@@ -349,7 +371,13 @@ export function Dashboard( props: dashboardProps ){
             reserveAsset: lpRewardEma[1].toString(),
             ibcAsset: lpRewardEma[0].toString(),
           },
-          contractInverseTokenBalance
+          contractInverseTokenBalance,
+          userLpRedeemableReserves: userLpRedeemableReserves.toString(),
+          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(inverseTokenDecimals.gt(13) ? ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) : ethers.BigNumber.from(0)), // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust
+          totalStakingBalance: totalStakingBalance,
+          contractReserveTokenBalance: contractReserveTokenBalance,
+          reserveTokenDecimals: reserveTokenDecimals,
+          reserveTokenSymbol: reserveTokenSymbol,
         });
 
         console.log(chartParam);
@@ -359,7 +387,7 @@ export function Dashboard( props: dashboardProps ){
     fetchWalletInfo()
       .then()
       .catch((err) => console.log("error", err))
-  }, [wallet, ibcContractAddress, forceUpdate, updated])
+  }, [wallet, ibcContractAddress, forceUpdate, updated, ibcAdminAddress, ibcRouterAddress])
 
   // data to generate
   // curve graph plot points
@@ -430,6 +458,22 @@ export function Dashboard( props: dashboardProps ){
     setNewReserve(null)
   }
 
+  const handleLiquidityNavInputSwitch = async(index:any) => {
+
+    if (index === 1 && "lpTokenSupply" in dashboardDataSet && "userLpTokenBalance" in dashboardDataSet && "userLpRedeemableReserves" in dashboardDataSet){
+      const newLpSupply = ethers.BigNumber.from(dashboardDataSet.lpTokenSupply).sub(dashboardDataSet.userLpTokenBalance)
+      const newReserve = ethers.BigNumber.from(dashboardDataSet.bondingCurveParams.reserveAmount).sub(ethers.utils.parseUnits(dashboardDataSet.userLpRedeemableReserves, dashboardDataSet.reserveTokenDecimals))
+
+      setNewLpIssuance(newLpSupply.toString())
+      setNewReserve(newReserve.toString())
+    }else {
+      setNewLpIssuance(null)
+      setNewReserve(null)
+    }
+    setNewIbcIssuance(null)
+    setNewPrice(null)
+  }
+
   const handleModalClose = async() => {
     const preModalSelectedNavItem = navOptions.find(x => x.displayText.toUpperCase() === headerTitle.toUpperCase())?.value
     setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
@@ -482,10 +526,10 @@ export function Dashboard( props: dashboardProps ){
                       borderRadius='0'
                       backgroundColor={colors.ROYAL}
                       boxShadow='rgb(0 0 0 / 40%) 0px 0px 33px 8px'>
-                      <ModalHeader pl='10' pt='7'>
+                      <ModalHeader pl='10' pt='7' borderBottom={selectedNavItem === "claim" ? `0.5px solid ${colors.GRAYED_OUT_GRAY}` : 'none'}>
                         <Stack>
-                          <Text>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
-                          <Text fontSize={'xs'}>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
+                          <Text fontSize='2xl'>{navOptions.find(x => x.value === selectedNavItem)?.displayText.toUpperCase()}</Text>
+                          <Text fontSize='sm'>{navOptions.find(x => x.value === selectedNavItem)?.description}</Text>
                         </Stack>
                       </ModalHeader>
                       <ModalCloseButton
@@ -497,20 +541,24 @@ export function Dashboard( props: dashboardProps ){
                         {
                           selectedNavItem === "stake" &&
                           <>
-                            <Tabs>
-                              <TabList mr='-7%' ml='-7%' pl='7%'>
-                                <Tab>Stake</Tab>
-                                <Tab>Unstake</Tab>
-                              </TabList>
-                              <TabPanels pt='10'>
-                                <TabPanel>
-                                  <StakeIbc dashboardDataSet={dashboardDataSet} />
-                                </TabPanel>
-                                <TabPanel>
-                                  <UnstakeIbc dashboardDataSet={dashboardDataSet} />
-                                </TabPanel>
-                              </TabPanels>
-                            </Tabs>
+                            <Stack>
+                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
+                              <Tabs>
+                                <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>
+                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Unstake</Tab>
+                                </TabList>
+                                <TabPanels pt='10'>
+                                  <TabPanel>
+                                    <StakeIbc dashboardDataSet={dashboardDataSet} />
+                                  </TabPanel>
+                                  <TabPanel>
+                                    <UnstakeIbc dashboardDataSet={dashboardDataSet} />
+                                  </TabPanel>
+                                </TabPanels>
+                              </Tabs>
+                            </Stack>
+
                           </>
                         }
                         {
@@ -537,19 +585,26 @@ export function Dashboard( props: dashboardProps ){
             <Divider orientation={'vertical'} colorScheme={'gray'}/>
           </GridItem>
 
-          <GridItem area={'header'}>
+          <GridItem area={'header'} fontWeight='500'>
             <Stack ml={7} direction="row" justifyContent={'space-between'}>
               <Stack direction="column" mt='70px'>
-                <Text fontSize='xl' textAlign={'left'}>{headerTitle}</Text>            
-                <Text fontSize={'xs'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
+                <Text fontSize='2xl' textAlign={'left'}>{headerTitle}</Text>            
+                <Text fontSize={'sm'}>{navOptions.find(x => x.displayText.toUpperCase() === headerTitle)?.description}</Text>
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
-                <ConnectWallet />
+                <Stack direction="row" align='center' gap='5'>
+                  <AddIbc 
+                    tokenAddress={dashboardDataSet.inverseTokenAddress}
+                    tokenDecimals={dashboardDataSet.inverseTokenDecimals}
+                    tokenSymbol={dashboardDataSet.inverseTokenSymbol}
+                  />
+                  <ConnectWallet />
+                </Stack>
               </Stack>
             </Stack>
           </GridItem>
 
-          <GridItem area={'main'} pb='40px'>
+          <GridItem area={'main'} pb='40px' fontWeight='500'>
             <Stack>
               {
                   headerTitle === "MINT / BURN" &&
@@ -615,7 +670,7 @@ export function Dashboard( props: dashboardProps ){
             </Stack>
           </GridItem>
 
-          <GridItem area={'sideinput'} mt='-42px'>
+          <GridItem area={'sideinput'} mt='-42px' fontWeight='500'>
               <Stack>
                 {
                   headerTitle === "MINT / BURN" &&
@@ -660,7 +715,7 @@ export function Dashboard( props: dashboardProps ){
                   headerTitle === "ADD / REMOVE LIQUIDITY" &&
                   (
                     <>
-                      <Tabs onChange={handleNavInputSwitch} pl='5' pr='5'>
+                      <Tabs onChange={handleLiquidityNavInputSwitch} pl='5' pr='5'>
                         <TabList borderBottom={'none'}>
                           <Tab>Add</Tab>
                           <Tab>Remove</Tab>

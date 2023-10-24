@@ -6,7 +6,7 @@ import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, pa
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { explorerUrl } from '../../config/constants'
+import { commandTypes, explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
@@ -20,7 +20,8 @@ type mintProps = {
 export default function StakeIbc(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>('')
 
@@ -61,27 +62,41 @@ export default function StakeIbc(props: mintProps) {
 
       if (userInverseTokenAllowance.gt(0)){
 
-        const functionDescriptorBytes = arrayify(solidityKeccak256(
-          [
-            "string"
-          ]
-          ,
-          [
-            "stake(uint256)" // put function signature here w/ types + no spaces, ex: createPair(address,address)
-          ]
-        )).slice(0,4)
+        const functionDescriptorBytes = arrayify(
+          solidityKeccak256(
+            ['string'],
+            [
+              'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+            ]
+          )
+        ).slice(0, 4)
           
-        const payloadBytes = arrayify(abiCoder.encode(
+        const commandBytes = arrayify(abiCoder.encode(
           [
+            "address",
             "uint256",
           ], // array of types; make sure to represent complex types as tuples 
           [
+            wallet.accounts[0].address, //ignored via router
             parseUnits(amount.toString(), inverseTokenDecimals)
           ] // arg values
         ))
   
+        const payloadBytes = arrayify(
+          abiCoder.encode(
+            ['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+            [
+              wallet.accounts[0].address,
+              ibcContractAddress,
+              true,
+              commandTypes.stake,
+              commandBytes,
+            ] // arg values
+          )
+        )
+
         txDetails = {
-          to: ibcContractAddress,
+          to: ibcRouterAddress,
           data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
         }
 
@@ -103,7 +118,7 @@ export default function StakeIbc(props: mintProps) {
             "uint",
           ], // array of types; make sure to represent complex types as tuples 
           [
-            ibcContractAddress,
+            ibcRouterAddress,
             constants.MaxUint256
           ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
         ))
@@ -149,11 +164,10 @@ export default function StakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress]);
+  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress]);
 
   return (
-    <>
-      <Stack>
+      <Stack fontWeight='500'>
         <Text align="left" fontSize='sm'>YOU STAKE</Text>
         <Stack direction="row">
           <NumberInput
@@ -163,22 +177,22 @@ export default function StakeIbc(props: mintProps) {
             <NumberInputField
               minWidth="auto"
               border="none"
-              fontSize='4xl'
+              fontSize='5xl'
               placeholder={`0`}
               height='auto'
               pl='0'
             />
           </NumberInput>
           <Text
-            fontSize='4xl'
+            fontSize='5xl'
             align="right"
             >IBC</Text>
         </Stack>
-        <Stack direction={`row`} justifyContent={`flex-end`} pb='5'>
-          <Text fontSize={'xs'}>
+        <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
+          <Text>
             {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
-          <Box as='button' fontSize={'xs'} color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
         </Stack>
         {
           isProcessing &&
@@ -188,6 +202,7 @@ export default function StakeIbc(props: mintProps) {
           mt='10'
           alignSelf={'center'}
           w='100%'
+          fontSize='lg'
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
         {
@@ -195,6 +210,5 @@ export default function StakeIbc(props: mintProps) {
         }
         </Button>
       </Stack>
-    </>
   )
 }

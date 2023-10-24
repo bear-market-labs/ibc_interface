@@ -8,7 +8,7 @@ import { contracts } from '../../config/contracts'
 export default function ClaimProtocolFee() {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
+  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 
   const sendTransaction = useCallback(async () => {
 

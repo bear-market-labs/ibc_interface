@@ -36,6 +36,7 @@ import {
 	reserveAssetSymbol,
 	format,
 	parse,
+	commandTypes,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -46,6 +47,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -57,7 +59,8 @@ export default function BurnTokens(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcContract)
+	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -86,11 +89,9 @@ export default function BurnTokens(props: mintProps) {
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
-	const userIbcBalance = bignumber(
-		'userIbcTokenBalance' in dashboardDataSet
-			? dashboardDataSet.userIbcTokenBalance
-			: '0'
-	)
+	const userIbcBalance ='userIbcTokenBalance' in dashboardDataSet
+			? BigNumber.from(dashboardDataSet.userIbcTokenBalance)
+			: BigNumber.from('0')
 	const totalFeePercent =
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
@@ -111,6 +112,8 @@ export default function BurnTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserverTokenDecimals : reserveAssetDecimals;
+	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())
 	)
@@ -152,7 +155,7 @@ export default function BurnTokens(props: mintProps) {
 					solidityKeccak256(
 						['string'],
 						[
-							'sellTokens(address,uint256,uint256,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+							'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 						]
 					)
 				).slice(0, 4)
@@ -162,29 +165,63 @@ export default function BurnTokens(props: mintProps) {
 					inverseTokenDecimals.toNumber()
 				)
 
+				// fee adjustment
+				const fee = parseUnits(
+					Number(
+						Number(formatUnits(decimaledAmount, inverseTokenDecimals)) *
+							totalFeePercent
+					).toFixed(Number(inverseTokenDecimals)),
+					inverseTokenDecimals
+				)
+
+				// must use burned amount for min/max price limits
+				const burnAmount = decimaledAmount.sub(fee)
+
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
-					.dividedBy(bignumber(decimaledAmount.toString()))
+					.dividedBy(bignumber(burnAmount.toString()))
+					.toFixed(reserveAssetDecimals)
+
+				const maxPriceLimit = bignumber(liquidityReceived.toString())
+					.multipliedBy(1 + maxSlippage / 100)
+					.dividedBy(bignumber(burnAmount.toString()))
 					.toFixed(reserveAssetDecimals)
 
 				const minReserveLimit =
-					Number(formatEther(bondingCurveParams.reserveAmount)) *
+					Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
 					(1 - maxReserve / 100)
+
+				const maxReserveLimit =
+					Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
+					(1 + maxReserve / 100)
+
+				const commandBytes = arrayify(
+					abiCoder.encode(
+						['address', 'uint256', 'uint256[2]', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
+						[
+							wallet.accounts[0].address, //ignored by router
+							decimaledAmount,
+							[parseEther(minPriceLimit),parseEther(maxPriceLimit)],
+							[parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),parseEther(maxReserveLimit.toFixed(reserveAssetDecimals))],
+						] // arg values
+					)
+				)
 
 				const payloadBytes = arrayify(
 					abiCoder.encode(
-						['address', 'uint256', 'uint256', 'uint256'], // array of types; make sure to represent complex types as tuples
+						['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address,
-							decimaledAmount,
-							parseEther(minPriceLimit),
-							parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),
+							ibcContractAddress,
+							true,
+							commandTypes.sellTokens,
+							commandBytes,
 						] // arg values
 					)
 				)
 
 				txDetails = {
-					to: ibcContractAddress,
+					to: ibcRouterAddress,
 					data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
 				}
 			} else {
@@ -200,7 +237,7 @@ export default function BurnTokens(props: mintProps) {
 				const payloadBytes = arrayify(
 					abiCoder.encode(
 						['address', 'uint'], // array of types; make sure to represent complex types as tuples
-						[ibcContractAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+						[ibcRouterAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
 					)
 				)
 
@@ -284,6 +321,9 @@ export default function BurnTokens(props: mintProps) {
 		liquidityReceived,
 		userInverseTokenAllowance,
 		inverseTokenAddress,
+		ibcRouterAddress,
+		reserveTokenDecimals,
+		contractReserveTokenBalance,
 	])
 
 	const handleAmountChange = (val: any) => {
@@ -337,16 +377,11 @@ export default function BurnTokens(props: mintProps) {
 					).toFixed(reserveAssetDecimals)
 				)
 
-				const newPriceQuery = composeQuery(
-					ibcContractAddress,
-					'priceOf',
-					['uint256'],
-					[inverseTokenSupply.sub(burnedAmount)]
-				)
-				const newPriceBytes = await provider.call(newPriceQuery)
-				const newPrice = BigNumber.from(
-					abiCoder.decode(['uint256'], newPriceBytes)[0].toString()
-				)
+				// calculate spot price post mint
+				const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
+				const newPrice = curveInvariant * Number(formatEther(utilization)) 
+				/
+				Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
 
 				// calculate resulting price
 				//setResultPrice((decimaledParsedAmount.toString() / liquidityReceived.toString()).toString())
@@ -357,7 +392,7 @@ export default function BurnTokens(props: mintProps) {
 				setResultPrice(bignumber(resultPriceInWei.toString()))
 				setLiquidityReceived(liquidityReceived)
 
-				parentSetters?.setNewPrice(newPrice.toString())
+				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
 				parentSetters?.setNewIbcIssuance(
 					inverseTokenSupply.sub(burnedAmount).toString()
 				)
@@ -402,27 +437,23 @@ export default function BurnTokens(props: mintProps) {
 						<NumberInputField
 							minWidth='auto'
 							border='none'
-							fontSize='4xl'
+							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right' fontSize='4xl'>
+					<Text align='right' fontSize='5xl'>
 						{ibcSymbol}
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
-					<Text align='right'>{`Balance: ${userIbcBalance
-						.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-						.toFixed(2)}`}</Text>
+					<Text align='right'>{`Balance: ${formatBalanceNumber(formatUnits(userIbcBalance, inverseTokenDecimals))}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
 						onClick={() =>
 							handleAmountChange(
-								userIbcBalance
-									.dividedBy(Math.pow(10, inverseTokenDecimals.toNumber()))
-									.toString()
+								formatUnits(userIbcBalance, inverseTokenDecimals)
 							)
 						}
 					>
@@ -433,18 +464,18 @@ export default function BurnTokens(props: mintProps) {
 				<Text align='left' fontSize='sm'>
 					YOU RECEIVE
 				</Text>
-				<Stack direction='row' justifyContent={'space-between'} fontSize='4xl'>
+				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
-						{(
-							Number(formatEther(liquidityReceived).toString()) *
-							(1 - totalFeePercent)
-						).toFixed(2)}
+						{
+							formatReceiveNumber((Number(formatEther(liquidityReceived)) *
+							(1 - totalFeePercent)).toString()
+						)}
 					</Text>
 					<Text align='right'>{reserveAssetSymbol}</Text>
 				</Stack>
-				<Text align='right' fontSize='sm'>{`Balance: ${Number(
+				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(
 					formatEther(userBalance)
-				).toFixed(1)}`}</Text>
+				)}`}</Text>
 			</Stack>
 			<Stack>
 				<Stack

@@ -1,4 +1,5 @@
 import { symbolWye } from "d3";
+import { ethers, BigNumber } from "ethers";
 
 export const maxTickerLength = 5
 export const targetNumCharacters = 9
@@ -60,30 +61,26 @@ export function formatReceiveNumber(number: string){
   return formatNumber(number, "AAA", false)
 }
 
-export function formatPriceNumber(number: string, symbol: string, showSymbol=false){
-  let num = parseFloat(number);
+export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number, symbol: string, showSymbol=false){
+  let priceNumeric = BigInt(priceUnformatted.toString());
+
+  const exponent = priceNumeric.toString().length - decimals// can be negative
   const formattedSymbol = symbol.length > maxTickerLength ? 'ASSET' : symbol;
 
-  // three special cases for values under 1
-  if (num > 0 && num < 1){
-    const exponent = Number(num.toExponential().split('e')[1]) // includes negative sign
-    
-    if (exponent <= -9){
-      const numDecimals = targetNumCharacters - Math.min(symbol.length, maxTickerLength) - 4 // 4 for [0, ., E, -]
-      let formattedNumber = num.toExponential(numDecimals).toUpperCase()
-      return showSymbol ? formattedNumber + formattedSymbol : formattedNumber
-    } else if (exponent <= -3){
-      //javascript behavior at underflow is to roundup
-      //we'll multiply this by 10**10, and manually construct the number string
-      let magnifiedNumber = parseInt((num * 1e9).toString())
-      let numSignificantZeros = 9 - magnifiedNumber.toString().length
-      let formatttedNumber = '0.' + '0'.repeat(numSignificantZeros) + magnifiedNumber
-      return showSymbol ? formatttedNumber+ ' ' + formattedSymbol : formatttedNumber
-    } else {
-      return showSymbol ? num.toFixed(3) + ' ' + formattedSymbol : num.toFixed(3)
-    }
+  if (exponent <= -9){ 
+    const numDigits = targetNumCharacters - Math.min(symbol.length, maxTickerLength) - 4 // 4 for [0, ., E, -], can be 0, 1, 2
+    let formattedNumber = numDigits === 0 ? `` : Number(priceNumeric.toString().substring(0, numDigits)) / 10**(numDigits-1)
+    return showSymbol ? formattedNumber + "E" + exponent.toString() + " " + formattedSymbol : formattedNumber + "E" + exponent.toString()
+  } else if (exponent <= -3){
+    //we'll multiply this by 10**10, and manually construct the number string
+    let numSignificantZeros = Math.abs(exponent)
+    let truncatedNumber = priceNumeric.toString().substring(0, 10 - numSignificantZeros)
+    let formatttedNumber = '0.' + '0'.repeat(numSignificantZeros) + truncatedNumber
+    return showSymbol ? formatttedNumber+ ' ' + formattedSymbol : formatttedNumber
+  } else if (exponent < 0) {
+    return showSymbol ? Number(ethers.utils.formatUnits(priceUnformatted, decimals)).toFixed(3) + ' ' + formattedSymbol : Number(ethers.utils.formatUnits(priceUnformatted, decimals)).toFixed(3)
   }
-  
+
   // default to > 1 handling
-  return formatNumber(number, symbol, showSymbol)
+  return formatNumber(ethers.utils.formatUnits(priceUnformatted, decimals), symbol, showSymbol)
 }

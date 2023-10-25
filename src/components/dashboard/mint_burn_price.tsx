@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
-import { blocksPerDay } from '../../config/constants';
+import { blocksPerDay, reserveAssetDecimals } from '../../config/constants';
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 
 type mintProps = {
@@ -43,10 +43,10 @@ export default function MintBurnPrice(props: mintProps) {
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(ethers.utils.formatEther(currentTokenPrice), "ETH")
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveAssetDecimals, "ETH")
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
-  const formattedNewPrice = formatPriceNumber(ethers.utils.formatEther(newPrice), "ETH")
+  const formattedNewPrice = formatPriceNumber(newPrice, reserveAssetDecimals, "ETH")
   const alsoNeedSymbolLine = Number(formattedNewPrice) > 1e-9 && Number(formattedNewPrice) < 0.001
 
   return (

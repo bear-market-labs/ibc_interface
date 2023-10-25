@@ -77,7 +77,7 @@ export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number,
     let truncatedNumber = priceNumeric.toString().substring(0, 10 - numSignificantZeros)
     let formatttedNumber = '0.' + '0'.repeat(numSignificantZeros) + truncatedNumber
     return showSymbol ? formatttedNumber+ ' ' + formattedSymbol : formatttedNumber
-  } else if (exponent < 0) {
+  } else if (exponent <= 0) {
     return showSymbol ? Number(ethers.utils.formatUnits(priceUnformatted, decimals)).toFixed(3) + ' ' + formattedSymbol : Number(ethers.utils.formatUnits(priceUnformatted, decimals)).toFixed(3)
   }
 

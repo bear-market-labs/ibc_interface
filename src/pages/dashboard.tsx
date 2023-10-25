@@ -29,6 +29,9 @@ import UsefulLinks from '../components/dashboard/useful_links'
 import AddIbc from "../components/dashboard/add_ibc";
 import { formatNumber } from "../util/display_formatting";
 import TermsOfService from '../components/dashboard/terms_of_service'
+import AssetList from "../components/dashboard/asset_list";
+import AssetHolding from "../components/dashboard/asset_holding";
+import LpPosition from "../components/dashboard/lp_position";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -39,6 +42,11 @@ export function Dashboard( props: dashboardProps ){
   const {mostRecentIbcBlock, nonWalletProvider} = props
 
   const navOptions = [
+    {
+      value: 'explore',
+      displayText: 'Explore',
+      description: 'Discover ibAssets and their stats'
+    },
     {
       value: 'mintBurn',
       displayText: 'Mint / Burn',
@@ -608,19 +616,37 @@ export function Dashboard( props: dashboardProps ){
               </Stack>
               <Stack justifyContent={'center'} mr='7'>
                 <Stack direction="row" align='center' gap='5'>
-                  <AddIbc 
-                    tokenAddress={dashboardDataSet.inverseTokenAddress}
-                    tokenDecimals={dashboardDataSet.inverseTokenDecimals}
-                    tokenSymbol={dashboardDataSet.inverseTokenSymbol}
-                  />
+                  {
+                  headerTitle !== "EXPLORE" &&
+                  <>
+                    <AddIbc 
+                      tokenAddress={dashboardDataSet.inverseTokenAddress}
+                      tokenDecimals={dashboardDataSet.inverseTokenDecimals}
+                      tokenSymbol={dashboardDataSet.inverseTokenSymbol}
+                    />
+                  </>
+                  }
                   <ConnectWallet />
                 </Stack>
               </Stack>
             </Stack>
           </GridItem>
 
+
           <GridItem area={'main'} pb='40px' fontWeight='500'>
             <Stack>
+            {
+                  headerTitle === "EXPLORE" &&
+                  <>
+                    <AssetList
+                      nonWalletProvider = {nonWalletProvider}
+                      parentSetters={{
+                      }}
+                    />
+                  
+                  </>
+              }
+
               {
                   headerTitle === "MINT / BURN" &&
                   <>
@@ -691,6 +717,28 @@ export function Dashboard( props: dashboardProps ){
 
           <GridItem area={'sideinput'} mt='-42px' fontWeight='500'>
               <Stack>
+              {
+                  headerTitle === "EXPLORE" &&
+                  (
+                    <>
+                      <Tabs onChange={handleNavInputSwitch} >
+                        <TabList borderBottom={'none'} pl='5' pr='5'>
+                          <Tab>My Holdings</Tab>
+                          <Tab>My LP Positions</Tab>
+                        </TabList>
+
+                        <TabPanels>
+                          <TabPanel p='0'>
+                            <AssetHolding parentSetters={{}}></AssetHolding>
+                          </TabPanel>
+                          <TabPanel p='0'>
+                            <LpPosition parentSetters={{}}></LpPosition>
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
+                    </>
+                  )
+                }                
                 {
                   headerTitle === "MINT / BURN" &&
                   (

@@ -17,10 +17,21 @@ export function formatNumber(number: string, unit: string, showUnit=true, prepen
 
   let retVal;
 
-  if (num < 1){
+  if (num === 0){
+    retVal = "0"
+  } else if (num < 1e-9){
+    console.log(number)
+    const numDigits = targetNumCharacters - tickerLength - 4 // 4 for [0, ., E, -], can be 0, 1, 2
+    let formattedNumber = numDigits === 0 ? `` : numDigits === 1 ? Number(number.split('.')[0]) : Number(number.split('.')[0]) + '.' + Number(number.split('.')[1].substring(0,1))
+    let exponent = Number(number).toExponential().split('e')[1]
+    retVal = formattedNumber + "E" + exponent.toString()
+  }
+  else if (num < 1e-3){
     const numDecimals = targetNumCharacters - tickerLength - 2 // 1 for the decimal, 1 for the leading integer 0
     const formattedNumber = num.toFixed(numDecimals)
     retVal = Number(formattedNumber)
+  }else if (num < 1){
+    retVal = num.toFixed(3)
   } else if (num < 1000) {
       const numDecimals = targetNumCharacters - tickerLength - integerLength
       const formattedNumber = num.toFixed(numDecimals);
@@ -66,12 +77,13 @@ export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number,
   const exponent = priceNumeric.toString().length - decimals// can be negative
   const formattedSymbol = symbol.length > maxTickerLength ? 'ASSET' : symbol;
 
-  if (exponent <= -9){ 
+  if (priceUnformatted.eq(0)) {
+    return showSymbol ? "0 " + formattedSymbol : "0"
+  }else if (exponent <= -9){ 
     const numDigits = targetNumCharacters - Math.min(symbol.length, maxTickerLength) - 4 // 4 for [0, ., E, -], can be 0, 1, 2
     let formattedNumber = numDigits === 0 ? `` : Number(priceNumeric.toString().substring(0, numDigits)) / 10**(numDigits-1)
     return showSymbol ? formattedNumber + "E" + exponent.toString() + " " + formattedSymbol : formattedNumber + "E" + exponent.toString()
   } else if (exponent <= -3){
-    //we'll multiply this by 10**10, and manually construct the number string
     let numSignificantZeros = Math.abs(exponent)
     let truncatedNumber = priceNumeric.toString().substring(0, 10 - numSignificantZeros)
     let formatttedNumber = '0.' + '0'.repeat(numSignificantZeros) + truncatedNumber

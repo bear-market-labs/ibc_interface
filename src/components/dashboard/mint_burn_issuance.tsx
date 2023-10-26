@@ -23,7 +23,19 @@ export default function MintBurnIssuance(props: mintProps) {
   let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance: BigInt(0)
   let newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0')
 
-  if (newIbcIssuance - BigInt(inverseTokenSupply.toString()) < diffTolerance * 10**inverseTokenDecimals.toNumber()){
+  if ( // math.abs not allowed for bigints
+    (
+      newIbcIssuance > BigInt(inverseTokenSupply.toString()) 
+      && 
+      newIbcIssuance - BigInt(inverseTokenSupply.toString()) < diffTolerance * 10**inverseTokenDecimals.toNumber() 
+    )
+    ||
+    (
+      BigInt(inverseTokenSupply.toString()) > newIbcIssuance
+      &&
+      BigInt(inverseTokenSupply.toString()) - newIbcIssuance < diffTolerance * 10**inverseTokenDecimals.toNumber()
+    )
+  ){
     newIbcIssuance = BigInt(inverseTokenSupply.toString())
   }
   const newIbcIssuanceSaneFormat = newIbcIssuance / BigInt(10**inverseTokenDecimals.toNumber())

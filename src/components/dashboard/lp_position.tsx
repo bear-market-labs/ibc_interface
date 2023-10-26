@@ -28,7 +28,7 @@ type lpPosition = {
 }
 
 export default function LpPosition(props: assetListProps) {
-    const [{ wallet,  }] = useConnectWallet()
+    const [{ wallet, }] = useConnectWallet()
     const [provider, setProvider] =
         useState<ethers.providers.Web3Provider | null>()
     const [lpPosition, setLpPosition] = useState<lpPosition[]>();
@@ -42,7 +42,7 @@ export default function LpPosition(props: assetListProps) {
 
                 let queries = _.map(curves, curve => {
                     return [
-                        composeMulticallQuery(curve.curveAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),         
+                        composeMulticallQuery(curve.curveAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),
                     ]
                 });
 
@@ -58,40 +58,42 @@ export default function LpPosition(props: assetListProps) {
                 let lpPositions: lpPosition[] = [];
                 for (let i = 0; i < curves.length; i++) {
                     const lpPositionBytes = multicallResults[i][0] ? multicallResults[i][1] : [0];
-                    const lpBalance = abiCoder.decode(["uint256", "uint256"], lpPositionBytes)[0]
+                    const lpBalance = Number(ethers.utils.formatEther(abiCoder.decode(["uint256", "uint256"], lpPositionBytes)[0]))
 
-                    if(lpBalance > 0){
+                    if (lpBalance > 0) {
                         lpPositions.push({
                             ibAsset: curves[i].ibAsset,
-                            balance: lpBalance                        
+                            balance: lpBalance
                         })
                     }
                 }
+                console.log(lpPositions)
                 setLpPosition(lpPositions);
+
             }
         }
-            
 
-            fetchWalletInfo()
-                .then()
-                .catch((err) => console.log("error", err))
-        }, [wallet])
+
+        fetchWalletInfo()
+            .then()
+            .catch((err) => console.log("error", err))
+    }, [wallet])
     return (
         <Stack justifyContent={'start'} h='calc(100vh - 220px)'>
             <Stack direction="row" w='100%'>
                 <TableContainer w='100%'>
                     <Table variant='simple'>
                         <Tbody>
-                        {
-                                lpPosition && lpPosition.map((position) =>{
-                                    return(
+                            {
+                                lpPosition && lpPosition.map((position) => {
+                                    return (
                                         <Tr>
                                             <Td>{position.ibAsset}</Td>
-                                            <Td>{position.balance.toFixed(4)} {position.ibAsset}</Td>
+                                            <Td>{position.balance.toFixed(4)} LP</Td>
                                         </Tr>
                                     )
                                 })
-                            } 
+                            }
                         </Tbody>
                     </Table>
                 </TableContainer>

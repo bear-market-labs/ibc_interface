@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image } from '@chakra-ui/react'
 
 import {
     Table,
@@ -30,11 +30,13 @@ type assetListProps = {
 type CurveInfo = {
     curveAddress: string,
     reserveSymbol: string,
+    icon: string,
     ibAsset: string,
     price: number,
     reserves: number,
     stakingApr: number,
-    lpApr: number
+    lpApr: number,
+    image: any
 }
 
 export default function AssetList(props: assetListProps) {
@@ -44,6 +46,8 @@ export default function AssetList(props: assetListProps) {
         useState<ethers.providers.Web3Provider | null>()
 
     const [curveList, setCurveList] = useState<CurveInfo[]>();
+    const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
+    const [sortOption, setSortOption] = useState<string>("HIGHEST STAKING APR");
 
     useEffect(() => {
         const fetchCurveMetrics = async () => {
@@ -55,7 +59,8 @@ export default function AssetList(props: assetListProps) {
                     price: 0,
                     reserves: 0,
                     stakingApr: 0,
-                    lpApr: 0
+                    lpApr: 0,
+                    image: null
                 }
             });
 
@@ -96,11 +101,6 @@ export default function AssetList(props: assetListProps) {
                 curveStates[i].price = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][3].toString())));
                 curveStates[i].reserves = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][0].toString())));
 
-
-
-                // reserveAsset: stakingRewardEma[1].toString(),
-                // ibcAsset: stakingRewardEma[0].toString(),
-
                 const reserveStakingRewardInIbc = Number(
                     Number(ethers.utils.formatEther(stakingRewardEma[1].toString()))
                     * blocksPerDay * 365
@@ -124,19 +124,36 @@ export default function AssetList(props: assetListProps) {
                 )
                 curveStates[i].lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveStates[i].reserves;
 
+                curveStates[i].image = require('../../assets/' + curveStates[i].icon);
 
 
             }
 
             setCurveList(curveStates);
-
+            setFilteredCurveList(curveStates);
         }
 
         fetchCurveMetrics().then(() => { }).catch((err) => { console.log(err) })
     }, [nonWalletProvider])
 
     const sortCurves = (order: string) => {
+        setSortOption(order);
+        let orderField = "stakingApr";
+        if (order === "HIGHEST STAKING APR") {
+            orderField = "stakingApr";
+        }else{
+            orderField = "lpApr";
+        }
+        setFilteredCurveList(_.orderBy(curveList, ['orderField'], ['desc']));
+    }
 
+    const searchCurve = (search: string) => {
+
+        if(search.startsWith("0x")){
+            setFilteredCurveList(_.filter(curveList, curve => curve.curveAddress.toLowerCase() === search.toLowerCase()));
+        }else{
+            setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.ibAsset.toLowerCase(), search.toLowerCase())));
+        }
     }
 
     return (
@@ -153,6 +170,7 @@ export default function AssetList(props: assetListProps) {
                             border='none'
                             height={`unset`}
                             paddingInline={`unset`}
+                            onChange={(event) => searchCurve(event.target.value)}
                         />
                     </Stack>
                 </Stack>
@@ -163,11 +181,14 @@ export default function AssetList(props: assetListProps) {
                         <Stack direction='row'>
                             <Menu>
                                 <MenuButton>
-                                    HIGHEST STAKING APR<Icon as={BsChevronCompactDown} fontSize='2xl' alignSelf={'right'} m='1' />
+                                    <Stack direction='row' align='center' gap='0'>
+                                        <Text>{sortOption}</Text>
+                                        <Icon as={BsChevronCompactDown} fontSize='2xl' alignSelf={'right'} m='1' />
+                                    </Stack>                                    
                                 </MenuButton>
                                 <MenuList>
-                                    <MenuItem onClick={() => sortCurves("")}>HIGHEST STAKING APR</MenuItem>
-                                    <MenuItem onClick={() => sortCurves("")}>HIGHEST LP APR</MenuItem>
+                                    <MenuItem onClick={() => sortCurves("HIGHEST STAKING APR")}>HIGHEST STAKING APR</MenuItem>
+                                    <MenuItem onClick={() => sortCurves("HIGHEST LP APR")}>HIGHEST LP APR</MenuItem>
                                 </MenuList>
                             </Menu>
                         </Stack>
@@ -188,11 +209,18 @@ export default function AssetList(props: assetListProps) {
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {curveList && curveList.map((item) => {
-
+                            {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
                                     <Tr>
-                                        <Td>{item.ibAsset}</Td>
+                                        <Td>
+                                            <Stack direction='row' align='center' gap='0'>
+                                                <Box boxSize='40px'>
+                                                    <Image src={item.image} alt={item.ibAsset} />
+                                                </Box>
+                                                <Text>{item.ibAsset}</Text>
+                                            </Stack>
+
+                                        </Td>
                                         <Td>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
                                         <Td>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
                                         <Td>{item.stakingApr.toFixed(2)}%</Td>
@@ -200,12 +228,10 @@ export default function AssetList(props: assetListProps) {
                                     </Tr>
                                 )
                             })}
-
                         </Tbody>
                     </Table>
                 </TableContainer>
             </Stack>
-
         </Stack>
     )
 }

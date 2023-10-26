@@ -217,7 +217,7 @@ export function Dashboard( props: dashboardProps ){
   useEffect(() => {
 
     const fetchWalletInfo = async() => {
-      if (wallet?.provider) {
+      if (wallet?.provider) {        
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 

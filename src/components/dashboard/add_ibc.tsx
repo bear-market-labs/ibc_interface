@@ -51,7 +51,7 @@ export default function AddIbc(props: addProps) {
     <>
       {
         isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
-          <Box as='button'>
+          <Box as='button' boxSize='32px'>
             <Image src={ib_eth_logo} onClick={sendTransaction} />
           </Box>
           )
@@ -59,7 +59,7 @@ export default function AddIbc(props: addProps) {
 
       {
         !isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
-          <Box >
+          <Box boxSize='32px'>
             <Image src={ib_eth_logo} />
           </Box>
         )

@@ -47,14 +47,11 @@ export default function LpPosition(props: assetListProps) {
                 });
 
                 let multicallQueries = _.flattenDepth(queries, 1);
-                console.log(multicallQueries);
-
 
                 let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
                 let multicallBytes = await web3Provider.call(multicallQuery)
                 let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-                console.log(multicallResults)
                 let lpPositions: lpPosition[] = [];
                 for (let i = 0; i < curves.length; i++) {
                     const lpPositionBytes = multicallResults[i][0] ? multicallResults[i][1] : [0];
@@ -67,9 +64,8 @@ export default function LpPosition(props: assetListProps) {
                         })
                     }
                 }
-                console.log(lpPositions)
-                setLpPosition(lpPositions);
 
+                setLpPosition(lpPositions);
             }
         }
 
@@ -81,15 +77,15 @@ export default function LpPosition(props: assetListProps) {
     return (
         <Stack justifyContent={'start'} h='calc(100vh - 220px)'>
             <Stack direction="row" w='100%'>
-                <TableContainer w='100%'>
+                <TableContainer w='100%' maxH='calc(100vh - 270px)' overflowY='auto'>
                     <Table variant='simple'>
                         <Tbody>
                             {
                                 lpPosition && lpPosition.map((position) => {
                                     return (
-                                        <Tr>
-                                            <Td>{position.ibAsset}</Td>
-                                            <Td>{position.balance.toFixed(4)} LP</Td>
+                                        <Tr h='70px'>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.ibAsset}</Td>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
                                         </Tr>
                                     )
                                 })

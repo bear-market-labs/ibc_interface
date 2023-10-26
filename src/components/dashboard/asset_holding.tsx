@@ -28,7 +28,7 @@ type holdingBalance = {
 }
 
 export default function AssetHolding(props: assetListProps) {
-    const [{ wallet,  }] = useConnectWallet()
+    const [{ wallet, }] = useConnectWallet()
     const [provider, setProvider] =
         useState<ethers.providers.Web3Provider | null>()
     const [holdingBalance, setHoldingBalance] = useState<holdingBalance[]>();
@@ -48,14 +48,11 @@ export default function AssetHolding(props: assetListProps) {
                 });
 
                 let multicallQueries = _.flattenDepth(queries, 1);
-                console.log(multicallQueries);
-
 
                 let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
                 let multicallBytes = await web3Provider.call(multicallQuery)
                 let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-                console.log(multicallResults)
                 let userBalances: holdingBalance[] = [];
                 for (let i = 0; i < curves.length; i++) {
                     const stakingBalanceBytes = multicallResults[i * 2 + 0][0] ? multicallResults[i * 2 + 0][1] : [0];
@@ -63,39 +60,39 @@ export default function AssetHolding(props: assetListProps) {
                     const userBalanceBytes = multicallResults[i * 2 + 1][0] ? multicallResults[i * 2 + 1][1] : [0];
                     const userBalance = abiCoder.decode(["uint256"], userBalanceBytes)[0];
                     const userTotalHoldingBalance = Number(ethers.utils.formatEther(stakingBalance)) + Number(ethers.utils.formatEther(userBalance));
-                    if(userTotalHoldingBalance > 0){
+                    if (userTotalHoldingBalance > 0) {
                         userBalances.push({
                             ibAsset: curves[i].ibAsset,
-                            balance: userTotalHoldingBalance                        
+                            balance: userTotalHoldingBalance
                         })
                     }
                 }
+
                 setHoldingBalance(userBalances);
             }
         }
-            
 
-            fetchWalletInfo()
-                .then()
-                .catch((err) => console.log("error", err))
-        }, [wallet])
+        fetchWalletInfo()
+            .then()
+            .catch((err) => console.log("error", err))
+    }, [wallet])
 
     return (
         <Stack justifyContent={'start'} h='calc(100vh - 220px)'>
             <Stack direction="row" w='100%'>
-                <TableContainer w='100%'>
+                <TableContainer w='100%' maxH='calc(100vh - 200px)' overflowY='auto'>
                     <Table variant='simple'>
                         <Tbody>
                             {
-                                holdingBalance && holdingBalance.map((balance) =>{
-                                    return(
-                                        <Tr>
-                                            <Td>{balance.ibAsset}</Td>
-                                            <Td>{balance.balance.toFixed(4)} {balance.ibAsset}</Td>
+                                holdingBalance && holdingBalance.map((balance) => {
+                                    return (
+                                        <Tr h='70px'>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{balance.ibAsset}</Td>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{balance.balance.toFixed(4)}</Td>
                                         </Tr>
                                     )
                                 })
-                            }                           
+                            }
                         </Tbody>
                     </Table>
                 </TableContainer>

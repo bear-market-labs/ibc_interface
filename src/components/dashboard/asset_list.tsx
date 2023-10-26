@@ -21,6 +21,7 @@ import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
 import { formatNumber } from '../../util/display_formatting'
 import { blocksPerDay } from '../../config/constants'
+import { colors } from '../../config/style'
 
 type assetListProps = {
     nonWalletProvider: any,
@@ -75,14 +76,10 @@ export default function AssetList(props: assetListProps) {
 
 
             let multicallQueries = _.flattenDepth(curveQueries, 1);
-            console.log(multicallQueries);
-
 
             let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
             let multicallBytes = await nonWalletProvider.call(multicallQuery)
             let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
-
-            console.log(multicallResults)
 
             for (let i = 0; i < curves.length; i++) {
                 const bondingCurveParamsBytes = multicallResults[i * 4][0] ? multicallResults[i * 4][1] : [[0, 0, 0, 0, 0]]
@@ -111,7 +108,7 @@ export default function AssetList(props: assetListProps) {
                     Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
                     * blocksPerDay * 365
                 )
-                curveStates[i].stakingApr = (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance));
+                curveStates[i].stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
 
                 const reserveStakingReward = Number(
                     Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
@@ -125,8 +122,6 @@ export default function AssetList(props: assetListProps) {
                 curveStates[i].lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveStates[i].reserves;
 
                 curveStates[i].image = require('../../assets/' + curveStates[i].icon);
-
-
             }
 
             setCurveList(curveStates);
@@ -144,7 +139,7 @@ export default function AssetList(props: assetListProps) {
         }else{
             orderField = "lpApr";
         }
-        setFilteredCurveList(_.orderBy(curveList, ['orderField'], ['desc']));
+        setFilteredCurveList(_.orderBy(curveList, [orderField], ['desc']));
     }
 
     const searchCurve = (search: string) => {
@@ -157,7 +152,7 @@ export default function AssetList(props: assetListProps) {
     }
 
     return (
-        <Stack justifyContent={'start'} h='calc(100vh - 220px)'>
+        <Stack justifyContent={'start'} h='calc(100vh - 220px)' maxW='100%'>
             <Stack direction="row" pr='7'>
                 <Stack w='50%'>
                     <Text ml={7} mt={7} align="left" fontSize='md'>SEARCH</Text>
@@ -197,34 +192,34 @@ export default function AssetList(props: assetListProps) {
             </Stack>
 
             <Stack direction="row" mt='12' w='100%'>
-                <TableContainer w='100%'>
+                <TableContainer w='100%' maxH='calc(100vh - 350px)' overflowY='auto'>
                     <Table variant='simple'>
                         <Thead>
-                            <Tr textTransform={'none'}>
-                                <Th>ibASSET</Th>
-                                <Th>PRICE</Th>
-                                <Th>RESERVES</Th>
-                                <Th>STAKING APR</Th>
-                                <Th>LP APR</Th>
+                            <Tr >
+                                <Th borderColor='rgba(255, 255, 255, 0.16)' textTransform='none' fontWeight='500' fontSize='sm' color={colors.WHITE}>ibASSET</Th>
+                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>PRICE</Th>
+                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>RESERVES</Th>
+                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>STAKING APR</Th>
+                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>LP APR</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
                             {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
-                                    <Tr>
-                                        <Td>
+                                    <Tr h='70px'>
+                                        <Td borderColor='rgba(255, 255, 255, 0.16)'>
                                             <Stack direction='row' align='center' gap='0'>
-                                                <Box boxSize='40px'>
+                                                <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.ibAsset} />
                                                 </Box>
-                                                <Text>{item.ibAsset}</Text>
+                                                <Text fontWeight='700'>{item.ibAsset}</Text>
                                             </Stack>
 
                                         </Td>
-                                        <Td>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
-                                        <Td>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
-                                        <Td>{item.stakingApr.toFixed(2)}%</Td>
-                                        <Td>{item.lpApr.toFixed(2)}%</Td>
+                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.stakingApr.toFixed(2)}%</Td>
+                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.lpApr.toFixed(2)}%</Td>
                                     </Tr>
                                 )
                             })}

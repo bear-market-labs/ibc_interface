@@ -56,6 +56,14 @@ const theme = extendTheme({
 	fonts: {
 		body: `'Roboto Mono Variable',Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"`,
 	},
+	breakpoints: {
+		sm: "30em",
+		md: "48em",
+		lg: "62em",
+		xl: "80em",
+		"2xl": "96em",
+		"3xl": "128em",
+	},
 });
 
 export default theme;

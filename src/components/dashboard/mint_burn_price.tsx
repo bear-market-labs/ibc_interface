@@ -54,7 +54,7 @@ export default function MintBurnPrice(props: mintProps) {
     <Stack direction="row" pr='7'>
       <Stack w='50%'>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
-        <Stack direction='row' fontSize='2xl' fontWeight='700'>
+        <Stack direction='row' fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
           <Stack rowGap={0}>
             <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ETH'}`}</Text>
             {
@@ -95,7 +95,7 @@ export default function MintBurnPrice(props: mintProps) {
             {
               <>
 
-                <Text fontSize='2xl' fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
                 </>
             }
           </Stack>

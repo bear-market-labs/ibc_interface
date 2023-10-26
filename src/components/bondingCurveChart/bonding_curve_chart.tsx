@@ -569,7 +569,6 @@ export default function BondingCurveChart(props: IProps) {
         .svg{
             position: relative;
             display: inline-block;
-            max-width: 800px;
             width: 100%;
             height: 100%;
         }

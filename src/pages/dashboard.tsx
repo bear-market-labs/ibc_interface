@@ -28,6 +28,7 @@ import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
 import AddIbc from "../components/dashboard/add_ibc";
 import { formatNumber } from "../util/display_formatting";
+import TermsOfService from '../components/dashboard/terms_of_service'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -62,7 +63,12 @@ export function Dashboard( props: dashboardProps ){
       value:'how',
       displayText: 'How It Works',
       description: 'Learn the basics of inverse bonding curves'
-  }    
+    },
+    {
+      value:'terms',
+      displayText: 'Terms of Service',
+      description: 'Last Updated: October 10th, 2023'
+    }
   ]
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
@@ -504,8 +510,17 @@ export function Dashboard( props: dashboardProps ){
               <Stack {...group} spacing='5' mt='7' flexGrow={1}>
                 {navOptions.map((item) => {
                   const radio = getRadioProps({ value: item.value })
+                  if(item.value === 'terms') {
+                    return (
+                      <Box mt='auto'>
+                        <RadioCard key={item.value} {...radio}>
+                        <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
+                        </RadioCard>
+                      </Box>
+                    )
+                  }
                   return(
-                    <RadioCard key={item.value} {...radio}>
+                    <RadioCard key={item.value} {...radio} >
                       <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                     </RadioCard>
                   )
@@ -618,8 +633,8 @@ export function Dashboard( props: dashboardProps ){
                         newReserve: newReserve
                       }}
                     />
-
-                    <Box width="100%" height="400px" padding="10px 20px">
+                    {/* max-width = max-height * 2, max-width = viwport-width * ((0.5 + 1)/(0.5 + 1 + 2)) (defined on line495, choose 28% and 56% for some buffer), 470px = top(150px) + price(100px) + bottom(220px) */}
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 
@@ -648,7 +663,7 @@ export function Dashboard( props: dashboardProps ){
                       }}
                     />
 
-                    <Box width="100%" height="400px" padding="10px 20px">
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 
@@ -666,6 +681,10 @@ export function Dashboard( props: dashboardProps ){
               {
                 headerTitle === 'HOW IT WORKS' &&
                 <HowItWorks/>
+              }
+              {
+                headerTitle === 'TERMS OF SERVICE' &&
+                <TermsOfService />
               }
             </Stack>
           </GridItem>

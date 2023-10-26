@@ -36,7 +36,7 @@ export default function LpingIssuance(props: mintProps) {
   return (
     <>
       <Stack>
-        <Text ml={7} mt={7} align="left" fontSize='md'>LP TOKEN ISSUANCE</Text>
+        <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>LP TOKEN ISSUANCE</Text>
         <Stack direction="row" fontSize='2xl' fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals), "LP")}`}</Text>
           {
@@ -52,7 +52,7 @@ export default function LpingIssuance(props: mintProps) {
 
         <Spacer />
 
-        <Text ml={7} mt={7} align="left" fontSize='md'>SHARE OF TOTAL LP</Text>
+        <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>SHARE OF TOTAL LP</Text>
         <Stack direction="row" fontSize='2xl' fontWeight='700'>
           <Text ml={7} align="left">{`${userCurrentLpShare.toFixed(2)} %`}</Text>
           {

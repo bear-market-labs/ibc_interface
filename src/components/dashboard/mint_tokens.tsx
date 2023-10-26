@@ -321,8 +321,6 @@ export default function MintTokens(props: mintProps) {
 
 				const mintAmount = newSupply - BigInt(inverseTokenSupply.toString())
 
-
-
         // calculate spot price post mint
         const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
 
@@ -338,12 +336,7 @@ export default function MintTokens(props: mintProps) {
 					)
 				).toFixed(inverseTokenDecimals.toNumber()) 
 
-				// this is the minter's price, not the resulting bonding curve price!!!
-				const resultPriceInEth = bignumber(decimaledParsedAmount.toString())
-					.dividedBy(bignumber(mintAmount.toString()))
-					.toFixed(reserveAssetDecimals)
-				const resultPriceInWei = parseEther(resultPriceInEth)
-				setResultPrice(bignumber(resultPriceInWei.toString()))
+				setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
 				setMintAmount(BigNumber.from(mintAmount))
 
 				parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())

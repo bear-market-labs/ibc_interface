@@ -35,6 +35,7 @@ import {
 	format,
 	parse,
   commandTypes,
+	sanitizeNumberInput,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -279,7 +280,7 @@ export default function MintTokens(props: mintProps) {
 	])
 
 	const handleAmountChange = (val: any) => {
-		const parsedAmount = val
+		const parsedAmount = sanitizeNumberInput(val)
 		setAmount(parsedAmount)
 
 		if (isNaN(val) || val.trim() === '') {
@@ -314,23 +315,28 @@ export default function MintTokens(props: mintProps) {
 					Math.log(
 						Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
 					)
+					
+				const newSupplySaneFormat = Math.exp(logMintedTokensPlusSupply)
+				const newSupply = BigInt(Math.floor(Math.exp(logMintedTokensPlusSupply) * 10**(inverseTokenDecimals.toNumber())))
 
-				const mintAmount = parseUnits(
-					Math.exp(logMintedTokensPlusSupply).toFixed(
-						inverseTokenDecimals.toNumber()
-					),
-					inverseTokenDecimals
-				).sub(inverseTokenSupply)
+				const mintAmount = newSupply - BigInt(inverseTokenSupply.toString())
 
-				const newSupply = mintAmount.add(inverseTokenSupply)
 
 
         // calculate spot price post mint
         const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
 
-        const newPrice = Number(curveInvariant * Number(formatEther(utilization)) 
-        /
-        Math.pow(Number(formatUnits(newSupply, inverseTokenDecimals)), 1 - Number(formatEther(utilization)))).toFixed(inverseTokenDecimals.toNumber())
+        const newPrice = Number(
+					curveInvariant 
+					* 
+					Number(formatEther(utilization)) 
+        	/
+        	Math.pow(
+						newSupplySaneFormat // this is in sane format
+						, 
+						1 - Number(formatEther(utilization))
+					)
+				).toFixed(inverseTokenDecimals.toNumber()) 
 
 				// this is the minter's price, not the resulting bonding curve price!!!
 				const resultPriceInEth = bignumber(decimaledParsedAmount.toString())
@@ -338,10 +344,10 @@ export default function MintTokens(props: mintProps) {
 					.toFixed(reserveAssetDecimals)
 				const resultPriceInWei = parseEther(resultPriceInEth)
 				setResultPrice(bignumber(resultPriceInWei.toString()))
-				setMintAmount(mintAmount)
+				setMintAmount(BigNumber.from(mintAmount))
 
 				parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
-				parentSetters?.setNewIbcIssuance(newSupply.toString())
+				parentSetters?.setNewIbcIssuance(newSupply) // this is wei format
 				parentSetters?.setNewReserve(
 					reserveAmount.add(decimaledParsedAmount).toString()
 				)

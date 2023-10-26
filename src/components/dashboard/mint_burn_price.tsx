@@ -4,8 +4,8 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
-import { blocksPerDay } from '../../config/constants';
-import { formatNumber } from '../../util/display_formatting';
+import { blocksPerDay, reserveAssetDecimals } from '../../config/constants';
+import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 
 type mintProps = {
   dashboardDataSet: any;
@@ -43,22 +43,48 @@ export default function MintBurnPrice(props: mintProps) {
   :
   '0'
 
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveAssetDecimals, "ETH")
+  const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
+
+  const formattedNewPrice = formatPriceNumber(newPrice, reserveAssetDecimals, "ETH")
+  const alsoNeedSymbolLine = Number(formattedNewPrice) > 1e-9 && Number(formattedNewPrice) < 0.001
+
   return (
     <>
     <Stack direction="row" pr='7'>
       <Stack w='50%'>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row' fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
-          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(currentTokenPrice), "ETH")}`}</Text>
-          {
-            newPrice.gt(0) && !newPrice.eq(currentTokenPrice) && 
-            <>
-              <Box ml='7' mr='7'>
-                <Icon as={HiOutlineArrowRight} h='100%'/>
-              </Box>
-              <Text>{`${formatNumber(ethers.utils.formatEther(newPrice), "ETH")}`}</Text>
-            </>
-          }
+          <Stack rowGap={0}>
+            <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ETH'}`}</Text>
+            {
+              needSymbolLine && 
+              <>
+                <Text textAlign={`left`}>ETH</Text>
+              </>
+            }
+          </Stack>
+          <Stack>
+            {
+              newPrice.gt(0) && !newPrice.eq(currentTokenPrice) && 
+              <>
+                <Stack direction="row">
+                  <Box ml='7' mr='7'>
+                    <Icon marginTop={`7px`} as={HiOutlineArrowRight}/>
+                  </Box>
+                  <Stack rowGap={0}>
+                    <Text>{`${formattedNewPrice}${alsoNeedSymbolLine ? '' : ' ETH'}`}</Text>
+                    {
+                      alsoNeedSymbolLine && 
+                      <>
+                        <Text textAlign={`left`}>ETH</Text>
+                      </>
+                    }
+                  </Stack>
+                </Stack>
+              </>
+            }
+          </Stack>
         </Stack>
       </Stack>
       <Stack w='50%' direction='row'>

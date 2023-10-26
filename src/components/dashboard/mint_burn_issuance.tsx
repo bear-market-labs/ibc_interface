@@ -20,12 +20,25 @@ export default function MintBurnIssuance(props: mintProps) {
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
 
 
-  let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? BigNumber.from(parentInputDynamicData.newIbcIssuance): BigNumber.from('0')
+  let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance: BigInt(0)
   let newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0')
 
-  if (Math.abs(Number(ethers.utils.formatUnits(inverseTokenSupply.sub(newIbcIssuance), inverseTokenDecimals))) < diffTolerance){
-    newIbcIssuance = inverseTokenSupply
+  if ( // math.abs not allowed for bigints
+    (
+      newIbcIssuance > BigInt(inverseTokenSupply.toString()) 
+      && 
+      newIbcIssuance - BigInt(inverseTokenSupply.toString()) < diffTolerance * 10**inverseTokenDecimals.toNumber() 
+    )
+    ||
+    (
+      BigInt(inverseTokenSupply.toString()) > newIbcIssuance
+      &&
+      BigInt(inverseTokenSupply.toString()) - newIbcIssuance < diffTolerance * 10**inverseTokenDecimals.toNumber()
+    )
+  ){
+    newIbcIssuance = BigInt(inverseTokenSupply.toString())
   }
+  const newIbcIssuanceSaneFormat = newIbcIssuance / BigInt(10**inverseTokenDecimals.toNumber())
 
   if (Math.abs(Number(ethers.utils.formatEther(reserveAmount.sub(newReserve)))) < diffTolerance){
     newReserve = reserveAmount
@@ -39,12 +52,12 @@ export default function MintBurnIssuance(props: mintProps) {
         <Stack direction="row" fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), "IBC")}`}</Text>
           {
-            newIbcIssuance.gt(0) && !newIbcIssuance.eq(inverseTokenSupply) &&
+            newIbcIssuance > BigInt(0) && newIbcIssuance !== BigInt(inverseTokenSupply.toString()) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
               </Box>
-              <Text>{`${formatNumber(ethers.utils.formatUnits(newIbcIssuance, inverseTokenDecimals), "IBC")}`}</Text>
+              <Text>{`${formatNumber(newIbcIssuanceSaneFormat.toString(), "IBC")}`}</Text>
             </>
           }
         </Stack>

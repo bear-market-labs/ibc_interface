@@ -421,7 +421,7 @@ export function Dashboard( props: dashboardProps ){
     if (selectedNavItem === "mintBurn" ){
       updateChartParam.targetLiquidityChange = null;
       if(newIbcIssuance){
-        updateChartParam.targetSupplyChange = (newIbcIssuance - dashboardDataSet.bondingCurveParams.inverseTokenSupply)/dashboardDataSet.bondingCurveParams.inverseTokenSupply;
+        updateChartParam.targetSupplyChange = (Number(newIbcIssuance) - dashboardDataSet.bondingCurveParams.inverseTokenSupply)/dashboardDataSet.bondingCurveParams.inverseTokenSupply;
       }else{
         updateChartParam.targetSupplyChange = null; 
       }

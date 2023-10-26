@@ -384,13 +384,7 @@ export default function BurnTokens(props: mintProps) {
 				/
 				Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
 
-				// calculate resulting price
-				//setResultPrice((decimaledParsedAmount.toString() / liquidityReceived.toString()).toString())
-				const resultPriceInEth = bignumber(liquidityReceived.toString())
-					.dividedBy(bignumber(burnedAmount.toString()))
-					.toFixed(inverseTokenDecimals.toNumber())
-				const resultPriceInWei = parseEther(resultPriceInEth)
-				setResultPrice(bignumber(resultPriceInWei.toString()))
+				setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
 				setLiquidityReceived(liquidityReceived)
 
 				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())

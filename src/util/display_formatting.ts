@@ -1,4 +1,3 @@
-import { symbolWye } from "d3";
 import { ethers, BigNumber } from "ethers";
 
 export const maxTickerLength = 5

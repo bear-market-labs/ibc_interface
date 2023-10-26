@@ -47,7 +47,7 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber, logBigInt } from '../../util/display_formatting'
+import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -315,16 +315,7 @@ export default function MintTokens(props: mintProps) {
 					Math.log(
 						Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
 					)
-
-				/*
-				parseunits fails from overflow
-				const mintAmount = parseUnits(
-					Math.exp(logMintedTokensPlusSupply).toFixed(
-						inverseTokenDecimals.toNumber()
-					),
-					inverseTokenDecimals
-				).sub(inverseTokenSupply) wei format
-				*/
+					
 				const newSupplySaneFormat = Math.exp(logMintedTokensPlusSupply)
 				const newSupply = BigInt(Math.floor(Math.exp(logMintedTokensPlusSupply) * 10**(inverseTokenDecimals.toNumber())))
 

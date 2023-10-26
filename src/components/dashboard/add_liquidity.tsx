@@ -269,11 +269,7 @@ export default function AddLiquidity(props: mintProps) {
 		}
 
 		const decimaledParsedAmount = parseEther(val === '' ? '0' : val)
-		const feeAdjustedAmount = parseEther(
-			Number(
-				Number(formatEther(decimaledParsedAmount)) * (1 - totalFeePercent)
-			).toFixed(reserveAssetDecimals)
-		)
+		const feeAdjustedAmount = decimaledParsedAmount.mul(BigNumber.from(1-totalFeePercent))
 
 		const mintAmount = BigNumber.from(
 			bignumber(lpTokenSupply.mul(feeAdjustedAmount).toString())

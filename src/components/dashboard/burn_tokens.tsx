@@ -395,7 +395,7 @@ export default function BurnTokens(props: mintProps) {
 
 				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
 				parentSetters?.setNewIbcIssuance(
-					inverseTokenSupply.sub(burnedAmount).toString()
+					BigInt(inverseTokenSupply.sub(burnedAmount).toString())
 				)
 				parentSetters?.setNewReserve(
 					reserveAmount.sub(liquidityReceived).toString()

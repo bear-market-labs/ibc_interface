@@ -328,7 +328,11 @@ export function Dashboard( props: dashboardProps ){
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][0])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
-        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][1])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
+        * 
+        Number(ethers.utils.formatEther(bondingCurveParams[0][1])) 
+        / 
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -379,7 +383,15 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(inverseTokenDecimals.gt(13) ? ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) : ethers.BigNumber.from(0)), // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust
+          userLpIbcDebit: userLpIbcDebit === 0 ? 
+            ethers.BigNumber.from(0) 
+            : 
+            ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(
+              inverseTokenDecimals.gt(13) ? 
+              ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
+              : 
+              ethers.BigNumber.from(0)
+            ), 
           totalStakingBalance: totalStakingBalance,
           contractReserveTokenBalance: contractReserveTokenBalance,
           reserveTokenDecimals: reserveTokenDecimals,

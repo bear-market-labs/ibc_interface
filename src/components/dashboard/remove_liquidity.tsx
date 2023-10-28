@@ -89,7 +89,7 @@ export default function RemoveLiquidity(props: mintProps) {
 			? dashboardDataSet.userLpIbcCredit
 			: BigNumber.from(0)
 
-	const userLpIbcDebit = 'userLpIbcDebit' in dashboardDataSet
+	let userLpIbcDebit = 'userLpIbcDebit' in dashboardDataSet
 			? dashboardDataSet.userLpIbcDebit
 			: BigNumber.from(0)
 

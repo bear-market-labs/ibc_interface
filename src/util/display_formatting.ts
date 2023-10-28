@@ -20,7 +20,6 @@ export function formatNumber(number: string, unit: string, showUnit=true, prepen
   if (num === 0){
     retVal = "0"
   } else if (num < 1e-9){
-    console.log(number)
     const numDigits = targetNumCharacters - tickerLength - 4 // 4 for [0, ., E, -], can be 0, 1, 2
     let formattedNumber = numDigits === 0 ? `` : numDigits === 1 ? Number(number.split('.')[0]) : Number(number.split('.')[0]) + '.' + Number(number.split('.')[1].substring(0,1))
     let exponent = Number(number).toExponential().split('e')[1]

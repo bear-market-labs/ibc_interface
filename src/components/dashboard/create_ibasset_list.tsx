@@ -37,11 +37,6 @@ type CurveInfo = {
     reserveAddress: string,
     reserveSymbol: string,
     icon: string,
-    ibAsset: string,
-    price: number,
-    reserves: number,
-    stakingApr: number,
-    lpApr: number,
     image: any
 }
 
@@ -80,29 +75,56 @@ export default function CreateIBAssetList(props: assetListProps) {
 
     const searchCurve = async (search: string) => {
         let reserveAddress = '';
+        const abiCoder = ethers.utils.defaultAbiCoder;
         if(search.startsWith("0x")){
+            
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
+
+            if(search.length == 42){
+                if(wallet?.provider){                
+                    const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
+                    try {
+                        let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
+                        let callResultBytes = await web3Provider.call(query)
+                        let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
+                        console.log('Curve find result', callResult);
+                        if(callResult == ethers.constants.AddressZero){
+                            reserveAddress = search;                        
+                        }else{
+                            let curveInfo = {
+                                curveAddress: '',
+                                reserveAddress: '',
+                                reserveSymbol: '',
+                                icon: 'unlisted_logo.png',
+                                image: ''
+                            }
+                            const curveAddress = callResult.toString() 
+                            curveInfo.curveAddress = curveAddress;
+                            query = composeQuery(curveAddress, "reserveTokenAddress", [], [])
+                            callResultBytes = await web3Provider.call(query)
+                            callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
+                            curveInfo.reserveAddress = callResult;
+                            
+                            query = composeQuery(callResult, "symbol", [], [])
+                            callResultBytes = await web3Provider.call(query)
+                            curveInfo.reserveSymbol = defaultAbiCoder.decode(["string"], callResultBytes)[0]
+
+                            
+                            curveInfo.image = require('../../assets/' + curveInfo.icon);
+
+                            setFilteredCurveList([curveInfo]);
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }  
+                }
+            }
+
         }else{
-            setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.ibAsset.toLowerCase(), search.toLowerCase())));
+            setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.reserveSymbol.toLowerCase(), search.toLowerCase())));
         }
 
-        if(search.length == 42){
-            if(wallet?.provider){                
-                const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
-                try {
-                    let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
-                    let callResultBytes = await web3Provider.call(query)
-                    let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                    console.log('Curve find result', callResult);
-                    if(callResult == ethers.constants.AddressZero){
-                        reserveAddress = search;
-                        
-                    }    
-                } catch (error) {
-                    console.log(error);
-                }  
-            }
-        }
+
         console.log('set reserveAddress', reserveAddress);
         parentSetters.setReserveAssetAddress(reserveAddress);
     }

@@ -771,7 +771,7 @@ export function Dashboard( props: dashboardProps ){
 
                         <TabPanels pt='4'>
                           <TabPanel>
-                            <CreateIBAsset parentSetters={{}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
+                            <CreateIBAsset parentSetters={{setReserveAssetAddress: setReserveAssetAddress}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>

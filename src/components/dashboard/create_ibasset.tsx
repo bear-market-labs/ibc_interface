@@ -140,6 +140,7 @@ export default function CreateIBAsset(props: mintProps) {
 		let description = ''
 
 		try {
+
 			setIsProcessing(true)
 			const signer = provider?.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
@@ -220,6 +221,7 @@ export default function CreateIBAsset(props: mintProps) {
 
 				if (curveCreatedDetail) {
 					description = `Curve created at ${curveCreatedDetail[2]}, ib${reserveSymbol} created at ${curveCreatedDetail[1]}`
+					parentSetters.setReserveAssetAddress('');
 				}
 			}else{
 				description = 'Error details';			

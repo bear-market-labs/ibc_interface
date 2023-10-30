@@ -101,6 +101,7 @@ export function Dashboard( props: dashboardProps ){
   const [newReserve, setNewReserve] = useState<any>()
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
   const [reserveAssetAddress, setReserveAssetAddress] = useState<any>('')
+  const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
 
@@ -116,9 +117,6 @@ export function Dashboard( props: dashboardProps ){
     }
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
-
-  let updateCurveCounter = 0;
-  
 
   useEffect(() => {
     const fetchIbcMetrics = async() => {
@@ -403,8 +401,6 @@ export function Dashboard( props: dashboardProps ){
           reserveTokenDecimals: reserveTokenDecimals,
           reserveTokenSymbol: reserveTokenSymbol,
         });
-
-        console.log(chartParam);
       }
     }
 
@@ -432,9 +428,6 @@ export function Dashboard( props: dashboardProps ){
 
   useEffect(()=>{
     const updateChartParam = _.cloneDeep(chartParam);
-    console.log("update chart parameter")
-    console.log(newIbcIssuance);
-    console.log(newReserve);
 
     if (selectedNavItem === "mintBurn" ){
       updateChartParam.targetLiquidityChange = null;
@@ -503,6 +496,10 @@ export function Dashboard( props: dashboardProps ){
     setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
 
     onClose()
+  }
+
+  const refreshCurve = (timestamp: number) =>{
+    setReserveListUpdateTimestamp(timestamp);
   }
 
   return (
@@ -665,7 +662,7 @@ export function Dashboard( props: dashboardProps ){
                       parentSetters={{
                         setReserveAssetAddress: setReserveAssetAddress
                       }}
-                      key={updateCurveCounter}
+                      reserveListUpdateTimestamp={reserveListUpdateTimestamp}
                     />
                   
                   </>                
@@ -774,7 +771,7 @@ export function Dashboard( props: dashboardProps ){
 
                         <TabPanels pt='4'>
                           <TabPanel>
-                            <CreateIBAsset parentSetters={{refreshCurve: ()=>{updateCurveCounter++}}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
+                            <CreateIBAsset parentSetters={{refreshCurve: refreshCurve}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>

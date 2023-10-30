@@ -89,22 +89,16 @@ export default function CreateIBAsset(props: mintProps) {
 				let multicallBytes = await web3Provider.call(multicallQuery)
 				let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-				console.log(multicallResults)
-
 				const symbolBytes = multicallResults[0][0] ? multicallResults[0][1] : [''];
-				console.log(abiCoder.decode(["string"], symbolBytes)[0]);
 				setReserveSymbol(abiCoder.decode(["string"], symbolBytes)[0]);
 
 				const decimalBytes = multicallResults[1][0] ? multicallResults[1][1] : [0];
-				console.log(abiCoder.decode(["uint256"], decimalBytes)[0]);
 				setReserveDecimal(abiCoder.decode(["uint256"], decimalBytes)[0]);
 
 				const userBalanceBytes = multicallResults[2][0] ? multicallResults[2][1] : [0];
-				console.log(abiCoder.decode(["uint256"], userBalanceBytes)[0]);
 				setUserBalance(abiCoder.decode(["uint256"], userBalanceBytes)[0]);
 
 				const userAllowanceBytes = multicallResults[3][0] ? multicallResults[3][1] : [0];
-				console.log(abiCoder.decode(["uint256"], userAllowanceBytes)[0]);
 				setUserAllowance(abiCoder.decode(["uint256"], userAllowanceBytes)[0]);
 			}
 		}
@@ -145,8 +139,7 @@ export default function CreateIBAsset(props: mintProps) {
 			const signer = provider?.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			const initialReserve = parseUnits((amount || 0).toString(), reserveDecimal);
-			console.log('initialReserve',initialReserve);
-			console.log('reserveDecimal',reserveDecimal);
+
 			let aproveAction = true;
 			if(userAllowance.gte(initialReserve)){
 				aproveAction = false;
@@ -221,7 +214,6 @@ export default function CreateIBAsset(props: mintProps) {
 
 				if (curveCreatedDetail) {
 					description = `Curve created at ${curveCreatedDetail[2]}, ib${reserveSymbol} created at ${curveCreatedDetail[1]}`
-					console.log(description);
 					parentSetters.refreshCurve();
 				}
 			}else{
@@ -251,7 +243,6 @@ export default function CreateIBAsset(props: mintProps) {
 				isClosable: true,
 			})
 
-			console.log(result)
 		} catch (error: any) {
 			console.log(error)
 			Toast({
@@ -269,6 +260,7 @@ export default function CreateIBAsset(props: mintProps) {
 		wallet,
 		provider,
 		mintAmount,
+		userAllowance
 	])
 
 	const handleAmountChange = (val: any) => {
@@ -380,7 +372,7 @@ export default function CreateIBAsset(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount) }
+					isDisabled= {!isAbleToSendTransaction(wallet, provider, amount) }
 				>
 					 {!reserveAddress || userAllowance.gte(parseUnits((amount || 0).toString(), reserveDecimal))  ? 'Create ibAsset' : `Approve ${reserveSymbol}`}
 				</Button>

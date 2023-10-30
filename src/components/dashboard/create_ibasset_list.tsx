@@ -29,6 +29,7 @@ import {
 
 type assetListProps = {
     nonWalletProvider: any,
+    reserveListUpdateTimestamp: number,
     parentSetters: any
 }
 
@@ -41,14 +42,14 @@ type CurveInfo = {
 }
 
 export default function CreateIBAssetList(props: assetListProps) {
-    const { nonWalletProvider, parentSetters } = props
+    const { nonWalletProvider, parentSetters, reserveListUpdateTimestamp } = props
     const [{ wallet, connecting }] = useConnectWallet()
     const [provider, setProvider] =
         useState<ethers.providers.Web3Provider | null>()
 
     const [curveList, setCurveList] = useState<CurveInfo[]>();
-    const [reserveAsset, setReserveAsset] = useState<string>('');
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
+    const [searchValue, setSearchValue] = useState<string>('');
 
     const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
 
@@ -70,14 +71,17 @@ export default function CreateIBAssetList(props: assetListProps) {
 
         setCurveList(curveStates);
         setFilteredCurveList(curveStates);
-    }, [nonWalletProvider])
+        if(searchValue){
+            searchCurve(searchValue).then().catch((err) => console.log("error", err))
+        }        
+    }, [nonWalletProvider, reserveListUpdateTimestamp])
 
 
     const searchCurve = async (search: string) => {
         let reserveAddress = '';
+        setSearchValue(search);
         const abiCoder = ethers.utils.defaultAbiCoder;
-        if(search.startsWith("0x")){
-            
+        if(search.startsWith("0x")){            
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
 
             if(search.length == 42){
@@ -87,7 +91,6 @@ export default function CreateIBAssetList(props: assetListProps) {
                         let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
                         let callResultBytes = await web3Provider.call(query)
                         let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                        console.log('Curve find result', callResult);
                         if(callResult == ethers.constants.AddressZero){
                             reserveAddress = search;                        
                         }else{
@@ -103,7 +106,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                             query = composeQuery(curveAddress, "reserveTokenAddress", [], [])
                             callResultBytes = await web3Provider.call(query)
                             callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                            curveInfo.reserveAddress = callResult;
+                            curveInfo.reserveAddress = curveAddress;
                             
                             query = composeQuery(callResult, "symbol", [], [])
                             callResultBytes = await web3Provider.call(query)
@@ -124,8 +127,6 @@ export default function CreateIBAssetList(props: assetListProps) {
             setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.reserveSymbol.toLowerCase(), search.toLowerCase())));
         }
 
-
-        console.log('set reserveAddress', reserveAddress);
         parentSetters.setReserveAssetAddress(reserveAddress);
     }
 
@@ -143,6 +144,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                             border='none'
                             height={`unset`}
                             paddingInline={`unset`}
+                            value={searchValue}
                             onChange={async(event) => {await searchCurve(event.target.value)}}
                         />
                     </Stack>
@@ -171,7 +173,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                             </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.reserveAddress}</Td>
+                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.curveAddress}</Td>
                                     </Tr>
                                 )
                             })}

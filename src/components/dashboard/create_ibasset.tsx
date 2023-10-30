@@ -221,7 +221,8 @@ export default function CreateIBAsset(props: mintProps) {
 
 				if (curveCreatedDetail) {
 					description = `Curve created at ${curveCreatedDetail[2]}, ib${reserveSymbol} created at ${curveCreatedDetail[1]}`
-					parentSetters.setReserveAssetAddress('');
+					console.log(description);
+					parentSetters.refreshCurve();
 				}
 			}else{
 				description = 'Error details';			

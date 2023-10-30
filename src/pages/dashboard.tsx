@@ -116,6 +116,8 @@ export function Dashboard( props: dashboardProps ){
     }
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
+
+  let updateCurveCounter = 0;
   
 
   useEffect(() => {
@@ -663,6 +665,7 @@ export function Dashboard( props: dashboardProps ){
                       parentSetters={{
                         setReserveAssetAddress: setReserveAssetAddress
                       }}
+                      key={updateCurveCounter}
                     />
                   
                   </>                
@@ -771,7 +774,7 @@ export function Dashboard( props: dashboardProps ){
 
                         <TabPanels pt='4'>
                           <TabPanel>
-                            <CreateIBAsset parentSetters={{setReserveAssetAddress: setReserveAssetAddress}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
+                            <CreateIBAsset parentSetters={{refreshCurve: ()=>{updateCurveCounter++}}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>

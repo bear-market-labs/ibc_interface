@@ -32,6 +32,8 @@ import TermsOfService from '../components/dashboard/terms_of_service'
 import AssetList from "../components/dashboard/asset_list";
 import AssetHolding from "../components/dashboard/asset_holding";
 import LpPosition from "../components/dashboard/lp_position";
+import CreateIBAsset from "../components/dashboard/create_ibasset";
+import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -46,7 +48,12 @@ export function Dashboard( props: dashboardProps ){
       value: 'explore',
       displayText: 'Explore',
       description: 'Discover ibAssets and their stats'
-    },
+    },   
+    {
+      value: 'createAsset',
+      displayText: 'Create New ibASSET',
+      description: 'Generate ibAssets for your reserve asset of choice'
+    }, 
     {
       value: 'mintBurn',
       displayText: 'Mint / Burn',
@@ -93,6 +100,8 @@ export function Dashboard( props: dashboardProps ){
   const [newIbcIssuance, setNewIbcIssuance] = useState<any>()
   const [newReserve, setNewReserve] = useState<any>()
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
+  const [reserveAssetAddress, setReserveAssetAddress] = useState<any>('')
+  const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
 
@@ -108,7 +117,6 @@ export function Dashboard( props: dashboardProps ){
     }
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
-  
 
   useEffect(() => {
     const fetchIbcMetrics = async() => {
@@ -393,8 +401,6 @@ export function Dashboard( props: dashboardProps ){
           reserveTokenDecimals: reserveTokenDecimals,
           reserveTokenSymbol: reserveTokenSymbol,
         });
-
-        console.log(chartParam);
       }
     }
 
@@ -422,9 +428,6 @@ export function Dashboard( props: dashboardProps ){
 
   useEffect(()=>{
     const updateChartParam = _.cloneDeep(chartParam);
-    console.log("update chart parameter")
-    console.log(newIbcIssuance);
-    console.log(newReserve);
 
     if (selectedNavItem === "mintBurn" ){
       updateChartParam.targetLiquidityChange = null;
@@ -493,6 +496,10 @@ export function Dashboard( props: dashboardProps ){
     setSelectedNavItem(preModalSelectedNavItem ? preModalSelectedNavItem : navOptions[0].value)
 
     onClose()
+  }
+
+  const refreshCurve = (timestamp: number) =>{
+    setReserveListUpdateTimestamp(timestamp);
   }
 
   return (
@@ -617,7 +624,7 @@ export function Dashboard( props: dashboardProps ){
               <Stack justifyContent={'center'} mr='7'>
                 <Stack direction="row" align='center' gap='5'>
                   {
-                  headerTitle !== "EXPLORE" &&
+                  headerTitle !== "EXPLORE" && headerTitle !== 'CREATE NEW IBASSET' &&
                   <>
                     <AddIbc 
                       tokenAddress={dashboardDataSet.inverseTokenAddress}
@@ -635,7 +642,7 @@ export function Dashboard( props: dashboardProps ){
 
           <GridItem area={'main'} pb='40px' fontWeight='500'>
             <Stack>
-            {
+              {
                   headerTitle === "EXPLORE" &&
                   <>
                     <AssetList
@@ -645,6 +652,20 @@ export function Dashboard( props: dashboardProps ){
                     />
                   
                   </>
+              }
+
+              {
+                  headerTitle === 'CREATE NEW IBASSET' &&
+                  <>
+                    <CreateIBAssetList
+                      nonWalletProvider = {nonWalletProvider}
+                      parentSetters={{
+                        setReserveAssetAddress: setReserveAssetAddress
+                      }}
+                      reserveListUpdateTimestamp={reserveListUpdateTimestamp}
+                    />
+                  
+                  </>                
               }
 
               {
@@ -738,7 +759,25 @@ export function Dashboard( props: dashboardProps ){
                       </Tabs>
                     </>
                   )
-                }                
+                } 
+                {
+                  headerTitle === 'CREATE NEW IBASSET' &&
+                  (
+                    <>
+                      <Tabs onChange={handleNavInputSwitch} pl='5' pr='5'>
+                        <TabList borderBottom={'none'}>
+                          <Tab>Create</Tab>
+                        </TabList>
+
+                        <TabPanels pt='4'>
+                          <TabPanel>
+                            <CreateIBAsset parentSetters={{refreshCurve: refreshCurve}} reserveAddress={reserveAssetAddress}></CreateIBAsset>
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
+                    </>
+                  )
+                }               
                 {
                   headerTitle === "MINT / BURN" &&
                   (

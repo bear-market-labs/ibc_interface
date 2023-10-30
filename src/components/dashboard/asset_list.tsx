@@ -131,6 +131,102 @@ export default function AssetList(props: assetListProps) {
         fetchCurveMetrics().then(() => { }).catch((err) => { console.log(err) })
     }, [nonWalletProvider])
 
+    const fectchCurveInfo = async(curveAddress: string) => { 
+        const abiCoder = ethers.utils.defaultAbiCoder;
+        const curveInfo = 
+        {
+            curveAddress: curveAddress,
+            ibAssetAddress: '',
+            reserveAddress : '',
+            reserveSymbol: '',
+            icon: 'unlisted_logo.png',
+            ibAsset: '',
+            price: 0,
+            reserves: 0,
+            stakingApr: 0,
+            lpApr: 0,
+            image: ''
+        }
+
+        let multicallQueries =  
+        [
+            composeMulticallQuery(curveAddress, "curveParameters", [], []),
+            composeMulticallQuery(curveAddress, "totalStaked", [], []),
+            composeMulticallQuery(curveAddress, "blockRewardEMA", ["uint8"], [0]),
+            composeMulticallQuery(curveAddress, "blockRewardEMA", ["uint8"], [1]),
+            composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
+            composeMulticallQuery(curveAddress, "reserveTokenAddress", [], [])
+        ]
+
+        let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallBytes = await nonWalletProvider.call(multicallQuery)
+        let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+        if(multicallResults[0][0] && multicallResults[1][0] && multicallResults[2][0] && multicallResults[3][0] && multicallResults[4][0] && multicallResults[5][0]){
+            const bondingCurveParamsBytes = multicallResults[0][1] 
+            const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
+
+            const totalStakingBalanceBytes = multicallResults[1][1]
+            const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
+
+            const lpRewardEmaBytes = multicallResults[2][1]
+            const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
+
+            const stakingRewardEmaBytes = multicallResults[3][1]
+            const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
+
+            curveInfo.ibAssetAddress = abiCoder.decode(["address"], multicallResults[4][1])[0].toString();
+            curveInfo.reserveAddress = abiCoder.decode(["address"], multicallResults[5][1])[0].toString();
+
+            bondingCurveParams[0][0].toString()
+            curveInfo.price = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][3].toString())));
+            curveInfo.reserves = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][0].toString())));
+
+            const reserveStakingRewardInIbc = Number(
+                Number(ethers.utils.formatEther(stakingRewardEma[1].toString()))
+                * blocksPerDay * 365
+                / curveInfo.price
+            )
+
+            const ibcStakingReward = Number(
+                Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
+                * blocksPerDay * 365
+            )
+            curveInfo.stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
+
+            const reserveStakingReward = Number(
+                Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
+                * blocksPerDay * 365
+            )
+
+            const ibcStakingRewardInReserve = Number(
+                Number(ethers.utils.formatEther(lpRewardEma[0].toString()))
+                * blocksPerDay * 365 * curveInfo.price
+            )
+            curveInfo.lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveInfo.reserves;
+
+
+            multicallQueries =  
+            [
+                composeMulticallQuery(curveInfo.ibAssetAddress, "symbol", [], []),
+                composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], [])
+            ]
+
+            multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+
+            multicallBytes = await nonWalletProvider.call(multicallQuery)
+            multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+            curveInfo.ibAsset = abiCoder.decode(["string"], multicallResults[0][1])[0].toString();
+            curveInfo.reserveSymbol = abiCoder.decode(["string"], multicallResults[1][1])[0].toString();
+            curveInfo.image = require('../../assets/' + curveInfo.icon);
+
+            return [curveInfo];
+        }else{
+            return [];
+        }
+    }
+
+
     const sortCurves = (order: string) => {
         setSortOption(order);
         let orderField = "stakingApr";
@@ -142,10 +238,16 @@ export default function AssetList(props: assetListProps) {
         setFilteredCurveList(_.orderBy(curveList, [orderField], ['desc']));
     }
 
-    const searchCurve = (search: string) => {
+    const searchCurve = async(search: string) => {
 
         if(search.startsWith("0x")){
-            setFilteredCurveList(_.filter(curveList, curve => curve.curveAddress.toLowerCase() === search.toLowerCase()));
+            let filterResult = _.filter(curveList, curve => curve.curveAddress.toLowerCase() === search.toLowerCase());
+            setFilteredCurveList(filterResult);
+            if(filterResult.length == 0){
+                filterResult = await fectchCurveInfo(search);
+                setFilteredCurveList(filterResult);
+            }
+            
         }else{
             setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.ibAsset.toLowerCase(), search.toLowerCase())));
         }
@@ -182,8 +284,8 @@ export default function AssetList(props: assetListProps) {
                                     </Stack>                                    
                                 </MenuButton>
                                 <MenuList>
-                                    <MenuItem onClick={() => sortCurves("HIGHEST STAKING APR")}>HIGHEST STAKING APR</MenuItem>
-                                    <MenuItem onClick={() => sortCurves("HIGHEST LP APR")}>HIGHEST LP APR</MenuItem>
+                                    <MenuItem onClick={async() => await sortCurves("HIGHEST STAKING APR")}>HIGHEST STAKING APR</MenuItem>
+                                    <MenuItem onClick={async() => await sortCurves("HIGHEST LP APR")}>HIGHEST LP APR</MenuItem>
                                 </MenuList>
                             </Menu>
                         </Stack>

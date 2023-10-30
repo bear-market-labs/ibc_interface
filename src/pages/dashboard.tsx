@@ -45,15 +45,15 @@ export function Dashboard( props: dashboardProps ){
 
   const navOptions = [
     {
-      value: 'createAsset',
-      displayText: 'Create New ibASSET',
-      description: 'Generate ibAssets for your reserve asset of choice'
-    },
-    {
       value: 'explore',
       displayText: 'Explore',
       description: 'Discover ibAssets and their stats'
-    },    
+    },   
+    {
+      value: 'createAsset',
+      displayText: 'Create New ibASSET',
+      description: 'Generate ibAssets for your reserve asset of choice'
+    }, 
     {
       value: 'mintBurn',
       displayText: 'Mint / Burn',

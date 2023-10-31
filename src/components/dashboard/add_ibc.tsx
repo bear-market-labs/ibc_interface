@@ -5,7 +5,8 @@ import { contracts } from '../../config/contracts'
 import { BiLinkExternal } from 'react-icons/bi'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { colors } from '../../config/style'
-import { ibcImageUrl } from '../../config/constants'
+import { curves } from '../../config/curves'
+import * as _ from "lodash";
 
 import ib_eth_logo from '../../assets/ib_eth_logo.png'
 
@@ -18,8 +19,13 @@ type addProps = {
 export default function AddIbc(props: addProps) {
   const [{ wallet, }] = useConnectWallet()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
-  const tokenImage = ibcImageUrl;
   const {tokenDecimals, tokenAddress, tokenSymbol} = props;
+
+  const curveInfo = _.find(curves, (curve) => curve.ibAssetAddress === tokenAddress)
+  const ibcImage = curveInfo ? curveInfo.icon : 'unlisted_logo.png'
+  const tokenImage = require('../../assets/' + ibcImage);
+
+  const tokenImageStatic = window.origin + tokenImage;
 
   const sendTransaction = useCallback(async () => {
 
@@ -37,7 +43,7 @@ export default function AddIbc(props: addProps) {
             address: tokenAddress, // The address of the token.
             symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 characters.
             decimals: tokenDecimals, // The number of decimals in the token.
-            image: tokenImage, // A string URL of the token logo.
+            image: tokenImageStatic, // A string URL of the token logo.
           },
         },
       });
@@ -52,7 +58,7 @@ export default function AddIbc(props: addProps) {
       {
         isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
           <Box as='button' boxSize='32px'>
-            <Image src={ib_eth_logo} onClick={sendTransaction} />
+            <Image src={tokenImage} onClick={sendTransaction} />
           </Box>
           )
       }
@@ -60,7 +66,7 @@ export default function AddIbc(props: addProps) {
       {
         !isAbleToSendTransaction(wallet, wallet?.provider, 69)&&(
           <Box boxSize='32px'>
-            <Image src={ib_eth_logo} />
+            <Image src={tokenImage} />
           </Box>
         )
       }

@@ -153,13 +153,13 @@ export default function MintTokens(props: mintProps) {
 				(1 - totalFeePercent)
 
 			const maxPriceLimit = bignumber(
-				Number(amount.toString()) * (1 + maxSlippage / 100)
+				Number(formatEther(amount)) * (1 + maxSlippage / 100)
 			)
 				.dividedBy(bignumber(receivedAmount))
 				.toFixed(reserveAssetDecimals)
 
       const minPriceLimit = bignumber(
-        Number(amount.toString()) * (1 - maxSlippage / 100)
+        Number(formatEther(amount)) * (1 - maxSlippage / 100)
       )
         .dividedBy(bignumber(receivedAmount))
         .toFixed(reserveAssetDecimals)

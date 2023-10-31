@@ -340,7 +340,7 @@ export default function MintTokens(props: mintProps) {
 	}
 
 	const handleAmountReceivedChanged = (val: any) => {
-		const parsedAmount = Number(sanitizeNumberInput(val))
+		const parsedAmount = sanitizeNumberInput(val)
 		setMintAmountDisplay(parsedAmount) // fee-adjusted
 
 		if (isNaN(val) || val.trim() === '') {

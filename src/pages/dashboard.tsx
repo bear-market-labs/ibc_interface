@@ -190,7 +190,7 @@ export function Dashboard( props: dashboardProps ){
       const m = Number(ethers.utils.formatEther(bondingCurveParams[0][3])) 
       * 
       Math.pow(
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
         k
       )
 

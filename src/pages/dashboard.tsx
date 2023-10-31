@@ -118,9 +118,14 @@ export function Dashboard( props: dashboardProps ){
   );
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
+  const getProvider = () => {
+    return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
+  }
+
   useEffect(() => {
     const fetchIbcMetrics = async() => {
       const abiCoder = ethers.utils.defaultAbiCoder
+      const provider = getProvider();
 
       // refresh
 
@@ -135,7 +140,7 @@ export function Dashboard( props: dashboardProps ){
       ]
 
       let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-      let multicallBytes = await nonWalletProvider.call(multicallQuery)
+      let multicallBytes = await provider.call(multicallQuery)
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
       // fetch/set main panel metrics data
@@ -163,7 +168,7 @@ export function Dashboard( props: dashboardProps ){
       ]
 
       multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-      multicallBytes = await nonWalletProvider.call(multicallQuery)
+      multicallBytes = await provider.call(multicallQuery)
       multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
       const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
@@ -220,7 +225,7 @@ export function Dashboard( props: dashboardProps ){
 
     fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})
 
-  }, [mostRecentIbcBlock, nonWalletProvider])
+  }, [mostRecentIbcBlock, nonWalletProvider, wallet?.provider])
 
   useEffect(() => {
 

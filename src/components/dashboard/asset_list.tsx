@@ -50,6 +50,11 @@ export default function AssetList(props: assetListProps) {
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
     const [sortOption, setSortOption] = useState<string>("HIGHEST STAKING APR");
 
+    const getProvider = () => {
+        return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
+    }
+
+
     useEffect(() => {
         const fetchCurveMetrics = async () => {
             const abiCoder = ethers.utils.defaultAbiCoder;
@@ -78,7 +83,7 @@ export default function AssetList(props: assetListProps) {
             let multicallQueries = _.flattenDepth(curveQueries, 1);
 
             let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-            let multicallBytes = await nonWalletProvider.call(multicallQuery)
+            let multicallBytes = await getProvider().call(multicallQuery)
             let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
             for (let i = 0; i < curves.length; i++) {
@@ -129,7 +134,7 @@ export default function AssetList(props: assetListProps) {
         }
 
         fetchCurveMetrics().then(() => { }).catch((err) => { console.log(err) })
-    }, [nonWalletProvider])
+    }, [nonWalletProvider, wallet?.provider])
 
     const fectchCurveInfo = async(curveAddress: string) => { 
         const abiCoder = ethers.utils.defaultAbiCoder;
@@ -159,7 +164,7 @@ export default function AssetList(props: assetListProps) {
         ]
 
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-        let multicallBytes = await nonWalletProvider.call(multicallQuery)
+        let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
         if(multicallResults[0][0] && multicallResults[1][0] && multicallResults[2][0] && multicallResults[3][0] && multicallResults[4][0] && multicallResults[5][0]){
@@ -214,7 +219,7 @@ export default function AssetList(props: assetListProps) {
 
             multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
-            multicallBytes = await nonWalletProvider.call(multicallQuery)
+            multicallBytes = await getProvider().call(multicallQuery)
             multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
             curveInfo.ibAsset = abiCoder.decode(["string"], multicallResults[0][1])[0].toString();
             curveInfo.reserveSymbol = abiCoder.decode(["string"], multicallResults[1][1])[0].toString();

@@ -53,6 +53,10 @@ export default function CreateIBAssetList(props: assetListProps) {
 
     const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
 
+    const getProvider = () => {
+        return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
+    }
+
     useEffect(() => {
         // if (wallet?.provider) {
         //     const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
@@ -74,7 +78,7 @@ export default function CreateIBAssetList(props: assetListProps) {
         if(searchValue){
             searchCurve(searchValue).then().catch((err) => console.log("error", err))
         }        
-    }, [nonWalletProvider, reserveListUpdateTimestamp])
+    }, [nonWalletProvider, wallet?.provider, reserveListUpdateTimestamp])
 
 
     const searchCurve = async (search: string) => {
@@ -85,11 +89,11 @@ export default function CreateIBAssetList(props: assetListProps) {
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
 
             if(search.length == 42){
-                if(wallet?.provider){                
-                    const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
+                const provider = getProvider();
+                if(provider){
                     try {
                         let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
-                        let callResultBytes = await web3Provider.call(query)
+                        let callResultBytes = await provider.call(query)
                         let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
                         if(callResult == ethers.constants.AddressZero){
                             reserveAddress = search;                        
@@ -104,12 +108,12 @@ export default function CreateIBAssetList(props: assetListProps) {
                             const curveAddress = callResult.toString() 
                             curveInfo.curveAddress = curveAddress;
                             query = composeQuery(curveAddress, "reserveTokenAddress", [], [])
-                            callResultBytes = await web3Provider.call(query)
+                            callResultBytes = await provider.call(query)
                             callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
                             curveInfo.reserveAddress = curveAddress;
                             
                             query = composeQuery(callResult, "symbol", [], [])
-                            callResultBytes = await web3Provider.call(query)
+                            callResultBytes = await provider.call(query)
                             curveInfo.reserveSymbol = defaultAbiCoder.decode(["string"], callResultBytes)[0]
 
                             

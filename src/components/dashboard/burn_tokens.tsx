@@ -38,6 +38,7 @@ import {
 	parse,
 	commandTypes,
 	sanitizeNumberInput,
+	curveUtilization,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -59,7 +60,8 @@ export default function BurnTokens(props: mintProps) {
 	const [{ wallet, connecting }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
-	const [amount, setAmount] = useState<number>()
+	const [amount, setAmount] = useState<BigNumber>()
+	const [amountDisplay, setAmountDisplay] = useState<number>()
 	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
@@ -68,6 +70,7 @@ export default function BurnTokens(props: mintProps) {
 	const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(
 		BigNumber.from(0)
 	)
+	const [liquidityReceivedDisplay, setLiquidityReceivedDisplay] = useState<number>()
 
 	const inverseTokenAddress =
 		'inverseTokenAddress' in dashboardDataSet
@@ -161,31 +164,23 @@ export default function BurnTokens(props: mintProps) {
 					)
 				).slice(0, 4)
 
-				let decimaledAmount = parseUnits(
-					amount.toString(),
-					inverseTokenDecimals.toNumber()
-				)
-
 				// fee adjustment
 				const fee = parseUnits(
 					Number(
-						Number(formatUnits(decimaledAmount, inverseTokenDecimals)) *
+						Number(formatUnits(amount, inverseTokenDecimals)) *
 							totalFeePercent
 					).toFixed(Number(inverseTokenDecimals)),
 					inverseTokenDecimals
 				)
 
-				// must use burned amount for min/max price limits
-				const burnAmount = decimaledAmount.sub(fee)
-
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
-					.dividedBy(bignumber(burnAmount.toString()))
+					.dividedBy(bignumber(amount.toString()))
 					.toFixed(reserveAssetDecimals)
 
 				const maxPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 + maxSlippage / 100)
-					.dividedBy(bignumber(burnAmount.toString()))
+					.dividedBy(bignumber(amount.toString()))
 					.toFixed(reserveAssetDecimals)
 
 				const minReserveLimit =
@@ -201,7 +196,7 @@ export default function BurnTokens(props: mintProps) {
 						['address', 'uint256', 'uint256[2]', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address, //ignored by router
-							decimaledAmount,
+							amount,
 							[parseEther(minPriceLimit),parseEther(maxPriceLimit)],
 							[parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),parseEther(maxReserveLimit.toFixed(reserveAssetDecimals))],
 						] // arg values
@@ -329,88 +324,113 @@ export default function BurnTokens(props: mintProps) {
 
 	const handleAmountChange = (val: any) => {
 		const parsedAmount = sanitizeNumberInput(val)
-		setAmount(parsedAmount)
+		setAmountDisplay(parsedAmount)
 
 		if (isNaN(val) || val.trim() === '') {
 			return
 		}
 
-		const decimaledParsedAmount = parseUnits(
-			val === '' ? '0' : val,
+		setAmount(parseUnits(parsedAmount, inverseTokenDecimals.toNumber()))
+
+		const decimaledParsedAmount = parseUnits(parsedAmount,
 			inverseTokenDecimals.toNumber()
 		)
+		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
+		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
-		const calcBurnAmount = async (
-			decimaledParsedAmount: BigNumber,
-			reserveAmount: BigNumber,
-			inverseTokenSupply: BigNumber,
-			utilization: BigNumber
-		) => {
-			if (wallet?.provider) {
-				const provider = new ethers.providers.Web3Provider(
-					wallet.provider,
-					'any'
-				)
-				const abiCoder = ethers.utils.defaultAbiCoder
+		// this should be a non-under/overflow number between 0,1
+		const fee = parseUnits(
+			Number(
+				Number(formatUnits(decimaledParsedAmount, inverseTokenDecimals)) *
+					totalFeePercent
+			).toFixed(Number(inverseTokenDecimals)),
+			inverseTokenDecimals
+		)
+		const burnedAmount = decimaledParsedAmount.sub(fee)
+		const supplyDelta =
+			Number(formatEther(inverseTokenSupply.sub(burnedAmount))) /
+			Number(formatEther(inverseTokenSupply))
 
-				// this should be a non-under/overflow number between 0,1
-				const fee = parseUnits(
-					Number(
-						Number(formatUnits(decimaledParsedAmount, inverseTokenDecimals)) *
-							totalFeePercent
-					).toFixed(Number(inverseTokenDecimals)),
-					inverseTokenDecimals
-				)
-				const burnedAmount = decimaledParsedAmount.sub(fee)
-				const supplyDelta =
-					Number(formatEther(inverseTokenSupply.sub(burnedAmount))) /
-					Number(formatEther(inverseTokenSupply))
+		// this will be a negative number
+		const logSupplyDeltaTimesUtilization =
+			Math.log(supplyDelta) * curveUtilization
 
-				// this will be a negative number
-				const logSupplyDeltaTimesUtilization =
-					Math.log(supplyDelta) * Number(formatEther(utilization))
+		const liquidityReceived = parseEther(
+			Number(
+				-1 *
+					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
+					Number(formatEther(reserveAmount))
+			).toFixed(reserveAssetDecimals)
+		)
 
-				const liquidityReceived = parseEther(
-					Number(
-						-1 *
-							(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-							Number(formatEther(reserveAmount))
-					).toFixed(reserveAssetDecimals)
-				)
+		// calculate spot price post mint
+		const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
+		const newPrice = curveInvariant * curveUtilization
+		/
+		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
 
-				// calculate spot price post mint
-				const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
-				const newPrice = curveInvariant * Number(formatEther(utilization)) 
-				/
-				Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
+		setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
+		setLiquidityReceived(liquidityReceived)
+		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatEther(liquidityReceived)) *
+		(1 - totalFeePercent)).toString())))
 
-				setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
-				setLiquidityReceived(liquidityReceived)
+		parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
+		parentSetters?.setNewIbcIssuance(
+			BigInt(inverseTokenSupply.sub(burnedAmount).toString())
+		)
+		parentSetters?.setNewReserve(
+			reserveAmount.sub(liquidityReceived).toString()
+		)
+	}
 
-				parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
-				parentSetters?.setNewIbcIssuance(
-					BigInt(inverseTokenSupply.sub(burnedAmount).toString())
-				)
-				parentSetters?.setNewReserve(
-					reserveAmount.sub(liquidityReceived).toString()
-				)
-			}
+	const handleAmountReceivedChanged = (val: any) => {
+		const parsedAmount = sanitizeNumberInput(val)
+		setLiquidityReceivedDisplay(parsedAmount) // fee-adjusted
+
+		if (isNaN(val) || val.trim() === '') {
+			return
 		}
 
-		if (
-			'reserveAmount' in bondingCurveParams &&
-			'inverseTokenSupply' in bondingCurveParams &&
-			'utilization' in bondingCurveParams
-		) {
-			calcBurnAmount(
-				decimaledParsedAmount,
-				BigNumber.from(bondingCurveParams.reserveAmount),
-				BigNumber.from(bondingCurveParams.inverseTokenSupply),
-				BigNumber.from(bondingCurveParams.utilization)
+		const liquidityReceived = parsedAmount / (1 - totalFeePercent) // full mint-amount
+
+		setLiquidityReceived(parseUnits(liquidityReceived.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber())) 
+
+		// calculate ibc burn amount
+		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
+		const k = 1 - curveUtilization
+		const m = Number(ethers.utils.formatEther(bondingCurveParams.currentTokenPrice)) 
+		* 
+		Math.pow(
+			currentInverseTokenSupply,
+			k
+		)
+		const k_1 = 1 - k
+
+		//solve for burn amount
+		const burnAmount = (
+			currentInverseTokenSupply
+			-
+			Math.pow(
+				liquidityReceived * k_1 / m - currentInverseTokenSupply**k_1,
+				1/k_1
 			)
-				.then()
-				.catch((err) => console.log(err))
-		}
+		)
+		/
+		(1 - totalFeePercent)
+
+		const newSupply = currentInverseTokenSupply - burnAmount * (1 - totalFeePercent)
+		const newPrice = Number(m * newSupply ** (-k)).toFixed(inverseTokenDecimals.toNumber())
+
+		setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
+
+		setAmount(parseUnits(burnAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
+		setAmountDisplay(burnAmount)
+
+		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
+		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
+		parentSetters?.setNewReserve(
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseEther(Number(parsedAmount).toFixed(reserveAssetDecimals)).toString()
+		))
 	}
 
 	return (
@@ -426,7 +446,7 @@ export default function BurnTokens(props: mintProps) {
 					alignItems='center'
 				>
 					<NumberInput
-						value={amount}
+						value={amountDisplay}
 						onChange={(valueString) => handleAmountChange(valueString)}
 					>
 						<NumberInputField
@@ -460,12 +480,19 @@ export default function BurnTokens(props: mintProps) {
 					YOU RECEIVE
 				</Text>
 				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
-					<Text>
-						{
-							formatReceiveNumber((Number(formatEther(liquidityReceived)) *
-							(1 - totalFeePercent)).toString()
-						)}
-					</Text>
+
+					<NumberInput
+						value={liquidityReceivedDisplay}
+						onChange={(valueString) => handleAmountReceivedChanged(valueString)}
+					>
+						<NumberInputField
+							minWidth='auto'
+							border='none'
+							fontSize='5xl'
+							placeholder={`0`}
+							pl='0'
+						/>
+					</NumberInput>
 					<Text align='right'>{reserveAssetSymbol}</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(

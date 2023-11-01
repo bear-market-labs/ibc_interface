@@ -1,14 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { Box, Button, IconButton, Image, Input, Link, Stack } from '@chakra-ui/react'
+import { Box, Image } from '@chakra-ui/react'
 import { contracts } from '../../config/contracts'
-import { BiLinkExternal } from 'react-icons/bi'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { colors } from '../../config/style'
 import { curves } from '../../config/curves'
 import * as _ from "lodash";
-
-import ib_eth_logo from '../../assets/ib_eth_logo.png'
 
 type addProps = {
   tokenDecimals: any;

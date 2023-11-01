@@ -2,7 +2,7 @@ export const curves = [
     {
         ibAsset: 'ibETH',
         reserveSymbol: "ETH",
-        icon: 'ib_eth_logo.png',
+        icon: 'ib_eth_logo.svg',
         curveAddress: '0xA870E501d336e77f29187952e1a9a1Ee354f677B',
         reserveAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         ibAssetAddress: '0x95Fe64ee219CD3113c3587cC1F50aaC6De6B89bD'

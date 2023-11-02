@@ -42,7 +42,7 @@ export default function MintBurnPrice(props: mintProps) {
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals, reserveAssetSymbol)
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals.toNumber(), reserveAssetSymbol)
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
   const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals.toNumber(), "ETH")

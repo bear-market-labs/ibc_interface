@@ -104,7 +104,7 @@ export default function MintTokens(props: mintProps) {
 			: '0'
 	)
 
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserverTokenDecimals : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : reserveAssetDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 
 	const [resultPrice, setResultPrice] = useState<bignumber>(
@@ -330,7 +330,7 @@ export default function MintTokens(props: mintProps) {
 		setMintAmountDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(mintAmount.toString(), inverseTokenDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
-		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
+		parentSetters?.setNewPrice(Number(Number(newPrice) * 10**reserveTokenDecimals.toNumber()).toString())
 		parentSetters?.setNewIbcIssuance(newSupply) // this is wei format
 		parentSetters?.setNewReserve(
 			reserveAmount.add(decimaledParsedAmount).toString()

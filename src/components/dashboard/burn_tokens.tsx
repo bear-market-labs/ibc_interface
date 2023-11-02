@@ -180,12 +180,12 @@ export default function BurnTokens(props: mintProps) {
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
 					.dividedBy(bignumber(burnAmount.toString()))
-					.toFixed(reserveAssetDecimals)
+					.toFixed(reserveTokenDecimals)
 
 				const maxPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 + maxSlippage / 100)
 					.dividedBy(bignumber(burnAmount.toString()))
-					.toFixed(reserveAssetDecimals)
+					.toFixed(reserveTokenDecimals)
 
 				const minReserveLimit =
 					Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
@@ -202,7 +202,7 @@ export default function BurnTokens(props: mintProps) {
 							wallet.accounts[0].address, //ignored by router
 							decimaledAmount,
 							[parseUnits(minPriceLimit, reserveTokenDecimals),parseUnits(maxPriceLimit, reserveTokenDecimals)],
-							[parseUnits(minReserveLimit.toFixed(reserveAssetDecimals), reserveTokenDecimals),parseUnits(maxReserveLimit.toFixed(reserveAssetDecimals), reserveTokenDecimals)],
+							[parseUnits(minReserveLimit.toFixed(reserveTokenDecimals), reserveTokenDecimals),parseUnits(maxReserveLimit.toFixed(reserveTokenDecimals), reserveTokenDecimals)],
 						] // arg values
 					)
 				)
@@ -374,7 +374,7 @@ export default function BurnTokens(props: mintProps) {
 						-1 *
 							(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
 							Number(formatUnits(reserveAmount, reserveTokenDecimals))
-					).toFixed(reserveAssetDecimals)
+					).toFixed(reserveTokenDecimals)
 					, 
 					reserveTokenDecimals
 				)

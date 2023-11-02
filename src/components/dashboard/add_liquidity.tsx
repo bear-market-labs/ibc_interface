@@ -18,10 +18,8 @@ import {
 	concat,
 	defaultAbiCoder,
 	hexlify,
-	parseEther,
 	formatUnits,
 	parseUnits,
-	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
 import { contracts } from '../../config/contracts'
@@ -29,12 +27,11 @@ import { colors } from '../../config/style'
 import {
 	explorerUrl,
 	maxSlippagePercent,
-	reserveAssetDecimals,
-	reserveAssetSymbol,
 	format,
 	parse,
 	commandTypes,
 	sanitizeNumberInput,
+	lpTokenDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -67,22 +64,18 @@ export default function AddLiquidity(props: mintProps) {
 		'bondingCurveParams' in dashboardDataSet
 			? dashboardDataSet.bondingCurveParams
 			: {}
-	const lpTokenDecimals = BigNumber.from(
-		'lpTokenDecimals' in dashboardDataSet
-			? dashboardDataSet.lpTokenDecimals
-			: '0'
-	)
 	const inverseTokenDecimals = BigNumber.from(
 		'inverseTokenDecimals' in dashboardDataSet
 			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
 	const lpTokenSupply = BigNumber.from(
 		'lpTokenSupply' in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'
 	)
-	const userBalance = BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol == "WETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
-	)
+	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userLpTokenBalance = bignumber(
 		'userLpTokenBalance' in dashboardDataSet
 			? dashboardDataSet.userLpTokenBalance
@@ -92,7 +85,7 @@ export default function AddLiquidity(props: mintProps) {
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
-						Number(formatEther(dashboardDataSet.fees[y]['addLiquidity'])) + x,
+						Number(formatUnits(dashboardDataSet.fees[y]['addLiquidity'], reserveTokenDecimals)) + x,
 					0
 			  )
 			: 0
@@ -159,7 +152,7 @@ export default function AddLiquidity(props: mintProps) {
 					['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
 					[
 						wallet.accounts[0].address, // ignored by router
-						parseEther(amount.toString()),
+						parseUnits(amount.toString(), reserveTokenDecimals),
 						[minPriceLimit, maxPriceLimit],
 					] // arg values
 				)
@@ -181,7 +174,7 @@ export default function AddLiquidity(props: mintProps) {
 			const txDetails = {
 				to: ibcRouterAddress,
 				data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
-				value: parseEther(amount.toString()),
+				value: parseUnits(amount.toString(), reserveTokenDecimals),
 			}
 
 			const tx = await signer.sendTransaction(txDetails)
@@ -208,7 +201,7 @@ export default function AddLiquidity(props: mintProps) {
 					description = `Received ${Number(
 						formatUnits(LiquidityAddedDetails[1], lpTokenDecimals)
 					).toFixed(4)} LP for ${Number(
-						formatEther(LiquidityAddedDetails[0])
+						formatUnits(LiquidityAddedDetails[0], reserveTokenDecimals)
 					).toFixed(4)} ETH`
 				}
 			}
@@ -268,7 +261,7 @@ export default function AddLiquidity(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseEther(val === '' ? '0' : val)
+		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, reserveTokenDecimals)
 		const feeAdjustedAmount = decimaledParsedAmount.mul(BigNumber.from(1-totalFeePercent))
 
 		const mintAmount = BigNumber.from(
@@ -280,7 +273,7 @@ export default function AddLiquidity(props: mintProps) {
 		)
 
 		//calculate ibc credit
-		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, reserveAssetDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, reserveAssetDecimals))
+		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, reserveTokenDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals))
 
 		setMintAmount(mintAmount)
 		setIbcCredit(lpIbcCredit)
@@ -316,18 +309,18 @@ export default function AddLiquidity(props: mintProps) {
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
-						{reserveAssetSymbol}
+						{dashboardDataSet.reserveTokenSymbol}
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
 					<Text align='right'>{`Balance: ${formatBalanceNumber(
-						formatEther(userBalance)
+						formatUnits(userBalance, reserveTokenDecimals)
 					)}`}</Text>
 					<Box
 						as='button'
 						color={colors.TEAL}
 						onClick={() =>
-							handleAmountChange(formatEther(userBalance).toString())
+							handleAmountChange(formatUnits(userBalance).toString(), reserveTokenDecimals)
 						}
 					>
 						MAX
@@ -345,7 +338,7 @@ export default function AddLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${formatNumber(ibcCredit.toString(), "IBC")} bound to position`
+						`+ ${formatNumber(ibcCredit.toString(), dashboardDataSet.inverseTokenSymbol)} bound to position`
 					}
 				</Text>
 			</Stack>
@@ -359,7 +352,7 @@ export default function AddLiquidity(props: mintProps) {
 				>
 					<Text align='left'>Market price</Text>
 					<Text align='right'>
-						{`${Number(formatEther(currentTokenPrice)).toFixed(3)} ETH`}
+						{`${Number(formatUnits(currentTokenPrice, reserveTokenDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>
 				</Stack>
 				<Stack

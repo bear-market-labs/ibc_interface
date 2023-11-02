@@ -16,13 +16,10 @@ import {
 } from '@chakra-ui/react'
 import {
 	arrayify,
-	parseUnits,
 	concat,
 	defaultAbiCoder,
 	hexlify,
 	formatUnits,
-	parseEther,
-	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
@@ -31,7 +28,6 @@ import { colors } from '../../config/style'
 import {
 	explorerUrl,
 	maxSlippagePercent,
-	reserveAssetSymbol,
 	parse,
 	format,
 	commandTypes,
@@ -61,9 +57,6 @@ export default function RemoveLiquidity(props: mintProps) {
 	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
-	const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(
-		BigNumber.from(0)
-	)
 
 	const userInverseTokenAllowance = BigNumber.from(
 		'userInverseTokenAllowance' in dashboardDataSet
@@ -79,6 +72,7 @@ export default function RemoveLiquidity(props: mintProps) {
 			? dashboardDataSet.lpTokenDecimals
 			: '0'
 	)
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
@@ -104,7 +98,7 @@ export default function RemoveLiquidity(props: mintProps) {
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
-						Number(formatEther(dashboardDataSet.fees[y]['removeLiquidity'])) +
+						Number(formatUnits(dashboardDataSet.fees[y]['removeLiquidity'], reserveTokenDecimals)) +
 						x,
 					0
 			  )
@@ -244,7 +238,7 @@ export default function RemoveLiquidity(props: mintProps) {
 
 				if (LiquidityRemovedDetails) {
 					description = `Received ${Number(
-						formatEther(LiquidityRemovedDetails[1])
+						formatUnits(LiquidityRemovedDetails[1], reserveTokenDecimals)
 					).toFixed(4)} ETH for ${Number(
 						formatUnits(LiquidityRemovedDetails[0], lpTokenDecimals)
 					).toFixed(4)} LP`
@@ -363,7 +357,7 @@ export default function RemoveLiquidity(props: mintProps) {
 								(1 - totalFeePercent)).toString()
 						)}
 					</Text>
-					<Text align='right'>{reserveAssetSymbol}</Text>
+					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
@@ -381,7 +375,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				>
 					<Text align='left'>Market price</Text>
 					<Text align='right'>
-						{`${Number(formatEther(currentTokenPrice)).toFixed(3)} ETH`}
+						{`${Number(formatUnits(currentTokenPrice, reserveTokenDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>
 				</Stack>
 				<Stack

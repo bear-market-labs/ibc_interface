@@ -29,7 +29,6 @@ import {
 	maxSlippagePercent,
 	maxReserveChangePercent,
 	reserveAssetDecimals,
-	reserveAssetSymbol,
 	format,
 	parse,
   commandTypes,
@@ -155,13 +154,13 @@ export default function MintTokens(props: mintProps) {
 				Number(formatUnits(amount, reserveTokenDecimals)) * (1 + maxSlippage / 100)
 			)
 				.dividedBy(bignumber(receivedAmount))
-				.toFixed(reserveAssetDecimals)
+				.toFixed(reserveTokenDecimals)
 
       const minPriceLimit = bignumber(
         Number(formatUnits(amount, reserveTokenDecimals)) * (1 - maxSlippage / 100)
       )
         .dividedBy(bignumber(receivedAmount))
-        .toFixed(reserveAssetDecimals)
+        .toFixed(reserveTokenDecimals)
 
 			const maxReserveLimit =
 				Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
@@ -366,13 +365,13 @@ export default function MintTokens(props: mintProps) {
 
 		setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
 
-		setAmount(parseUnits(reserveNeeded.toFixed(reserveAssetDecimals), reserveTokenDecimals))
+		setAmount(parseUnits(reserveNeeded.toFixed(reserveTokenDecimals), reserveTokenDecimals))
 		setAmountDisplay(reserveNeeded)
 
 		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
 		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply + mintAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).add(parseUnits(reserveNeeded.toFixed(reserveAssetDecimals), reserveTokenDecimals).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).add(parseUnits(reserveNeeded.toFixed(reserveTokenDecimals), reserveTokenDecimals).toString()
 		))
 	}
 

@@ -20,7 +20,6 @@ import {
 	concat,
 	defaultAbiCoder,
 	hexlify,
-	parseEther,
 	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
@@ -87,9 +86,9 @@ export default function BurnTokens(props: mintProps) {
 			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
-	const userBalance = BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol == "WETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
-	)
+	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userIbcBalance ='userIbcTokenBalance' in dashboardDataSet
 			? BigNumber.from(dashboardDataSet.userIbcTokenBalance)
 			: BigNumber.from('0')
@@ -202,8 +201,8 @@ export default function BurnTokens(props: mintProps) {
 						[
 							wallet.accounts[0].address, //ignored by router
 							decimaledAmount,
-							[parseEther(minPriceLimit),parseEther(maxPriceLimit)],
-							[parseEther(minReserveLimit.toFixed(reserveAssetDecimals)),parseEther(maxReserveLimit.toFixed(reserveAssetDecimals))],
+							[parseUnits(minPriceLimit, reserveTokenDecimals),parseUnits(maxPriceLimit, reserveTokenDecimals)],
+							[parseUnits(minReserveLimit.toFixed(reserveAssetDecimals), reserveTokenDecimals),parseUnits(maxReserveLimit.toFixed(reserveAssetDecimals), reserveTokenDecimals)],
 						] // arg values
 					)
 				)
@@ -265,7 +264,7 @@ export default function BurnTokens(props: mintProps) {
 
 				if (tokenSoldDetails) {
 					description = `Received ${Number(
-						formatEther(tokenSoldDetails[1])
+						formatUnits(tokenSoldDetails[1], reserveTokenDecimals)
 					).toFixed(4)} ETH for ${Number(
 						formatUnits(tokenSoldDetails[0], inverseTokenDecimals)
 					).toFixed(4)} IBC`
@@ -363,23 +362,25 @@ export default function BurnTokens(props: mintProps) {
 				)
 				const burnedAmount = decimaledParsedAmount.sub(fee)
 				const supplyDelta =
-					Number(formatEther(inverseTokenSupply.sub(burnedAmount))) /
-					Number(formatEther(inverseTokenSupply))
+					Number(formatUnits(inverseTokenSupply.sub(burnedAmount), reserveTokenDecimals)) /
+					Number(formatUnits(inverseTokenSupply, reserveTokenDecimals))
 
 				// this will be a negative number
 				const logSupplyDeltaTimesUtilization =
 					Math.log(supplyDelta) * Number(formatEther(utilization))
 
-				const liquidityReceived = parseEther(
+				const liquidityReceived = parseUnits(
 					Number(
 						-1 *
 							(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-							Number(formatEther(reserveAmount))
+							Number(formatUnits(reserveAmount, reserveTokenDecimals))
 					).toFixed(reserveAssetDecimals)
+					, 
+					reserveTokenDecimals
 				)
 
 				// calculate spot price post mint
-				const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
+				const curveInvariant = Number(formatUnits(reserveAmount, reserveTokenDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), Number(formatEther(utilization))) 
 				const newPrice = curveInvariant * Number(formatEther(utilization)) 
 				/
 				Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - Number(formatEther(utilization)))
@@ -438,7 +439,7 @@ export default function BurnTokens(props: mintProps) {
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
-						{ibcSymbol}
+						{dashboardDataSet.inverseTokenSymbol}
 					</Text>
 				</Stack>
 				<Stack direction='row' justify='right' fontSize='sm'>
@@ -462,14 +463,14 @@ export default function BurnTokens(props: mintProps) {
 				<Stack direction='row' justifyContent={'space-between'} fontSize='5xl'>
 					<Text>
 						{
-							formatReceiveNumber((Number(formatEther(liquidityReceived)) *
+							formatReceiveNumber((Number(formatUnits(liquidityReceived, reserveTokenDecimals)) *
 							(1 - totalFeePercent)).toString()
 						)}
 					</Text>
-					<Text align='right'>{reserveAssetSymbol}</Text>
+					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(
-					formatEther(userBalance)
+					formatUnits(userBalance, reserveTokenDecimals)
 				)}`}</Text>
 			</Stack>
 			<Stack>
@@ -543,7 +544,7 @@ export default function BurnTokens(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
 				>
-					{userInverseTokenAllowance.gt(0) ? 'Burn' : 'Approve IBC'}
+					{userInverseTokenAllowance.gt(0) ? 'Burn' : 'Approve ' + dashboardDataSet.inverseTokenSymbol}
 				</Button>
 			</Stack>
 		</Stack>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
 import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
@@ -186,7 +186,7 @@ export default function StakeIbc(props: mintProps) {
           <Text
             fontSize='5xl'
             align="right"
-            >IBC</Text>
+            >{dashboardDataSet.inverseTokenSymbol}</Text>
         </Stack>
         <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
           <Text>
@@ -206,7 +206,7 @@ export default function StakeIbc(props: mintProps) {
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
         {
-              userInverseTokenAllowance.gt(0) ? "STAKE" : "Approve IBC"
+              userInverseTokenAllowance.gt(0) ? "STAKE" : "Approve " + dashboardDataSet.inverseTokenSymbol
         }
         </Button>
       </Stack>

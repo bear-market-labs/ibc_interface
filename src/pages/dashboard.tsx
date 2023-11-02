@@ -663,7 +663,7 @@ export function Dashboard( props: dashboardProps ){
                           selectedNavItem === "stake" &&
                           <>
                             <Stack>
-                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
+                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), dashboardDataSet.inverseTokenSymbol) : '0 IBC'}`}</Text>
                               <Tabs>
                                 <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
                                   <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
 import { Box, Button, Divider, Input, Link, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 
@@ -120,7 +120,7 @@ export default function ClaimLpRewards(props: mintProps) {
         })
 
         if (RewardClaimedDetails){
-          description = `Received ${Number(formatUnits(RewardClaimedDetails[0], inverseTokenDecimals)).toFixed(4)} IBC and ${Number(formatEther(RewardClaimedDetails[1])).toFixed(4)} ETH`
+          description = `Received ${Number(formatUnits(RewardClaimedDetails[0], inverseTokenDecimals)).toFixed(4)} ${dashboardDataSet.inverseTokenSymbol} and ${Number(formatUnits(RewardClaimedDetails[1], dashboardDataSet.reserveTokenDecimals)).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol}`
           closeParentDialog();
         }
       } 
@@ -154,8 +154,8 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, provider, ibcContractAddress, ibcRouterAddress]);
 
-  const IBC_rewards = formatNumber((Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toString(), "IBC", false)
-  const ETH_rewards = formatNumber((Number(formatUnits(userClaimableLpReserveRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, inverseTokenDecimals))).toString(), "ETH", false)
+  const IBC_rewards = formatNumber((Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toString(), dashboardDataSet.inverseTokenSymbol, false)
+  const ETH_rewards = formatNumber((Number(formatUnits(userClaimableLpReserveRewards, dashboardDataSet.reserveTokenDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, dashboardDataSet.reserveTokenDecimals))).toString(), dashboardDataSet.reserveTokenSymbol, false)
   
   return (
     <>
@@ -163,11 +163,11 @@ export default function ClaimLpRewards(props: mintProps) {
         <Text fontSize='sm' mb='3'>YOU HAVE ACCRUED</Text>
           <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
             <Text>{IBC_rewards}</Text>
-            <Text>IBC</Text>
+            <Text>{dashboardDataSet.inverseTokenSymbol}</Text>
           </Stack>
           <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
             <Text>{ETH_rewards}</Text>
-            <Text>ETH</Text>
+            <Text>{dashboardDataSet.reserveTokenSymbol}</Text>
           </Stack>
 
         {

@@ -31,7 +31,6 @@ import {
 	maxSlippagePercent,
 	maxReserveChangePercent,
 	reserveAssetDecimals,
-	reserveAssetSymbol,
 	format,
 	parse,
 	commandTypes,
@@ -114,7 +113,7 @@ export default function BurnTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserverTokenDecimals : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : reserveAssetDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())
@@ -346,8 +345,8 @@ export default function BurnTokens(props: mintProps) {
 		)
 		const burnedAmount = decimaledParsedAmount.sub(fee)
 		const supplyDelta =
-			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), reserveTokenDecimals)) /
-			Number(formatUnits(inverseTokenSupply, reserveTokenDecimals))
+			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)) /
+			Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
 
 		// this will be a negative number
 		const logSupplyDeltaTimesUtilization =
@@ -358,7 +357,7 @@ export default function BurnTokens(props: mintProps) {
 				-1 *
 					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
 					Number(formatUnits(reserveAmount, reserveTokenDecimals))
-			).toFixed(reserveAssetDecimals)
+			).toFixed(reserveTokenDecimals)
 			,
 			reserveTokenDecimals
 		)
@@ -429,7 +428,7 @@ export default function BurnTokens(props: mintProps) {
 		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
 		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(reserveAssetDecimals), reserveTokenDecimals).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(reserveTokenDecimals), reserveTokenDecimals).toString()
 		))
 	}
 
@@ -493,7 +492,7 @@ export default function BurnTokens(props: mintProps) {
 							pl='0'
 						/>
 					</NumberInput>
-					<Text align='right'>{reserveAssetSymbol}</Text>
+					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>
 				</Stack>
 				<Text align='right' fontSize='sm'>{`Balance: ${formatBalanceNumber(
 					formatUnits(userBalance, reserveTokenDecimals)

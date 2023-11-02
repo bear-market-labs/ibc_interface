@@ -37,7 +37,8 @@ type CurveInfo = {
     reserves: number,
     stakingApr: number,
     lpApr: number,
-    image: any
+    image: any,
+    reserveAddress: string,
 }
 
 export default function AssetList(props: assetListProps) {
@@ -150,7 +151,7 @@ export default function AssetList(props: assetListProps) {
             reserves: 0,
             stakingApr: 0,
             lpApr: 0,
-            image: ''
+            image: '',
         }
 
         let multicallQueries =  
@@ -319,7 +320,7 @@ export default function AssetList(props: assetListProps) {
                                                 <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.ibAsset} />
                                                 </Box>
-                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.curveAddress} isExternal>
+                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
                                                     {item.ibAsset}
                                                 </Link>
                                             </Stack>

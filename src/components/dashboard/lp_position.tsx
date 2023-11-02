@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { Button, Divider, Icon, Input, Link, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
 
 import {
     Table,
@@ -24,7 +24,8 @@ type assetListProps = {
 
 type lpPosition = {
     ibAsset: string,
-    balance: number
+    balance: number,
+    reserveAddress: string,
 }
 
 export default function LpPosition(props: assetListProps) {
@@ -60,7 +61,8 @@ export default function LpPosition(props: assetListProps) {
                     if (lpBalance > 0) {
                         lpPositions.push({
                             ibAsset: curves[i].ibAsset,
-                            balance: lpBalance
+                            balance: lpBalance,
+                            reserveAddress: curves[i].reserveAddress,
                         })
                     }
                 }
@@ -84,7 +86,7 @@ export default function LpPosition(props: assetListProps) {
                                 lpPosition && lpPosition.map((position) => {
                                     return (
                                         <Tr h='70px'>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.ibAsset}</Td>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>{position.ibAsset}</Link></Td>
                                             <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
                                         </Tr>
                                     )

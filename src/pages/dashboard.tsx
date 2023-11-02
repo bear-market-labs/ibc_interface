@@ -70,6 +70,12 @@ export function Dashboard( props: dashboardProps ){
         displayText: 'How It Works',
         description: 'Learn the basics of inverse bonding curves'
       },
+      ,
+      {
+        value:'terms',
+        displayText: 'Terms of Service',
+        description: 'Last Updated: October 10th, 2023'
+      }
     ]
   } else {
     navOptions = [

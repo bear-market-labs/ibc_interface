@@ -32,6 +32,7 @@ import {
 	format,
 	commandTypes,
 	reserveAssetDecimals,
+	defaultDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -75,7 +76,7 @@ export default function RemoveLiquidity(props: mintProps) {
   const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
 	const userBalance = BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
-	)
+	) 
 	const userLpTokenBalance = 'userLpTokenBalance' in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'
 	const userIbcTokenBalance = 'userIbcTokenBalance' in dashboardDataSet ? BigNumber.from(dashboardDataSet.userIbcTokenBalance) : BigNumber.from(0)
 
@@ -98,7 +99,7 @@ export default function RemoveLiquidity(props: mintProps) {
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
-						Number(formatUnits(dashboardDataSet.fees[y]['removeLiquidity'], reserveTokenDecimals)) +
+						Number(formatUnits(dashboardDataSet.fees[y]['removeLiquidity'], defaultDecimals)) +
 						x,
 					0
 			  )

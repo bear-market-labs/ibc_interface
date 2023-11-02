@@ -293,10 +293,10 @@ export function Dashboard( props: dashboardProps ){
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][3])) 
+      const m = Number(ethers.utils.formatUnits(bondingCurveParams[0][3], dashboardDataSet.reserveTokenDecimals)) 
       * 
       Math.pow(
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals.toString())),
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], dashboardDataSet.inverseTokenDecimals)),
         k
       )
 
@@ -436,7 +436,7 @@ export function Dashboard( props: dashboardProps ){
 
         const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
         * 
-        Number(ethers.utils.formatEther(bondingCurveParams[0][1])) 
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], reserveTokenDecimals)) 
         / 
         Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 

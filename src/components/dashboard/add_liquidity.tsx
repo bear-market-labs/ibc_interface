@@ -32,6 +32,7 @@ import {
 	commandTypes,
 	sanitizeNumberInput,
 	lpTokenDecimals,
+	defaultDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -85,7 +86,7 @@ export default function AddLiquidity(props: mintProps) {
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
-						Number(formatUnits(dashboardDataSet.fees[y]['addLiquidity'], reserveTokenDecimals)) + x,
+						Number(formatUnits(dashboardDataSet.fees[y]['addLiquidity'], defaultDecimals)) + x,
 					0
 			  )
 			: 0
@@ -262,10 +263,10 @@ export default function AddLiquidity(props: mintProps) {
 		}
 
 		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, reserveTokenDecimals)
-		const feeAdjustedAmount = decimaledParsedAmount.mul(BigNumber.from(1-totalFeePercent))
+		const feeAdjustedAmount = Number(Number(decimaledParsedAmount.toString()) * (1-totalFeePercent)).toFixed(0)
 
 		const mintAmount = BigNumber.from(
-			bignumber(lpTokenSupply.mul(feeAdjustedAmount).toString())
+			bignumber(Number(lpTokenSupply.toString()) * Number(feeAdjustedAmount))
 				.dividedBy(
 					bignumber(bondingCurveParams.reserveAmount)
 				)
@@ -280,7 +281,7 @@ export default function AddLiquidity(props: mintProps) {
 
 		parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
 		parentSetters?.setNewReserve(
-			feeAdjustedAmount.add(bondingCurveParams.reserveAmount).toString()
+			Number(Number(feeAdjustedAmount) + Number(bondingCurveParams.reserveAmount)).toString()
 		)
 	}
 
@@ -320,7 +321,7 @@ export default function AddLiquidity(props: mintProps) {
 						as='button'
 						color={colors.TEAL}
 						onClick={() =>
-							handleAmountChange(formatUnits(userBalance).toString(), reserveTokenDecimals)
+							handleAmountChange(formatUnits(userBalance, reserveTokenDecimals).toString())
 						}
 					>
 						MAX

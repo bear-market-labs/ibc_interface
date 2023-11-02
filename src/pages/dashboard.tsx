@@ -42,61 +42,73 @@ type dashboardProps = {
   mostRecentIbcBlock: any;
   nonWalletProvider: any;
   setupEventListener: any;
+  isExplorePage: boolean;
 }
 
 export function Dashboard( props: dashboardProps ){
-  const {mostRecentIbcBlock, nonWalletProvider, setupEventListener} = props
+  const {mostRecentIbcBlock, nonWalletProvider, setupEventListener, isExplorePage} = props
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
   const reserveAsset = reserveAssetParam ? reserveAssetParam : contracts.tenderly.wethAddress
 
-  const selectedNavOptionIndex = 0
+  let navOptions: any[]
 
-  const navOptions = [
-    {
-      value: 'explore',
-      displayText: 'Explore',
-      description: 'Discover ibAssets and their stats'
-    },   
-    {
-      value: 'createAsset',
-      displayText: 'Create New ibASSET',
-      description: 'Generate ibAssets for your reserve asset of choice'
-    }, 
-    {
-      value: 'mintBurn',
-      displayText: 'Mint / Burn',
-      description: 'Mint tokens with inversed market properties, the first of its kind'
-    },
-    {
-      value: 'lp',
-      displayText: 'Add / Remove Liquidity',
-      description: 'Provide liquidity and earn trading fees'
-    },
-    {
-      value: 'stake',
-      displayText: 'Stake / Unstake',
-      description: 'Earn trading fees by staking'
-    },
-    {
-      value: 'claim',
-      displayText: 'Claim',
-      description: 'Claim trading fees'
-    },
-    {
-      value:'how',
-      displayText: 'How It Works',
-      description: 'Learn the basics of inverse bonding curves'
-    },
-    {
-      value:'terms',
-      displayText: 'Terms of Service',
-      description: 'Last Updated: October 10th, 2023'
-    }
-  ]
+  if (isExplorePage){
+    navOptions = [
+      {
+        value: 'explore',
+        displayText: 'Explore',
+        description: 'Discover ibAssets and their stats'
+      },   
+      {
+        value: 'createAsset',
+        displayText: 'Create New ibASSET',
+        description: 'Generate ibAssets for your reserve asset of choice'
+      },
+      {
+        value:'how',
+        displayText: 'How It Works',
+        description: 'Learn the basics of inverse bonding curves'
+      },
+    ]
+  } else {
+    navOptions = [
+      {
+        value: 'mintBurn',
+        displayText: 'Mint / Burn',
+        description: 'Mint tokens with inversed market properties, the first of its kind'
+      },
+      {
+        value: 'lp',
+        displayText: 'Add / Remove Liquidity',
+        description: 'Provide liquidity and earn trading fees'
+      },
+      {
+        value: 'stake',
+        displayText: 'Stake / Unstake',
+        description: 'Earn trading fees by staking'
+      },
+      {
+        value: 'claim',
+        displayText: 'Claim',
+        description: 'Claim trading fees'
+      },
+      {
+        value:'how',
+        displayText: 'How It Works',
+        description: 'Learn the basics of inverse bonding curves'
+      },
+      {
+        value:'terms',
+        displayText: 'Terms of Service',
+        description: 'Last Updated: October 10th, 2023'
+      }
+    ]  
+  }
 
-  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[selectedNavOptionIndex].value);
-  const [headerTitle, setHeaderTitle] = useState<string>(navOptions[selectedNavOptionIndex].displayText.toUpperCase());
+
+  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
+  const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()
   const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)

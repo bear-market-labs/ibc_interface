@@ -76,7 +76,7 @@ export default function MintTokens(props: mintProps) {
 			: '0'
 	)
 	// todo: special case - use the eth balance for weth
-	const userBalance = dashboardDataSet.reserveTokenSymbol == "WETH" ? BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol == "ETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userIbcBalance =

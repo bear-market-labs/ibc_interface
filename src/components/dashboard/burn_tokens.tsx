@@ -87,7 +87,7 @@ export default function BurnTokens(props: mintProps) {
 			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
-	const userBalance = dashboardDataSet.reserveTokenSymbol == "WETH" ? BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol == "ETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userIbcBalance ='userIbcTokenBalance' in dashboardDataSet

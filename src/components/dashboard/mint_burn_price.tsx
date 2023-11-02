@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
-import { blocksPerDay, reserveAssetDecimals } from '../../config/constants';
+import { blocksPerDay, reserveAssetSymbol } from '../../config/constants';
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 
 type mintProps = {
@@ -18,8 +18,7 @@ export default function MintBurnPrice(props: mintProps) {
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const newPrice = BigNumber.from(parentInputDynamicData?.newPrice ? parentInputDynamicData.newPrice : '0')
   const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
-  const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : ''; 
-  const inverseTokenSymbol = "inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : ''; 
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
   const stakingRewardEma = "stakingRewardEma" in dashboardDataSet ? dashboardDataSet.stakingRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0
@@ -43,10 +42,10 @@ export default function MintBurnPrice(props: mintProps) {
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveAssetDecimals, "ETH")
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals, reserveAssetSymbol)
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
-  const formattedNewPrice = formatPriceNumber(newPrice, reserveAssetDecimals, "ETH")
+  const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals.toNumber(), "ETH")
   const alsoNeedSymbolLine = Number(formattedNewPrice) > 1e-9 && Number(formattedNewPrice) < 0.001
 
   return (
@@ -56,11 +55,11 @@ export default function MintBurnPrice(props: mintProps) {
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row' fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
           <Stack rowGap={0}>
-            <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ETH'}`}</Text>
+            <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ' + dashboardDataSet.reserveTokenSymbol}`}</Text>
             {
               needSymbolLine && 
               <>
-                <Text textAlign={`left`}>ETH</Text>
+                <Text textAlign={`left`}>{dashboardDataSet.reserveTokenSymbol}</Text>
               </>
             }
           </Stack>
@@ -73,11 +72,11 @@ export default function MintBurnPrice(props: mintProps) {
                     <Icon marginTop={`7px`} as={HiOutlineArrowRight}/>
                   </Box>
                   <Stack rowGap={0}>
-                    <Text>{`${formattedNewPrice}${alsoNeedSymbolLine ? '' : ' ETH'}`}</Text>
+                    <Text>{`${formattedNewPrice}${alsoNeedSymbolLine ? '' : ' ' + dashboardDataSet.reserveTokenSymbol}`}</Text>
                     {
                       alsoNeedSymbolLine && 
                       <>
-                        <Text textAlign={`left`}>ETH</Text>
+                        <Text textAlign={`left`}>{dashboardDataSet.reserveTokenSymbol}</Text>
                       </>
                     }
                   </Stack>
@@ -95,7 +94,7 @@ export default function MintBurnPrice(props: mintProps) {
             {
               <>
 
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.inverseTokenSymbol)}`}</Text>
                 </>
             }
           </Stack>

@@ -17,8 +17,8 @@ export default function MintBurnIssuance(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const reserveAmount = "reserveAmount" in bondingCurveParams ? BigNumber.from(bondingCurveParams.reserveAmount) : BigNumber.from('0'); 
   const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply) : BigNumber.from('0'); 
-  const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
-
+  const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
+  const reserveTokenDecimals = BigNumber.from("reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : '0'); 
 
   let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance: BigInt(0)
   let newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0')
@@ -40,7 +40,7 @@ export default function MintBurnIssuance(props: mintProps) {
   }
   const newIbcIssuanceSaneFormat = newIbcIssuance / BigInt(10**inverseTokenDecimals.toNumber())
 
-  if (Math.abs(Number(ethers.utils.formatEther(reserveAmount.sub(newReserve)))) < diffTolerance){
+  if (Math.abs(Number(ethers.utils.formatUnits(reserveAmount.sub(newReserve), reserveTokenDecimals))) < diffTolerance){
     newReserve = reserveAmount
   }
 
@@ -50,14 +50,14 @@ export default function MintBurnIssuance(props: mintProps) {
       <Stack>
         <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>ISSUANCE</Text>
         <Stack direction="row" fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
-          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), "IBC")}`}</Text>
+          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), dashboardDataSet.inverseTokenSymbol)}`}</Text>
           {
             newIbcIssuance > BigInt(0) && newIbcIssuance !== BigInt(inverseTokenSupply.toString()) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
               </Box>
-              <Text>{`${formatNumber(newIbcIssuanceSaneFormat.toString(), "IBC")}`}</Text>
+              <Text>{`${formatNumber(newIbcIssuanceSaneFormat.toString(), dashboardDataSet.inverseTokenSymbol)}`}</Text>
             </>
           }
         </Stack>
@@ -66,14 +66,14 @@ export default function MintBurnIssuance(props: mintProps) {
 
         <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>RESERVE</Text>
         <Stack direction="row" fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
-          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(reserveAmount), "ETH")}`}</Text>
+          <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, reserveTokenDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
           {
             newReserve.gt(0) && !newReserve.eq(reserveAmount) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
               </Box>
-              <Text>{`${formatNumber(ethers.utils.formatEther(newReserve), "ETH")}`}</Text>
+              <Text>{`${formatNumber(ethers.utils.formatUnits(newReserve, reserveTokenDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             </>
           }
         </Stack>

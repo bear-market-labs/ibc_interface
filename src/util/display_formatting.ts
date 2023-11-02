@@ -5,6 +5,15 @@ export const targetNumCharacters = 9
 
 // numeric values and units should be fitted into 9 characters (ignoring decimal and space characters)
 export function formatNumber(number: string, unit: string, showUnit=true, prependIb=false){
+
+  if (!unit){
+    unit = "ASSET"
+  }
+
+  if (unit.toUpperCase() === "WETH"){
+    unit = "ETH"
+  }
+
   const tickerLength = Math.min(unit.length, maxTickerLength);
   let integerLength = parseInt(number).toString().length
   let num = parseFloat(number);
@@ -74,7 +83,8 @@ export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number,
   let priceNumeric = BigInt(priceUnformatted.toString());
 
   const exponent = priceNumeric.toString().length - decimals// can be negative
-  const formattedSymbol = symbol.length > maxTickerLength ? 'ASSET' : symbol;
+  let formattedSymbol = !symbol || symbol.length > maxTickerLength ? 'ASSET' : symbol;
+  formattedSymbol = formattedSymbol.toUpperCase() === "WETH" ? "ETH" : formattedSymbol;
 
   if (priceUnformatted.eq(0)) {
     return showSymbol ? "0 " + formattedSymbol : "0"

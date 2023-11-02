@@ -240,7 +240,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				if (LiquidityRemovedDetails) {
 					description = `Received ${Number(
 						formatUnits(LiquidityRemovedDetails[1], reserveTokenDecimals)
-					).toFixed(4)} ETH for ${Number(
+					).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol} for ${Number(
 						formatUnits(LiquidityRemovedDetails[0], lpTokenDecimals)
 					).toFixed(4)} LP`
 				} else {
@@ -340,7 +340,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				<Stack direction='row' justify='right' fontSize='sm'>
 					<Text align='right'>
 						{
-							userLpIbcPayment.gt(0) ? `+ ${formatNumber(formatUnits(userLpIbcPayment, lpTokenDecimals), "IBC")} for withdrawal` : ` ` 
+							userLpIbcPayment.gt(0) ? `+ ${formatNumber(formatUnits(userLpIbcPayment, lpTokenDecimals), dashboardDataSet.reserveTokenSymbol, true, true)} for withdrawal` : ` ` 
 						}
 					</Text>
 				</Stack>
@@ -362,7 +362,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						userLpIbcPayment.lt(0) ? `+ ${Number(Number(formatUnits(userLpIbcPayment.abs(), lpTokenDecimals)) * (1 - totalFeePercent)).toFixed(3)} IBC made available` : ` ` 
+						userLpIbcPayment.lt(0) ? `+ ${Number(Number(formatUnits(userLpIbcPayment.abs(), lpTokenDecimals)) * (1 - totalFeePercent)).toFixed(3)} ${dashboardDataSet.inverseTokenSymbol} made available` : ` ` 
 					}
 				</Text>
 			</Stack>
@@ -409,7 +409,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
-					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? 'Insufficient IBC' : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
+					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? `Insufficient ${dashboardDataSet.inverseTokenSymbol}` : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>
 			</Stack>
 		</Stack>

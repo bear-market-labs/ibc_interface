@@ -187,6 +187,7 @@ export function Dashboard( props: dashboardProps ){
 
         const reserveTokenSymbolBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
         dashboardDataSet.reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
+        dashboardDataSet.reserveTokenSymbol = dashboardDataSet.reserveTokenSymbol === "WETH" ? "ETH" : dashboardDataSet.reserveTokenSymbol
 
         multicallQueries = [
           composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "decimals", [], []),
@@ -513,7 +514,7 @@ export function Dashboard( props: dashboardProps ){
           totalStakingBalance: totalStakingBalance,
           contractReserveTokenBalance: contractReserveTokenBalance,
           reserveTokenDecimals: reserveTokenDecimals,
-          reserveTokenSymbol: reserveTokenSymbol,
+          reserveTokenSymbol: reserveTokenSymbol === "WETH" ? "ETH" : reserveTokenSymbol,
           userReserveTokenBalance: userReserveTokenBalance,
         });
       }

@@ -15,7 +15,7 @@ export default function LpingReserve(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
 
   const reserveAmount = "reserveAmount" in bondingCurveParams ? BigNumber.from(bondingCurveParams.reserveAmount) : BigNumber.from('0'); 
-  const newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0'); 
+  const newReserve = parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0'; 
   const lpRewardEma = "lpRewardEma" in dashboardDataSet ? dashboardDataSet.lpRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0
@@ -52,12 +52,12 @@ export default function LpingReserve(props: mintProps) {
           <Stack direction="row" fontSize='2xl' fontWeight='700'>
             <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, dashboardDataSet.reserveTokenDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             {
-              newReserve.gt(0) && !newReserve.eq(reserveAmount) && 
+              newReserve !== '0' && newReserve !== reserveAmount.toString() && 
               <>
                 <Box ml='7' mr='7'>
                   <Icon as={HiOutlineArrowRight} h='100%'/>
                 </Box>
-                <Text>{`${formatNumber(ethers.utils.formatUnits(newReserve, reserveTokenDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
+                <Text>{`${formatNumber(Number(Number(newReserve) / reserveTokenDecimals.toNumber()).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
               </>
             }
           </Stack>
@@ -69,7 +69,7 @@ export default function LpingReserve(props: mintProps) {
               {
                 <>
 
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, inverseTokenSymbol)}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
                 </>
               }
           </Stack>

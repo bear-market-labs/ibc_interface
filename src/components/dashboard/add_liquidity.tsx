@@ -339,7 +339,7 @@ export default function AddLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${formatNumber(ibcCredit.toString(), dashboardDataSet.inverseTokenSymbol)} bound to position`
+						`+ ${formatNumber(ibcCredit.toString(), dashboardDataSet.reserveTokenSymbol, true, true)} bound to position`
 					}
 				</Text>
 			</Stack>

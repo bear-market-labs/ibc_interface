@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image } from '@chakra-ui/react'
+import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
 
 import {
     Table,
@@ -319,7 +319,9 @@ export default function AssetList(props: assetListProps) {
                                                 <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.ibAsset} />
                                                 </Box>
-                                                <Text fontWeight='700'>{item.ibAsset}</Text>
+                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.curveAddress} isExternal>
+                                                    {item.ibAsset}
+                                                </Link>
                                             </Stack>
 
                                         </Td>

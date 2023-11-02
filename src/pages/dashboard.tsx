@@ -529,8 +529,8 @@ export function Dashboard( props: dashboardProps ){
                   const radio = getRadioProps({ value: item.value })
                   if(item.value === 'terms') {
                     return (
-                      <Box mt='auto'>
-                        <RadioCard key={item.value} {...radio}>
+                      <Box mt='auto' key={item.value}>
+                        <RadioCard {...radio}>
                         <Text align="left" fontSize={'lg'}>{item.displayText}</Text>
                         </RadioCard>
                       </Box>

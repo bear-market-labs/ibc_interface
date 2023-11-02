@@ -25,12 +25,13 @@ export default function UsefulLinks() {
 				Useful Links
 			</Text>
 			<Stack>
-				{links.map((link) => (
+				{links.map((link, i) => (
 					<Box
 						borderBottom={`0.5px ${colors.GRAYED_OUT_GRAY} solid`}
 						pl='7'
 						pb='5'
 						pt='3'
+						key={i}
 					>
 						<Link
 							fontSize='lg'

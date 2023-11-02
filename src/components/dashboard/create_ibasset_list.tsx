@@ -165,9 +165,9 @@ export default function CreateIBAssetList(props: assetListProps) {
                             </Tr>
                         </Thead>
                         <Tbody>
-                            {filteredCurveList && filteredCurveList.map((item) => {
+                            {filteredCurveList && filteredCurveList.map((item, i) => {
                                 return (
-                                    <Tr h='70px'>
+                                    <Tr h='70px' key={i}>
                                         <Td borderColor='rgba(255, 255, 255, 0.16)'>
                                             <Stack direction='row' align='center' gap='0'>
                                                 <Box boxSize='28px' mr='4'>

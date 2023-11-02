@@ -20,7 +20,6 @@ import {
 	concat,
 	defaultAbiCoder,
 	hexlify,
-	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
@@ -347,30 +346,32 @@ export default function BurnTokens(props: mintProps) {
 		)
 		const burnedAmount = decimaledParsedAmount.sub(fee)
 		const supplyDelta =
-			Number(formatEther(inverseTokenSupply.sub(burnedAmount))) /
-			Number(formatEther(inverseTokenSupply))
+			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), reserveTokenDecimals)) /
+			Number(formatUnits(inverseTokenSupply, reserveTokenDecimals))
 
 		// this will be a negative number
 		const logSupplyDeltaTimesUtilization =
 			Math.log(supplyDelta) * curveUtilization
 
-		const liquidityReceived = parseEther(
+		const liquidityReceived = parseUnits(
 			Number(
 				-1 *
 					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-					Number(formatEther(reserveAmount))
+					Number(formatUnits(reserveAmount, reserveTokenDecimals))
 			).toFixed(reserveAssetDecimals)
+			,
+			reserveTokenDecimals
 		)
 
 		// calculate spot price post mint
-		const curveInvariant = Number(formatEther(reserveAmount)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
+		const curveInvariant = Number(formatUnits(reserveAmount, reserveTokenDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
 		const newPrice = curveInvariant * curveUtilization
 		/
 		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
 
 		setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
 		setLiquidityReceived(liquidityReceived)
-		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatEther(liquidityReceived)) *
+		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, reserveTokenDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
 		parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
@@ -397,7 +398,7 @@ export default function BurnTokens(props: mintProps) {
 		// calculate ibc burn amount
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
-		const m = Number(ethers.utils.formatEther(bondingCurveParams.currentTokenPrice)) 
+		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, reserveTokenDecimals)) 
 		* 
 		Math.pow(
 			currentInverseTokenSupply,
@@ -428,7 +429,7 @@ export default function BurnTokens(props: mintProps) {
 		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
 		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseEther(Number(parsedAmount).toFixed(reserveAssetDecimals)).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(reserveAssetDecimals), reserveTokenDecimals).toString()
 		))
 	}
 

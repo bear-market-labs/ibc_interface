@@ -516,7 +516,7 @@ export default function MintTokens(props: mintProps) {
 					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
 					onClick={sendTransaction}
 				>
-					MINT
+					Mint
 				</Button>
 			</Stack>
 		</Stack>

@@ -49,7 +49,7 @@ export function Dashboard( props: dashboardProps ){
   const {mostRecentIbcBlock, nonWalletProvider, setupEventListener, isExplorePage} = props
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
-  const reserveAsset = reserveAssetParam ? reserveAssetParam : contracts.tenderly.wethAddress
+  const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.tenderly.wethAddress
 
   let navOptions: any[]
 
@@ -131,7 +131,6 @@ export function Dashboard( props: dashboardProps ){
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
-  const [fetching, updateFetching] = React.useState<boolean>(false);
 
   const [chartParam, setChartParam] = React.useState<any>(
     {

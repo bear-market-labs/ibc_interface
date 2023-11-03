@@ -147,17 +147,18 @@ export default function CreateIBAsset(props: mintProps) {
 					solidityKeccak256(
 						['string'],
 						[
-							'createCurve(uint256,address)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+							'createCurve(uint256,address,address)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
 						]
 					)
 				).slice(0, 4)
 
 				const payloadBytes = arrayify(
 					abiCoder.encode(
-						['uint256', 'address'], 
+						['uint256', 'address', 'address'], 
 						[
 							initialReserve,
 							reserveAddress,
+							wallet.accounts[0].address
 						] 
 					)
 				)	

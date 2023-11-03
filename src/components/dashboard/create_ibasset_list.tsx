@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image } from '@chakra-ui/react'
+import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
 
 import {
     Table,
@@ -110,7 +110,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                             query = composeQuery(curveAddress, "reserveTokenAddress", [], [])
                             callResultBytes = await provider.call(query)
                             callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                            curveInfo.reserveAddress = curveAddress;
+                            curveInfo.reserveAddress = search;
                             
                             query = composeQuery(callResult, "symbol", [], [])
                             callResultBytes = await provider.call(query)
@@ -173,8 +173,10 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                 <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.reserveSymbol} />
                                                 </Box>
-                                                <Text fontWeight='700'>{item.reserveSymbol}</Text>
-                                            </Stack>
+                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                    {item.reserveSymbol}
+                                                </Link>
+                                               </Stack>
 
                                         </Td>
                                         <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.curveAddress}</Td>

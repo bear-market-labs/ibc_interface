@@ -158,8 +158,8 @@ export default function AssetList(props: assetListProps) {
         [
             composeMulticallQuery(curveAddress, "curveParameters", [], []),
             composeMulticallQuery(curveAddress, "totalStaked", [], []),
-            composeMulticallQuery(curveAddress, "blockRewardEMA", ["uint8"], [0]),
-            composeMulticallQuery(curveAddress, "blockRewardEMA", ["uint8"], [1]),
+            composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [0]),
+            composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [1]),
             composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
             composeMulticallQuery(curveAddress, "reserveTokenAddress", [], [])
         ]

@@ -5,11 +5,9 @@ import {
 	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -50,7 +48,7 @@ type mintProps = {
 }
 
 export default function AddLiquidity(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
+	const [{ wallet }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
@@ -97,9 +95,7 @@ export default function AddLiquidity(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
-	const [resultPrice, setResultPrice] = useState<bignumber>(
-		bignumber(currentTokenPrice.toString())
-	)
+
 	const [isProcessing, setIsProcessing] = useState(false)
 
 	useEffect(() => {

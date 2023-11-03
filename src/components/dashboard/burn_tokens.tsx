@@ -115,6 +115,8 @@ export default function BurnTokens(props: mintProps) {
 	)
 	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
+	const maxBurn = "inverseTokenSupply" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) : 0
+	const maxWithdraw = "reserveAmount" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals)) : 0
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())
 	)
@@ -323,7 +325,7 @@ export default function BurnTokens(props: mintProps) {
 		const parsedAmount = sanitizeNumberInput(val)
 		setAmountDisplay(parsedAmount)
 
-		if (isNaN(val) || val.trim() === '') {
+		if (isNaN(val) || val.trim() === '' || Number(val) > maxBurn) {
 			return
 		}
 
@@ -386,7 +388,7 @@ export default function BurnTokens(props: mintProps) {
 		const parsedAmount = sanitizeNumberInput(val)
 		setLiquidityReceivedDisplay(parsedAmount) // fee-adjusted
 
-		if (isNaN(val) || val.trim() === '') {
+		if (isNaN(val) || val.trim() === '' || Number(val) > maxWithdraw) {
 			return
 		}
 
@@ -432,6 +434,7 @@ export default function BurnTokens(props: mintProps) {
 		))
 	}
 
+
 	return (
 		<Stack justifyContent={'space-between'} h='calc(100vh - 220px)'>
 			<Stack>
@@ -446,6 +449,7 @@ export default function BurnTokens(props: mintProps) {
 				>
 					<NumberInput
 						value={amountDisplay}
+						max={maxBurn}
 						onChange={(valueString) => handleAmountChange(valueString)}
 					>
 						<NumberInputField
@@ -482,6 +486,7 @@ export default function BurnTokens(props: mintProps) {
 
 					<NumberInput
 						value={liquidityReceivedDisplay}
+						max={maxWithdraw}
 						onChange={(valueString) => handleAmountReceivedChanged(valueString)}
 					>
 						<NumberInputField

@@ -12,6 +12,7 @@ import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
 import { contracts, } from "./config/contracts";
 import { useState } from "react";
+import { curves } from "./config/curves";
 
 const injected = injectedModule();
 const rpcUrl = `https://rpc.tenderly.co/fork/cc2b5331-1bfa-4756-84ab-e2f2f63a91d5`
@@ -39,27 +40,29 @@ init({
 
 export const App = () => {
   const [mostRecentIbcBlock, setMostRecentIbcBlock ] = useState<any>()
-
-  provider.removeAllListeners()
   const handleLog = (log: any) => {
     // Process the log data here
     console.log('Received LOG:', log);
     setMostRecentIbcBlock(log.blockNumber)
   };
-  
-  const eventFilter = {
-    address: contracts.tenderly.ibcETHCurveContract,
-  };
-  
-  provider.on(eventFilter, handleLog);
 
+  const setupEventListener = (curveAddress: string) => {
+    provider.removeAllListeners()
+    const eventFilter = {
+      address: curveAddress,
+    }
+    provider.on(eventFilter, handleLog)
+  }
+
+  setupEventListener(contracts.tenderly.ibcETHCurveContract)
 
   return (
   <ChakraProvider theme={theme}>
     <Box textAlign="center" fontSize="xl">
       <Routes>
-        <Route path="/" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} />} />
-        <Route path="/staging" element={<StagingPage/>}/>
+        <Route path="/explore/" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={true} key="1"/>} />
+        <Route path="/:reserveAsset?" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={false} key="2"/>} />
+        <Route path="/staging" element={<StagingPage key="3"/>}/>
       </Routes>
     </Box>
   </ChakraProvider>

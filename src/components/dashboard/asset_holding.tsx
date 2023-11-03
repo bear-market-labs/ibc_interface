@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { Button, Divider, Icon, Input, Link, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
 
 import {
     Table,
@@ -24,7 +24,8 @@ type assetListProps = {
 
 type holdingBalance = {
     ibAsset: string,
-    balance: number
+    balance: number,
+    reserveAddress: string,
 }
 
 export default function AssetHolding(props: assetListProps) {
@@ -63,7 +64,8 @@ export default function AssetHolding(props: assetListProps) {
                     if (userTotalHoldingBalance > 0) {
                         userBalances.push({
                             ibAsset: curves[i].ibAsset,
-                            balance: userTotalHoldingBalance
+                            balance: userTotalHoldingBalance,
+                            reserveAddress: curves[i].reserveAddress
                         })
                     }
                 }
@@ -87,7 +89,7 @@ export default function AssetHolding(props: assetListProps) {
                                 holdingBalance && holdingBalance.map((balance) => {
                                     return (
                                         <Tr h='70px'>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{balance.ibAsset}</Td>
+                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + balance.reserveAddress} isExternal>{balance.ibAsset}</Link></Td>
                                             <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{balance.balance.toFixed(4)}</Td>
                                         </Tr>
                                     )

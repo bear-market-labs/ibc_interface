@@ -5,6 +5,15 @@ export const targetNumCharacters = 9
 
 // numeric values and units should be fitted into 9 characters (ignoring decimal and space characters)
 export function formatNumber(number: string, unit: string, showUnit=true, prependIb=false){
+
+  if (!unit){
+    unit = "ASSET"
+  }
+
+  if (unit.toUpperCase() === "WETH"){
+    unit = "ETH"
+  }
+
   const tickerLength = Math.min(unit.length, maxTickerLength);
   let integerLength = parseInt(number).toString().length
   let num = parseFloat(number);
@@ -12,7 +21,7 @@ export function formatNumber(number: string, unit: string, showUnit=true, prepen
 
   // just passthru number if it's not a number (like NaN or Infinity)
   if (isNaN(num)) {
-      return `${number} ${unit}`;
+      return `${number} ${prependIb ? "ib" + unit : unit}`;
   }
 
   let retVal;
@@ -20,7 +29,6 @@ export function formatNumber(number: string, unit: string, showUnit=true, prepen
   if (num === 0){
     retVal = "0"
   } else if (num < 1e-9){
-    console.log(number)
     const numDigits = targetNumCharacters - tickerLength - 4 // 4 for [0, ., E, -], can be 0, 1, 2
     let formattedNumber = numDigits === 0 ? `` : numDigits === 1 ? Number(number.split('.')[0]) : Number(number.split('.')[0]) + '.' + Number(number.split('.')[1].substring(0,1))
     let exponent = Number(number).toExponential().split('e')[1]
@@ -68,14 +76,15 @@ export function formatBalanceNumber(number: string){
 
 export function formatReceiveNumber(number: string){
   // "you receive" box always has sufficient space to assume smaller ticker length
-  return formatNumber(number, "AAA", false)
+  return Number(number).toFixed(3)
 }
 
 export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number, symbol: string, showSymbol=false){
   let priceNumeric = BigInt(priceUnformatted.toString());
 
   const exponent = priceNumeric.toString().length - decimals// can be negative
-  const formattedSymbol = symbol.length > maxTickerLength ? 'ASSET' : symbol;
+  let formattedSymbol = !symbol || symbol.length > maxTickerLength ? 'ASSET' : symbol;
+  formattedSymbol = formattedSymbol.toUpperCase() === "WETH" ? "ETH" : formattedSymbol;
 
   if (priceUnformatted.eq(0)) {
     return showSymbol ? "0 " + formattedSymbol : "0"

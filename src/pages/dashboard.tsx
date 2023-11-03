@@ -34,62 +34,89 @@ import AssetHolding from "../components/dashboard/asset_holding";
 import LpPosition from "../components/dashboard/lp_position";
 import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
+import { useParams } from "react-router-dom";
+import { curves } from "../config/curves";
+import { constants } from "os";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
   nonWalletProvider: any;
+  setupEventListener: any;
+  isExplorePage: boolean;
 }
 
 export function Dashboard( props: dashboardProps ){
-  const {mostRecentIbcBlock, nonWalletProvider} = props
+  const {mostRecentIbcBlock, nonWalletProvider, setupEventListener, isExplorePage} = props
+  const params = useParams();
+  const reserveAssetParam = params.reserveAsset
+  const reserveAsset = reserveAssetParam ? reserveAssetParam : contracts.tenderly.wethAddress
 
-  const navOptions = [
-    {
-      value: 'explore',
-      displayText: 'Explore',
-      description: 'Discover ibAssets and their stats'
-    },   
-    {
-      value: 'createAsset',
-      displayText: 'Create New ibASSET',
-      description: 'Generate ibAssets for your reserve asset of choice'
-    }, 
-    {
-      value: 'mintBurn',
-      displayText: 'Mint / Burn',
-      description: 'Mint tokens with inversed market properties, the first of its kind'
-    },
-    {
-      value: 'lp',
-      displayText: 'Add / Remove Liquidity',
-      description: 'Provide liquidity and earn trading fees'
-    },
-    {
-      value: 'stake',
-      displayText: 'Stake / Unstake',
-      description: 'Earn trading fees by staking'
-    },
-    {
-      value: 'claim',
-      displayText: 'Claim',
-      description: 'Claim trading fees'
-    },
-    {
-      value:'how',
-      displayText: 'How It Works',
-      description: 'Learn the basics of inverse bonding curves'
-    },
-    {
-      value:'terms',
-      displayText: 'Terms of Service',
-      description: 'Last Updated: October 10th, 2023'
-    }
-  ]
+  let navOptions: any[]
+
+  if (isExplorePage){
+    navOptions = [
+      {
+        value: 'explore',
+        displayText: 'Explore',
+        description: 'Discover ibAssets and their stats'
+      },   
+      {
+        value: 'createAsset',
+        displayText: 'Create New ibASSET',
+        description: 'Generate ibAssets for your reserve asset of choice'
+      },
+      {
+        value:'how',
+        displayText: 'How It Works',
+        description: 'Learn the basics of inverse bonding curves'
+      },
+      ,
+      {
+        value:'terms',
+        displayText: 'Terms of Service',
+        description: 'Last Updated: October 10th, 2023'
+      }
+    ]
+  } else {
+    navOptions = [
+      {
+        value: 'mintBurn',
+        displayText: 'Mint / Burn',
+        description: 'Mint tokens with inversed market properties, the first of its kind'
+      },
+      {
+        value: 'lp',
+        displayText: 'Add / Remove Liquidity',
+        description: 'Provide liquidity and earn trading fees'
+      },
+      {
+        value: 'stake',
+        displayText: 'Stake / Unstake',
+        description: 'Earn trading fees by staking'
+      },
+      {
+        value: 'claim',
+        displayText: 'Claim',
+        description: 'Claim trading fees'
+      },
+      {
+        value:'how',
+        displayText: 'How It Works',
+        description: 'Learn the basics of inverse bonding curves'
+      },
+      {
+        value:'terms',
+        displayText: 'Terms of Service',
+        description: 'Last Updated: October 10th, 2023'
+      }
+    ]  
+  }
+
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
+  const [ibcContractAddress, setIbcContractAddress] = useState<string>()
   const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
 
@@ -100,7 +127,7 @@ export function Dashboard( props: dashboardProps ){
   const [newIbcIssuance, setNewIbcIssuance] = useState<any>()
   const [newReserve, setNewReserve] = useState<any>()
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
-  const [reserveAssetAddress, setReserveAssetAddress] = useState<any>('')
+  const [reserveAssetAddress, setReserveAssetAddress] = useState<any>(contracts.tenderly.wethAddress)
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
@@ -122,20 +149,115 @@ export function Dashboard( props: dashboardProps ){
     return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
   }
 
+
+  useEffect(() => {
+    const fetchFocusedAssetInfo = async() => {
+      const abiCoder = ethers.utils.defaultAbiCoder
+      const provider = getProvider();
+
+      // check validity of curveAddress param from url router
+      let multicallQueries = [
+        composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "getCurve", ["address"], [reserveAsset])
+      ]
+
+      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      let multicallBytes = await provider.call(multicallQuery)
+      let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+      const curveAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
+      let curveAddress = abiCoder.decode(["address"], curveAddressBytes)[0]
+
+      const validReserveAsset: boolean = curveAddress !== ""
+      // if invalid reserve asset, assume eth is focused asset
+      curveAddress = validReserveAsset ? curveAddress : curves.find(x => x.reserveSymbol === "ETH")?.curveAddress
+
+      if (validReserveAsset){
+        setReserveAssetAddress(reserveAsset)
+        
+        //fetch curve metadata
+        multicallQueries = [
+          composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
+          composeMulticallQuery(reserveAsset, "decimals", [], []),
+          composeMulticallQuery(reserveAsset, "symbol", [], []),
+        ]
+
+        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallBytes = await provider.call(multicallQuery)
+        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+        const inverseTokenAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
+        dashboardDataSet.inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+
+        const reserveTokenDecimalsBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
+        dashboardDataSet.reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+
+        const reserveTokenSymbolBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
+        dashboardDataSet.reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
+        dashboardDataSet.reserveTokenSymbol = dashboardDataSet.reserveTokenSymbol === "WETH" ? "ETH" : dashboardDataSet.reserveTokenSymbol
+
+        multicallQueries = [
+          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "decimals", [], []),
+          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "symbol", [], [])
+        ]
+
+        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallBytes = await provider.call(multicallQuery)
+        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+        const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
+        dashboardDataSet.inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+
+        const inverseTokenSymbolBytes = multicallResults[1][0] ? multicallResults[1][1] : [""]
+        dashboardDataSet.inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
+      } else {
+        // use hardcoded eth defaults
+        dashboardDataSet.reserveTokenSymbol = "ETH"
+        dashboardDataSet.inverseTokenSymbol = "ibETH"
+        dashboardDataSet.inverseTokenAddress = "0x95Fe64ee219CD3113c3587cC1F50aaC6De6B89bD"
+
+        //fetch curve metadata
+        multicallQueries = [
+          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "decimals", [], []),
+          composeMulticallQuery(reserveAsset, "decimals", [], []),
+        ]
+
+        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallBytes = await provider.call(multicallQuery)
+        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+        const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
+        dashboardDataSet.inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
+
+        const reserveTokenDecimalsBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
+        dashboardDataSet.reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+      }
+
+      // triggers another hook for additioanl data collection
+      setIbcContractAddress(curveAddress)
+      setupEventListener(curveAddress)
+    }
+
+    fetchFocusedAssetInfo().then(() =>{}).catch((err) => {console.log(err)})
+
+  }, [nonWalletProvider, wallet?.provider, reserveAsset, setupEventListener])
+
+
   useEffect(() => {
     const fetchIbcMetrics = async() => {
       const abiCoder = ethers.utils.defaultAbiCoder
       const provider = getProvider();
 
+      if (!ibcContractAddress){
+        return;
+      }
+
       // refresh
-
-
       let multicallQueries = [
         composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
         composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
-        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+        composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [1]),
+        composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [0]),
         composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
@@ -162,21 +284,6 @@ export function Dashboard( props: dashboardProps ){
       const totalStakingBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0];
       const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
 
-      multicallQueries = [
-        composeMulticallQuery(inverseTokenAddress, "decimals", [], []),
-        composeMulticallQuery(inverseTokenAddress,  "balanceOf", ["address"], [ibcContractAddress])
-      ]
-
-      multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-      multicallBytes = await provider.call(multicallQuery)
-      multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
-
-      const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
-      const inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
-
-      const contractInverseTokenBalanceBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
-      const contractInverseTokenBalance = abiCoder.decode(["uint"], contractInverseTokenBalanceBytes)[0]
-
       dashboardDataSet.stakingRewardEma = {
         reserveAsset: stakingRewardEma[1].toString(),
         ibcAsset: stakingRewardEma[0].toString(),
@@ -198,9 +305,6 @@ export function Dashboard( props: dashboardProps ){
 
       dashboardDataSet.lpTokenDecimals = lpTokenDecimals.toString();
       dashboardDataSet.lpTokenSupply = dashboardDataSet.bondingCurveParams.lpSupply;
-      dashboardDataSet.inverseTokenDecimals = inverseTokenDecimals.toString();
-      dashboardDataSet.inverseTokenAddress = inverseTokenAddress.toString();
-      dashboardDataSet.contractInverseTokenBalance = contractInverseTokenBalance.toString()
       dashboardDataSet.totalStakingBalance = totalStakingBalance;
 
       // compute old k/m params from utilization and invariant
@@ -208,10 +312,10 @@ export function Dashboard( props: dashboardProps ){
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatEther(bondingCurveParams[0][3])) 
+      const m = Number(ethers.utils.formatUnits(bondingCurveParams[0][3], dashboardDataSet.reserveTokenDecimals)) 
       * 
       Math.pow(
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], lpTokenDecimals.toString())),
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], dashboardDataSet.inverseTokenDecimals)),
         k
       )
 
@@ -225,12 +329,12 @@ export function Dashboard( props: dashboardProps ){
 
     fetchIbcMetrics().then(() =>{}).catch((err) => {console.log(err)})
 
-  }, [mostRecentIbcBlock, nonWalletProvider, wallet?.provider])
+  }, [mostRecentIbcBlock, ibcContractAddress])
 
   useEffect(() => {
 
     const fetchWalletInfo = async() => {
-      if (wallet?.provider) {        
+      if (wallet?.provider && ibcContractAddress) {        
         const provider = new ethers.providers.Web3Provider(wallet.provider, 'any')
         const abiCoder = ethers.utils.defaultAbiCoder
 
@@ -238,15 +342,11 @@ export function Dashboard( props: dashboardProps ){
         let multicallQueries = [
           composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
           composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
-          //composeMulticallQuery(ibcAdminAddress, "feeConfig", ["uint8"], [0]),
-          //composeMulticallQuery(ibcContractAddress, "decimals", [], []),
-          //composeMulticallQuery(ibcContractAddress, "totalSupply", [], []),
-          composeMulticallQuery(ibcContractAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),//composeMulticallQuery(ibcContractAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
-          //composeMulticallQuery(ibcContractAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcContractAddress]),
+          composeMulticallQuery(ibcContractAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+          composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [1]),
+          composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [0]),
           composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
           composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         ].concat(feeQueries)
@@ -313,6 +413,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveTokenAddress,  "balanceOf", ["address"], [ibcContractAddress]),
           composeMulticallQuery(reserveTokenAddress, "decimals", [], []),
           composeMulticallQuery(reserveTokenAddress, "symbol", [], []),
+          composeMulticallQuery(reserveTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
         ]
   
         multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -346,10 +447,17 @@ export function Dashboard( props: dashboardProps ){
         const reserveTokenSymbolBytes = multicallResults[7][1];
         const reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
 
-        // downstream calculation for lp removal, all in formatted (or sane) decimals
-        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][0])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        const userReserveTokenBalanceBytes = multicallResults[8][1];
+        const userReserveTokenBalance = abiCoder.decode(["uint"], userReserveTokenBalanceBytes)[0]
 
-        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatEther(bondingCurveParams[0][1])) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        // downstream calculation for lp removal, all in formatted (or sane) decimals
+        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], reserveTokenDecimals.toNumber())) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+
+        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
+        * 
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], reserveTokenDecimals)) 
+        / 
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -400,11 +508,20 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(inverseTokenDecimals.gt(13) ? ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) : ethers.BigNumber.from(0)), // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust
+          userLpIbcDebit: userLpIbcDebit === 0 ? 
+            ethers.BigNumber.from(0) 
+            : 
+            ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(
+              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit.toString()) !== Number(ethers.utils.formatUnits(userLpIbcCredit, dashboardDataSet.inverseTokenDecimals)) ? 
+              ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
+              : 
+              ethers.BigNumber.from(0)
+            ), 
           totalStakingBalance: totalStakingBalance,
           contractReserveTokenBalance: contractReserveTokenBalance,
           reserveTokenDecimals: reserveTokenDecimals,
-          reserveTokenSymbol: reserveTokenSymbol,
+          reserveTokenSymbol: reserveTokenSymbol === "WETH" ? "ETH" : reserveTokenSymbol,
+          userReserveTokenBalance: userReserveTokenBalance,
         });
       }
     }
@@ -577,7 +694,7 @@ export function Dashboard( props: dashboardProps ){
                           selectedNavItem === "stake" &&
                           <>
                             <Stack>
-                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), "IBC") : '0 IBC'}`}</Text>
+                              <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), dashboardDataSet.inverseTokenSymbol) : '0 IBC'}`}</Text>
                               <Tabs>
                                 <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
                                   <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>
@@ -685,7 +802,6 @@ export function Dashboard( props: dashboardProps ){
                         newReserve: newReserve
                       }}
                     />
-                    {/* max-width = max-height * 2, max-width = viwport-width * ((0.5 + 1)/(0.5 + 1 + 2)) (defined on line495, choose 28% and 56% for some buffer), 470px = top(150px) + price(100px) + bottom(220px) */}
                     <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>

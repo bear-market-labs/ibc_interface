@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
 import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
@@ -149,7 +149,7 @@ export default function UnstakeIbc(props: mintProps) {
           </NumberInput>
           <Text
             fontSize='5xl'
-            align="right">IBC</Text>
+            align="right">{dashboardDataSet.inverseTokenSymbol}</Text>
         </Stack>
         <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
           <Text>

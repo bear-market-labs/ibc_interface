@@ -1,6 +1,7 @@
 export const reserveAssetSymbol = "ETH"
 export const reserveAssetDecimals = 18
 export const lpTokenDecimals = 18
+export const defaultDecimals = 18
 export const ibcSymbol = "IBC"
 export const maxSlippagePercent = 1
 export const maxReserveChangePercent = 1
@@ -37,6 +38,7 @@ export function sanitizeNumberInput(input: any){
 
 export const ibcImageUrl = 'http://placekitten.com/200/300'
 export const blocksPerDay = 7200
+export const secondsPerDay = 86400
 
 // arg for the multicall contract to continue if one of the calldata executions/queries results in error
 export const multicallContinueOnErrorFlag = true

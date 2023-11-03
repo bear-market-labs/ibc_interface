@@ -2,7 +2,7 @@ import {  ethers } from 'ethers'
 import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
-import { blocksPerDay } from '../../config/constants'
+import { secondsPerDay } from '../../config/constants'
 import { formatNumber } from '../../util/display_formatting'
 
 type mintProps = {
@@ -15,28 +15,31 @@ export default function LpingReserve(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
 
   const reserveAmount = "reserveAmount" in bondingCurveParams ? BigNumber.from(bondingCurveParams.reserveAmount) : BigNumber.from('0'); 
-  const newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0'); 
+  const newReserve = parentInputDynamicData?.newReserve ? parentInputDynamicData.newReserve : '0'; 
   const lpRewardEma = "lpRewardEma" in dashboardDataSet ? dashboardDataSet.lpRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0
   }; 
 
   const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply) : BigNumber.from('0')
-  const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
+  const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
+  const inverseTokenSymbol = "inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : 'ASSET'; 
 
 
-  const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals)) > 0 ? Number(
-    Number(ethers.utils.formatEther(lpRewardEma.reserveAsset)) 
-    * blocksPerDay 
-    / Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals))
+
+  const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) && lpRewardEma.reserveAsset > 0 ? Number(
+    Number(ethers.utils.formatUnits(lpRewardEma.reserveAsset, reserveTokenDecimals)) 
+    * secondsPerDay 
+    / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
   :
   '0.000'
 
-  const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals)) > 0 ? Number(
-    Number(ethers.utils.formatEther(lpRewardEma.ibcAsset)) 
-    * blocksPerDay 
-    / Number(ethers.utils.formatUnits(lpTokenSupply, lpTokenDecimals))
+  const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) > 0 && lpRewardEma.ibcAsset > 0 ? Number(
+    Number(ethers.utils.formatUnits(lpRewardEma.ibcAsset, reserveTokenDecimals)) 
+    * secondsPerDay 
+    / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
   :
   '0.000'
@@ -47,14 +50,14 @@ export default function LpingReserve(props: mintProps) {
         <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
           <Stack direction="row" fontSize='2xl' fontWeight='700'>
-            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatEther(reserveAmount), "ETH")}`}</Text>
+            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, reserveTokenDecimals.toNumber()), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             {
-              newReserve.gt(0) && !newReserve.eq(reserveAmount) && 
+              newReserve !== '0' && newReserve !== reserveAmount.toString() && 
               <>
                 <Box ml='7' mr='7'>
                   <Icon as={HiOutlineArrowRight} h='100%'/>
                 </Box>
-                <Text>{`${formatNumber(ethers.utils.formatEther(newReserve), "ETH")}`}</Text>
+                <Text>{`${formatNumber(Number(Number(newReserve) / 10**reserveTokenDecimals.toNumber()).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
               </>
             }
           </Stack>
@@ -66,7 +69,7 @@ export default function LpingReserve(props: mintProps) {
               {
                 <>
 
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, "ETH")} + ${formatNumber(ibc24HReward, "IBC")}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
                 </>
               }
           </Stack>

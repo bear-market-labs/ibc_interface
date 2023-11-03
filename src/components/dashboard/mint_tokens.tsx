@@ -4,7 +4,6 @@ import { ethers } from 'ethers'
 import {
 	Box,
 	Button,
-	Input,
 	Icon,
 	Stack,
 	Text,
@@ -25,7 +24,6 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	ibcSymbol,
 	maxSlippagePercent,
 	maxReserveChangePercent,
 	reserveAssetDecimals,
@@ -35,7 +33,6 @@ import {
 	sanitizeNumberInput,
 	curveUtilization,
 } from '../../config/constants'
-import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -53,7 +50,7 @@ type mintProps = {
 }
 
 export default function MintTokens(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
+	const [{ wallet }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
@@ -516,7 +513,7 @@ export default function MintTokens(props: mintProps) {
 					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
 					onClick={sendTransaction}
 				>
-					MINT
+					Mint
 				</Button>
 			</Stack>
 		</Stack>

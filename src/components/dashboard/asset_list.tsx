@@ -20,7 +20,7 @@ import { curves } from '../../config/curves'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
 import { formatNumber } from '../../util/display_formatting'
-import { blocksPerDay } from '../../config/constants'
+import { secondsPerDay } from '../../config/constants'
 import { colors } from '../../config/style'
 
 type assetListProps = {
@@ -75,8 +75,8 @@ export default function AssetList(props: assetListProps) {
                 return [
                     composeMulticallQuery(curve.curveAddress, "curveParameters", [], []),
                     composeMulticallQuery(curve.curveAddress, "totalStaked", [], []),
-                    composeMulticallQuery(curve.curveAddress, "blockRewardEMA", ["uint8"], [0]),
-                    composeMulticallQuery(curve.curveAddress, "blockRewardEMA", ["uint8"], [1])
+                    composeMulticallQuery(curve.curveAddress, "rewardEMAPerSecond", ["uint8"], [0]),
+                    composeMulticallQuery(curve.curveAddress, "rewardEMAPerSecond", ["uint8"], [1])
                 ]
             });
 
@@ -106,24 +106,24 @@ export default function AssetList(props: assetListProps) {
 
                 const reserveStakingRewardInIbc = Number(
                     Number(ethers.utils.formatEther(stakingRewardEma[1].toString()))
-                    * blocksPerDay * 365
+                    * secondsPerDay * 365
                     / curveStates[i].price
                 )
 
                 const ibcStakingReward = Number(
                     Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
-                    * blocksPerDay * 365
+                    * secondsPerDay * 365
                 )
                 curveStates[i].stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
 
                 const reserveStakingReward = Number(
                     Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
-                    * blocksPerDay * 365
+                    * secondsPerDay * 365
                 )
 
                 const ibcStakingRewardInReserve = Number(
                     Number(ethers.utils.formatEther(lpRewardEma[0].toString()))
-                    * blocksPerDay * 365 * curveStates[i].price
+                    * secondsPerDay * 365 * curveStates[i].price
                 )
                 curveStates[i].lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveStates[i].reserves;
 
@@ -190,24 +190,24 @@ export default function AssetList(props: assetListProps) {
 
             const reserveStakingRewardInIbc = Number(
                 Number(ethers.utils.formatEther(stakingRewardEma[1].toString()))
-                * blocksPerDay * 365
+                * secondsPerDay * 365
                 / curveInfo.price
             )
 
             const ibcStakingReward = Number(
                 Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
-                * blocksPerDay * 365
+                * secondsPerDay * 365
             )
             curveInfo.stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
 
             const reserveStakingReward = Number(
                 Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
-                * blocksPerDay * 365
+                * secondsPerDay * 365
             )
 
             const ibcStakingRewardInReserve = Number(
                 Number(ethers.utils.formatEther(lpRewardEma[0].toString()))
-                * blocksPerDay * 365 * curveInfo.price
+                * secondsPerDay * 365 * curveInfo.price
             )
             curveInfo.lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveInfo.reserves;
 

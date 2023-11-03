@@ -512,7 +512,7 @@ export function Dashboard( props: dashboardProps ){
             ethers.BigNumber.from(0) 
             : 
             ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(
-              inverseTokenDecimals.gt(13) ? 
+              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit.toString()) !== Number(ethers.utils.formatUnits(userLpIbcCredit, dashboardDataSet.inverseTokenDecimals)) ? 
               ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
               : 
               ethers.BigNumber.from(0)

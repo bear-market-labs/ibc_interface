@@ -57,7 +57,7 @@ export default function LpingReserve(props: mintProps) {
                 <Box ml='7' mr='7'>
                   <Icon as={HiOutlineArrowRight} h='100%'/>
                 </Box>
-                <Text>{`${formatNumber(Number(Number(newReserve) / reserveTokenDecimals.toNumber()).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
+                <Text>{`${formatNumber(Number(Number(newReserve) / 10**reserveTokenDecimals.toNumber()).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
               </>
             }
           </Stack>

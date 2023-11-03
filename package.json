@@ -15,6 +15,7 @@
     "@types/node": "^12.20.55",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
+    "@vercel/analytics": "^1.1.1",
     "@web3-onboard/core": "^2.21.0",
     "@web3-onboard/injected-wallets": "^2.10.5",
     "@web3-onboard/react": "^2.8.11",

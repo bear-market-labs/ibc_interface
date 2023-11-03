@@ -131,6 +131,7 @@ export function Dashboard( props: dashboardProps ){
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
+  const [fetching, updateFetching] = React.useState<boolean>(false);
 
   const [chartParam, setChartParam] = React.useState<any>(
     {
@@ -211,9 +212,9 @@ export function Dashboard( props: dashboardProps ){
         dashboardDataSet.inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
       } else {
         // use hardcoded eth defaults
-        dashboardDataSet.reserveTokenSymbol = "ETH"
-        dashboardDataSet.inverseTokenSymbol = "ibETH"
-        dashboardDataSet.inverseTokenAddress = "0x95Fe64ee219CD3113c3587cC1F50aaC6De6B89bD"
+        dashboardDataSet.reserveTokenSymbol = curves[0].reserveSymbol
+        dashboardDataSet.inverseTokenSymbol = curves[0].ibAsset
+        dashboardDataSet.inverseTokenAddress = curves[0].ibAssetAddress
 
         //fetch curve metadata
         multicallQueries = [
@@ -234,12 +235,12 @@ export function Dashboard( props: dashboardProps ){
 
       // triggers another hook for additioanl data collection
       setIbcContractAddress(curveAddress)
-      setupEventListener(curveAddress)
+      setupEventListener(curveAddress, reserveAsset)
     }
 
     fetchFocusedAssetInfo().then(() =>{}).catch((err) => {console.log(err)})
-
-  }, [nonWalletProvider, wallet?.provider, reserveAsset, setupEventListener])
+ 
+  }, [])
 
 
   useEffect(() => {

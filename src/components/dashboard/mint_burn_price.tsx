@@ -2,10 +2,8 @@ import { ethers } from 'ethers'
 import { Box, Stack, Text, Icon, Divider, Center } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
-import { colors } from "../../config/style";
-import AddIbc from './add_ibc';
-import { secondsPerDay } from '../../config/constants';
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
+import { secondsPerDay } from '../../config/constants';
 
 type mintProps = {
   dashboardDataSet: any;
@@ -18,7 +16,7 @@ export default function MintBurnPrice(props: mintProps) {
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const newPrice = BigNumber.from(parentInputDynamicData?.newPrice ? parentInputDynamicData.newPrice : '0')
   const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
-  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : '0'; 
   const stakingRewardEma = "stakingRewardEma" in dashboardDataSet ? dashboardDataSet.stakingRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0
@@ -27,25 +25,25 @@ export default function MintBurnPrice(props: mintProps) {
 
 
   const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.reserveAsset) > 0 ? Number(
-    Number(ethers.utils.formatUnits(stakingRewardEma.reserveAsset, dashboardDataSet.reserveTokenDecimals)) 
-    * secondsPerDay 
-    / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
-  ).toString()
-  :
-  '0'
-
-  const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.ibcAsset) > 0 ? Number(
-    Number(ethers.utils.formatUnits(stakingRewardEma.ibcAsset, dashboardDataSet.inverseTokenDecimals)) 
+    Number(ethers.utils.formatUnits(stakingRewardEma.reserveAsset, reserveTokenDecimals)) 
     * secondsPerDay
     / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
   ).toString()
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals.toNumber(), dashboardDataSet.reserveTokenSymbol)
+  const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.ibcAsset) > 0 ? Number(
+    Number(ethers.utils.formatUnits(stakingRewardEma.ibcAsset, reserveTokenDecimals)) 
+    * secondsPerDay
+    / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
+  ).toString()
+  :
+  '0'
+
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals, dashboardDataSet.reserveTokenSymbol)
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
-  const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals.toNumber(), "ETH")
+  const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals, "ETH")
   const alsoNeedSymbolLine = Number(formattedNewPrice) > 1e-9 && Number(formattedNewPrice) < 0.001
 
   return (

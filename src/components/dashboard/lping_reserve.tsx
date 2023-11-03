@@ -50,7 +50,7 @@ export default function LpingReserve(props: mintProps) {
         <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
           <Stack direction="row" fontSize='2xl' fontWeight='700'>
-            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, dashboardDataSet.reserveTokenDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
+            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, reserveTokenDecimals.toNumber()), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             {
               newReserve !== '0' && newReserve !== reserveAmount.toString() && 
               <>

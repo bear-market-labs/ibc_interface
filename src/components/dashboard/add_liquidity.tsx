@@ -263,7 +263,7 @@ export default function AddLiquidity(props: mintProps) {
 		}
 
 		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, reserveTokenDecimals)
-		const feeAdjustedAmount = Number(Number(decimaledParsedAmount.toString()) * (1-totalFeePercent)).toFixed(0)
+		const feeAdjustedAmount = BigInt(decimaledParsedAmount.toString()) * BigInt(10000 - totalFeePercent*10000) / BigInt(10000)
 
 		const mintAmount = BigNumber.from(
 			bignumber(Number(lpTokenSupply.toString()) * Number(feeAdjustedAmount))

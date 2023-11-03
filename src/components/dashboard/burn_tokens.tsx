@@ -113,7 +113,7 @@ export default function BurnTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 	const [resultPrice, setResultPrice] = useState<bignumber>(
 		bignumber(currentTokenPrice.toString())

@@ -5,11 +5,9 @@ import {
 	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -18,30 +16,24 @@ import {
 	concat,
 	defaultAbiCoder,
 	hexlify,
-	parseEther,
 	formatUnits,
 	parseUnits,
-	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	format,
-	parse,
-	commandTypes,
 	sanitizeNumberInput,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
-import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatNumber } from '../../util/display_formatting'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 
 type mintProps = {
@@ -50,7 +42,7 @@ type mintProps = {
 }
 
 export default function CreateIBAsset(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
+	const [{ wallet }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
@@ -271,13 +263,11 @@ export default function CreateIBAsset(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseEther(val === '' ? '0' : val)
 
 		const mintAmount = 1.0;
 		const price = 2/val;
 		const supply = val * val / 4;
 		const tokenToDead = supply * INITIAL_RESERVE_DEDUCTION/ val;
-		const lpToDead = INITIAL_RESERVE_DEDUCTION/ val;
 
 
 		setMintAmount(mintAmount)

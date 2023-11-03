@@ -4,7 +4,6 @@ import { ethers } from 'ethers'
 import {
 	Box,
 	Button,
-	Input,
 	Icon,
 	Stack,
 	Text,
@@ -37,7 +36,6 @@ import {
   commandTypes,
 	sanitizeNumberInput,
 } from '../../config/constants'
-import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -55,7 +53,7 @@ type mintProps = {
 }
 
 export default function MintTokens(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
+	const [{ wallet }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
@@ -296,12 +294,6 @@ export default function MintTokens(props: mintProps) {
 			utilization: BigNumber
 		) => {
 			if (wallet?.provider) {
-				const provider = new ethers.providers.Web3Provider(
-					wallet.provider,
-					'any'
-				)
-				const abiCoder = ethers.utils.defaultAbiCoder
-
 				//directly calculate mintAmount with invariant and utilization
 
 				// this should be a non-under/overflow number

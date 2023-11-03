@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Stack } from '@chakra-ui/react'
 
 import {
     Table,
-    Thead,
     Tbody,
-    Tfoot,
     Tr,
-    Th,
     Td,
     TableContainer,
 } from '@chakra-ui/react'
@@ -81,9 +78,9 @@ export default function LpPosition(props: assetListProps) {
                     <Table variant='simple'>
                         <Tbody>
                             {
-                                lpPosition && lpPosition.map((position) => {
+                                lpPosition && lpPosition.map((position, i) => {
                                     return (
-                                        <Tr h='70px'>
+                                        <Tr key={i} h='70px'>
                                             <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.ibAsset}</Td>
                                             <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
                                         </Tr>

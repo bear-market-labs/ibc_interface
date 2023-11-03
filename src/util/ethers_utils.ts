@@ -1,6 +1,5 @@
-import { arrayify, concat, defaultAbiCoder, hexlify, Interface, parseEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, solidityKeccak256 } from 'ethers/lib/utils'
 import { multicallContinueOnErrorFlag } from '../config/constants'
-import { contracts } from '../config/contracts'
 
 export function getFunctionDescriptorBytes(functionName: string, argTypes: string[]){
   const functionDescriptorBytes = arrayify(solidityKeccak256(

@@ -37,8 +37,6 @@ export default function ConnectWallet() {
     }
   }, [wallet])
 
-  const bal = wallet?.accounts[0]?.balance
-
   if(wallet?.provider && account) {
     return (
         <Button

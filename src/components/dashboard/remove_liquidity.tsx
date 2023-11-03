@@ -3,25 +3,20 @@ import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, constants } from 'ethers'
 
 import {
-	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
 import {
 	arrayify,
-	parseUnits,
 	concat,
 	defaultAbiCoder,
 	hexlify,
 	formatUnits,
-	parseEther,
 	formatEther,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
@@ -35,7 +30,6 @@ import {
 	parse,
 	format,
 	commandTypes,
-	reserveAssetDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -53,17 +47,14 @@ type mintProps = {
 }
 
 export default function RemoveLiquidity(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
+	const [{ wallet }] = useConnectWallet()
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
 	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
-	const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(
-		BigNumber.from(0)
-	)
 
 	const userInverseTokenAllowance = BigNumber.from(
 		'userInverseTokenAllowance' in dashboardDataSet
@@ -78,9 +69,6 @@ export default function RemoveLiquidity(props: mintProps) {
 		'lpTokenDecimals' in dashboardDataSet
 			? dashboardDataSet.lpTokenDecimals
 			: '0'
-	)
-	const userBalance = BigNumber.from(
-		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	)
 	const userLpTokenBalance = 'userLpTokenBalance' in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'
 	const userIbcTokenBalance = 'userIbcTokenBalance' in dashboardDataSet ? BigNumber.from(dashboardDataSet.userIbcTokenBalance) : BigNumber.from(0)

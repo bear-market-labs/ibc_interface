@@ -1,5 +1,5 @@
 import {  ethers } from 'ethers'
-import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
+import { Box, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { blocksPerDay } from '../../config/constants'

@@ -1,4 +1,4 @@
-import { Code, Grid, Link, Text, VStack } from "@chakra-ui/react";
+import { Grid, Text, VStack } from "@chakra-ui/react";
 import { ColorModeSwitcher } from "../ColorModeSwitcher";
 import ConnectWallet from "../components/ConnectWallet";
 import ClaimProtocolFee from "../components/staging/claim_protocol_fee";

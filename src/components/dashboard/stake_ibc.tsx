@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers, constants } from 'ethers'
-import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseEther, parseUnits, formatEther, solidityKeccak256 } from 'ethers/lib/utils'
+import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
+import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
@@ -18,7 +18,7 @@ type mintProps = {
 }
 
 export default function StakeIbc(props: mintProps) {
-  const [{ wallet, connecting }] = useConnectWallet()
+  const [{ wallet }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)

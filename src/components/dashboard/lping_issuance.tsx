@@ -15,8 +15,6 @@ const issuanceDiffTolerance = 0.000001
 export default function LpingIssuance(props: mintProps) {
   const {dashboardDataSet, parentInputDynamicData} = props
   
-  const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
-
   const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply) : BigNumber.from('0')
 
   const lpTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 

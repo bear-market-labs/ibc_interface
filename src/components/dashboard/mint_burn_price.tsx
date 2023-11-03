@@ -1,9 +1,7 @@
 import { ethers } from 'ethers'
-import { Box, Stack, Text, Icon, Divider, Center } from '@chakra-ui/react'
+import { Box, Stack, Text, Icon, Divider } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
-import { colors } from "../../config/style";
-import AddIbc from './add_ibc';
 import { blocksPerDay, reserveAssetDecimals } from '../../config/constants';
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 
@@ -17,9 +15,7 @@ export default function MintBurnPrice(props: mintProps) {
   const bondingCurveParams = "bondingCurveParams" in dashboardDataSet ? dashboardDataSet.bondingCurveParams : {};
   const currentTokenPrice = BigNumber.from("currentTokenPrice" in bondingCurveParams ? bondingCurveParams.currentTokenPrice : '0'); 
   const newPrice = BigNumber.from(parentInputDynamicData?.newPrice ? parentInputDynamicData.newPrice : '0')
-  const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'; 
-  const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : ''; 
-  const inverseTokenSymbol = "inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : ''; 
+  const inverseTokenDecimals = "inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0';
   const stakingRewardEma = "stakingRewardEma" in dashboardDataSet ? dashboardDataSet.stakingRewardEma : {
     reserveAsset: 0,
     ibcAsset: 0

@@ -21,7 +21,7 @@ export function formatNumber(number: string, unit: string, showUnit=true, prepen
 
   // just passthru number if it's not a number (like NaN or Infinity)
   if (isNaN(num)) {
-      return `${number} ${unit}`;
+      return `${number} ${prependIb ? "ib" + unit : unit}`;
   }
 
   let retVal;

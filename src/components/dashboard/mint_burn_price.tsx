@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { colors } from "../../config/style";
 import AddIbc from './add_ibc';
-import { blocksPerDay, reserveAssetSymbol } from '../../config/constants';
+import { secondsPerDay } from '../../config/constants';
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 
 type mintProps = {
@@ -26,23 +26,23 @@ export default function MintBurnPrice(props: mintProps) {
   const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply): BigNumber.from('0'); 
 
 
-  const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
-    Number(ethers.utils.formatEther(stakingRewardEma.reserveAsset)) 
-    * blocksPerDay 
+  const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.reserveAsset) > 0 ? Number(
+    Number(ethers.utils.formatUnits(stakingRewardEma.reserveAsset, dashboardDataSet.reserveTokenDecimals)) 
+    * secondsPerDay 
     / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
   ).toString()
   :
   '0'
 
-  const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 ? Number(
-    Number(ethers.utils.formatEther(stakingRewardEma.ibcAsset)) 
-    * blocksPerDay 
+  const ibc24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.ibcAsset) > 0 ? Number(
+    Number(ethers.utils.formatUnits(stakingRewardEma.ibcAsset, dashboardDataSet.inverseTokenDecimals)) 
+    * secondsPerDay
     / Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals))
   ).toString()
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals.toNumber(), reserveAssetSymbol)
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals.toNumber(), dashboardDataSet.reserveTokenSymbol)
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
   const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals.toNumber(), "ETH")

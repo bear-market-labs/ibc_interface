@@ -256,8 +256,8 @@ export function Dashboard( props: dashboardProps ){
         composeMulticallQuery(ibcContractAddress, "curveParameters", [], []),
         composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         composeMulticallQuery(ibcContractAddress, "inverseTokenAddress", [], []),
-        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-        composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+        composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [1]),
+        composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [0]),
         composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
@@ -345,8 +345,8 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(ibcContractAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "rewardOf", ["address"], [wallet.accounts[0].address]),
           composeMulticallQuery(ibcContractAddress, "stakingBalanceOf", ["address"], [wallet.accounts[0].address]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [1]),
-          composeMulticallQuery(ibcContractAddress, "blockRewardEMA", ["uint8"], [0]),
+          composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [1]),
+          composeMulticallQuery(ibcContractAddress, "rewardEMAPerSecond", ["uint8"], [0]),
           composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
           composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         ].concat(feeQueries)

@@ -2,7 +2,7 @@ import {  ethers } from 'ethers'
 import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
-import { blocksPerDay } from '../../config/constants'
+import { secondsPerDay } from '../../config/constants'
 import { formatNumber } from '../../util/display_formatting'
 
 type mintProps = {
@@ -28,17 +28,17 @@ export default function LpingReserve(props: mintProps) {
 
 
 
-  const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) > 0 ? Number(
+  const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) && lpRewardEma.reserveAsset > 0 ? Number(
     Number(ethers.utils.formatUnits(lpRewardEma.reserveAsset, reserveTokenDecimals)) 
-    * blocksPerDay 
+    * secondsPerDay 
     / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
   :
   '0.000'
 
-  const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) > 0 ? Number(
+  const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) > 0 && lpRewardEma.ibcAsset > 0 ? Number(
     Number(ethers.utils.formatUnits(lpRewardEma.ibcAsset, reserveTokenDecimals)) 
-    * blocksPerDay 
+    * secondsPerDay 
     / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
   :

@@ -351,7 +351,7 @@ export default function AddLiquidity(props: mintProps) {
 					justifyContent={'space-between'}
 					mt='12'
 				>
-					<Text align='left'>Market price</Text>
+					<Text align='left'>Market Price</Text>
 					<Text align='right'>
 						{`${Number(formatUnits(currentTokenPrice, reserveTokenDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>

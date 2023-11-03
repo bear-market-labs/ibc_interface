@@ -234,7 +234,7 @@ export function Dashboard( props: dashboardProps ){
 
       // triggers another hook for additioanl data collection
       setIbcContractAddress(curveAddress)
-      setupEventListener(curveAddress, reserveAsset)
+      setupEventListener(curveAddress)
     }
 
     fetchFocusedAssetInfo().then(() =>{}).catch((err) => {console.log(err)})

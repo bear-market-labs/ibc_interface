@@ -6,7 +6,7 @@ import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
 import { ethers } from 'ethers'
 import { contracts } from "../config/contracts";
-import { composeMulticallQuery, composeQuery, getFunctionDescriptorBytes } from "../util/ethers_utils";
+import { composeMulticallQuery, composeQuery } from "../util/ethers_utils";
 import BurnTokens from "../components/dashboard/burn_tokens";
 import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
@@ -18,7 +18,7 @@ import MintBurnPrice from "../components/dashboard/mint_burn_price";
 import MintBurnIssuance from "../components/dashboard/mint_burn_issuance";
 import LpingReserve from "../components/dashboard/lping_reserve";
 import LpingIssuance from "../components/dashboard/lping_issuance";
-import BondingCurveChart, { IChartParam } from "../components/bondingCurveChart/bonding_curve_chart";
+import BondingCurveChart from "../components/bondingCurveChart/bonding_curve_chart";
 import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
@@ -36,7 +36,6 @@ import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
 import { useParams } from "react-router-dom";
 import { curves } from "../config/curves";
-import { constants } from "os";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -70,7 +69,6 @@ export function Dashboard( props: dashboardProps ){
         displayText: 'How It Works',
         description: 'Learn the basics of inverse bonding curves'
       },
-      ,
       {
         value:'terms',
         displayText: 'Terms of Service',
@@ -268,13 +266,7 @@ export function Dashboard( props: dashboardProps ){
       // fetch/set main panel metrics data
       const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
       const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
-
-      const reserveTokenAddressBytes = multicallResults[1][0] ? multicallResults[1][1] : [""]
-      const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0]
       
-      const inverseTokenAddressBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
-      const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
-
       const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0]
       const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
@@ -990,9 +982,17 @@ export function Dashboard( props: dashboardProps ){
                 */}
                 {
                   headerTitle === 'HOW IT WORKS' &&
-                  <UsefulLinks/>
+                    <Tabs onChange={handleLiquidityNavInputSwitch} pl='5' pr='5'>
+                      <TabList borderBottom={'none'}>
+                          <Tab>Useful Links</Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel>
+                          <UsefulLinks/>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                 }
-
                 <Spacer/>
               </Stack>
           </GridItem>

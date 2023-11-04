@@ -173,11 +173,11 @@ export default function BurnTokens(props: mintProps) {
 					.toFixed(defaultDecimals)
 
 				const minReserveLimit =
-					Number(formatUnits(bondingCurveParams.reserveAmount, defaultDecimals)) *
+					Number(formatUnits(dashboardDataSet.contractReserveTokenBalance, reserveTokenDecimals)) *
 					(1 - maxReserve / 100)
 
 				const maxReserveLimit =
-					Number(formatUnits(bondingCurveParams.reserveAmount, defaultDecimals)) *
+					Number(formatUnits(dashboardDataSet.contractReserveTokenBalance, reserveTokenDecimals)) *
 					(1 + maxReserve / 100)
 
 				const commandBytes = arrayify(

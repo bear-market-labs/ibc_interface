@@ -36,6 +36,7 @@ import {
 	commandTypes,
 	sanitizeNumberInput,
 	curveUtilization,
+	defaultDecimals,
 } from '../../config/constants'
 import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -59,7 +60,6 @@ export default function BurnTokens(props: mintProps) {
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>()
 	const [amountDisplay, setAmountDisplay] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
@@ -114,7 +114,6 @@ export default function BurnTokens(props: mintProps) {
 			: '0'
 	)
 	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
-	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 	const maxBurn = "inverseTokenSupply" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) : 0
 	const maxWithdraw = "reserveAmount" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals)) : 0
 	const [resultPrice, setResultPrice] = useState<bignumber>(
@@ -163,31 +162,22 @@ export default function BurnTokens(props: mintProps) {
 					)
 				).slice(0, 4)
 
-				// fee adjustment
-				const fee = parseUnits(
-					Number(
-						Number(formatUnits(amount, inverseTokenDecimals)) *
-							totalFeePercent
-					).toFixed(Number(inverseTokenDecimals)),
-					inverseTokenDecimals
-				)
-
 				const minPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 - maxSlippage / 100)
 					.dividedBy(bignumber(amount.toString()))
-					.toFixed(reserveTokenDecimals)
+					.toFixed(defaultDecimals)
 
 				const maxPriceLimit = bignumber(liquidityReceived.toString())
 					.multipliedBy(1 + maxSlippage / 100)
 					.dividedBy(bignumber(amount.toString()))
-					.toFixed(reserveTokenDecimals)
+					.toFixed(defaultDecimals)
 
 				const minReserveLimit =
-					Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
+					Number(formatUnits(dashboardDataSet.contractReserveTokenBalance, reserveTokenDecimals)) *
 					(1 - maxReserve / 100)
 
 				const maxReserveLimit =
-					Number(formatUnits(contractReserveTokenBalance, reserveTokenDecimals)) *
+					Number(formatUnits(dashboardDataSet.contractReserveTokenBalance, reserveTokenDecimals)) *
 					(1 + maxReserve / 100)
 
 				const commandBytes = arrayify(
@@ -196,8 +186,8 @@ export default function BurnTokens(props: mintProps) {
 						[
 							wallet.accounts[0].address, //ignored by router
 							amount,
-							[parseUnits(minPriceLimit, reserveTokenDecimals),parseUnits(maxPriceLimit, reserveTokenDecimals)],
-							[parseUnits(minReserveLimit.toFixed(reserveTokenDecimals), reserveTokenDecimals),parseUnits(maxReserveLimit.toFixed(reserveTokenDecimals), reserveTokenDecimals)],
+							[parseUnits(minPriceLimit, defaultDecimals),parseUnits(maxPriceLimit, defaultDecimals)],
+							[parseUnits(minReserveLimit.toFixed(defaultDecimals), defaultDecimals),parseUnits(maxReserveLimit.toFixed(defaultDecimals), defaultDecimals)],
 						] // arg values
 					)
 				)
@@ -207,7 +197,7 @@ export default function BurnTokens(props: mintProps) {
 						['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address,
-							ibcContractAddress,
+							dashboardDataSet.curveAddress,
 							true,
 							commandTypes.sellTokens,
 							commandBytes,
@@ -259,10 +249,10 @@ export default function BurnTokens(props: mintProps) {
 
 				if (tokenSoldDetails) {
 					description = `Received ${Number(
-						formatUnits(tokenSoldDetails[1], reserveTokenDecimals)
-					).toFixed(4)} ETH for ${Number(
+						Number(formatUnits(tokenSoldDetails[1], defaultDecimals)) * (1-totalFeePercent)
+					).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol} for ${Number(
 						formatUnits(tokenSoldDetails[0], inverseTokenDecimals)
-					).toFixed(4)} IBC`
+					).toFixed(4)} ${dashboardDataSet.inverseTokenSymbol}`
 				} else {
 					// allowance type tx was performed
 					description = `Allowance updated`
@@ -311,14 +301,13 @@ export default function BurnTokens(props: mintProps) {
 		amount,
 		wallet,
 		provider,
-		ibcContractAddress,
+		dashboardDataSet,
 		maxSlippage,
 		liquidityReceived,
 		userInverseTokenAllowance,
 		inverseTokenAddress,
 		ibcRouterAddress,
 		reserveTokenDecimals,
-		contractReserveTokenBalance,
 	])
 
 	const handleAmountChange = (val: any) => {
@@ -358,21 +347,21 @@ export default function BurnTokens(props: mintProps) {
 			Number(
 				-1 *
 					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-					Number(formatUnits(reserveAmount, reserveTokenDecimals))
-			).toFixed(reserveTokenDecimals)
+					Number(formatUnits(reserveAmount, defaultDecimals))
+			).toFixed(defaultDecimals)
 			,
-			reserveTokenDecimals
+			defaultDecimals
 		)
 
 		// calculate spot price post mint
-		const curveInvariant = Number(formatUnits(reserveAmount, reserveTokenDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
+		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
 		const newPrice = curveInvariant * curveUtilization
 		/
 		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
 
 		setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
-		setLiquidityReceived(liquidityReceived)
-		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, reserveTokenDecimals)) *
+		setLiquidityReceived(liquidityReceived) 
+		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, defaultDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
 		parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
@@ -394,12 +383,12 @@ export default function BurnTokens(props: mintProps) {
 
 		const liquidityReceived = parsedAmount / (1 - totalFeePercent) // full mint-amount
 
-		setLiquidityReceived(parseUnits(liquidityReceived.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber())) 
+		setLiquidityReceived(parseUnits(liquidityReceived.toFixed(defaultDecimals), defaultDecimals)) 
 
 		// calculate ibc burn amount
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
-		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, reserveTokenDecimals)) 
+		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
 		* 
 		Math.pow(
 			currentInverseTokenSupply,
@@ -420,17 +409,17 @@ export default function BurnTokens(props: mintProps) {
 		(1 - totalFeePercent)
 
 		const newSupply = currentInverseTokenSupply - burnAmount * (1 - totalFeePercent)
-		const newPrice = Number(m * newSupply ** (-k)).toFixed(inverseTokenDecimals.toNumber())
+		const newPrice = Number(m * newSupply ** (-k)).toFixed(defaultDecimals)
 
-		setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
+		setResultPrice(bignumber(parseUnits(newPrice, defaultDecimals).toString()))
 
 		setAmount(parseUnits(burnAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
 		setAmountDisplay(burnAmount)
 
-		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
+		parentSetters?.setNewPrice(parseUnits(newPrice, defaultDecimals).toString())
 		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(reserveTokenDecimals), reserveTokenDecimals).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals).toString()
 		))
 	}
 
@@ -451,6 +440,7 @@ export default function BurnTokens(props: mintProps) {
 						value={amountDisplay}
 						max={maxBurn}
 						onChange={(valueString) => handleAmountChange(valueString)}
+						isDisabled={Object.keys(bondingCurveParams).length === 0}
 					>
 						<NumberInputField
 							minWidth='auto'
@@ -488,6 +478,7 @@ export default function BurnTokens(props: mintProps) {
 						value={liquidityReceivedDisplay}
 						max={maxWithdraw}
 						onChange={(valueString) => handleAmountReceivedChanged(valueString)}
+						isDisabled={Object.keys(bondingCurveParams).length === 0}
 					>
 						<NumberInputField
 							minWidth='auto'

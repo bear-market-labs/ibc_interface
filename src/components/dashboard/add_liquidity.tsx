@@ -52,7 +52,6 @@ export default function AddLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
@@ -68,7 +67,7 @@ export default function AddLiquidity(props: mintProps) {
 			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
-  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
+  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : 0; 
 	const lpTokenSupply = BigNumber.from(
 		'lpTokenSupply' in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'
 	)
@@ -93,6 +92,12 @@ export default function AddLiquidity(props: mintProps) {
 	const currentTokenPrice = BigNumber.from(
 		'currentTokenPrice' in bondingCurveParams
 			? bondingCurveParams.currentTokenPrice
+			: '0'
+	)
+	
+	const userReserveTokenAllowance = BigNumber.from(
+		'userReserveTokenAllowance' in dashboardDataSet
+			? dashboardDataSet.userReserveTokenAllowance
 			: '0'
 	)
 
@@ -122,62 +127,86 @@ export default function AddLiquidity(props: mintProps) {
 			setIsProcessing(true)
 			const signer = provider?.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
+			let txDetails
+			let description = 'Error details'
 
-			const functionDescriptorBytes = arrayify(
-				solidityKeccak256(
-					['string'],
-					[
-						'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
-					]
+			if (userReserveTokenAllowance.lt(parseUnits(Number(amount).toFixed(reserveTokenDecimals), reserveTokenDecimals)) && dashboardDataSet.reserveTokenSymbol.toUpperCase() !== "ETH"){
+				const functionDescriptorBytes = arrayify(
+					solidityKeccak256(
+						['string'],
+						[
+							'approve(address,uint256)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+						]
+					)
+				).slice(0, 4)
+
+				const payloadBytes = arrayify(
+					abiCoder.encode(
+						['address', 'uint'], // array of types; make sure to represent complex types as tuples
+						[ibcRouterAddress, parseUnits(Number(amount).toFixed(reserveTokenDecimals), reserveTokenDecimals)] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+					)
 				)
-			).slice(0, 4)
 
-			const minPriceLimit = BigNumber.from(
-				bignumber(currentTokenPrice.toString())
-					.multipliedBy(1 - maxSlippage / 100)
-					.toFixed(0)
-			)
+				txDetails = {
+					to: dashboardDataSet.reserveTokenAddress,
+					data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+				}
+			} else {
 
-			const maxPriceLimit = BigNumber.from(
-				bignumber(currentTokenPrice.toString())
-					.multipliedBy(1 + maxSlippage / 100)
-					.toFixed(0)
-			)
-
-			const commandBytes = arrayify(
-				abiCoder.encode(
-					['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
-					[
-						wallet.accounts[0].address, // ignored by router
-						parseUnits(amount.toString(), reserveTokenDecimals),
-						[minPriceLimit, maxPriceLimit],
-					] // arg values
+				const functionDescriptorBytes = arrayify(
+					solidityKeccak256(
+						['string'],
+						[
+							'execute(address,address,bool,uint8,bytes)', // put function signature here w/ types + no spaces, ex: createPair(address,address)
+						]
+					)
+				).slice(0, 4)
+	
+				const minPriceLimit = BigNumber.from(
+					bignumber(currentTokenPrice.toString())
+						.multipliedBy(1 - maxSlippage / 100)
+						.toFixed(0)
 				)
-			)
-
-			const payloadBytes = arrayify(
-				abiCoder.encode(
-					['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
-					[
-						wallet.accounts[0].address,
-						ibcContractAddress,
-						true,
-						commandTypes.addLiquidity,
-						commandBytes,
-					] // arg values
+	
+				const maxPriceLimit = BigNumber.from(
+					bignumber(currentTokenPrice.toString())
+						.multipliedBy(1 + maxSlippage / 100)
+						.toFixed(0)
 				)
-			)
-
-			const txDetails = {
-				to: ibcRouterAddress,
-				data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
-				value: parseUnits(amount.toString(), reserveTokenDecimals),
+	
+				const commandBytes = arrayify(
+					abiCoder.encode(
+						['address', 'uint256', 'uint256[2]'], // array of types; make sure to represent complex types as tuples
+						[
+							wallet.accounts[0].address, // ignored by router
+							parseUnits(amount.toString(), reserveTokenDecimals),
+							[minPriceLimit, maxPriceLimit],
+						] // arg values
+					)
+				)
+	
+				const payloadBytes = arrayify(
+					abiCoder.encode(
+						['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
+						[
+							wallet.accounts[0].address,
+							dashboardDataSet.curveAddress,
+							dashboardDataSet.reserveTokenSymbol.toUpperCase() === "ETH",
+							commandTypes.addLiquidity,
+							commandBytes,
+						] // arg values
+					)
+				)
+	
+				txDetails = {
+					to: ibcRouterAddress,
+					data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
+					value: dashboardDataSet.reserveTokenSymbol.toUpperCase() === "ETH" ? parseUnits(amount.toString(), reserveTokenDecimals) : 0,
+				}
 			}
 
 			const tx = await signer.sendTransaction(txDetails)
 			const result = await tx.wait()
-
-			let description = 'Error details'
 
 			if (result.status === 1) {
 				// extract LiquidityAdded event, and display details
@@ -198,8 +227,10 @@ export default function AddLiquidity(props: mintProps) {
 					description = `Received ${Number(
 						formatUnits(LiquidityAddedDetails[1], lpTokenDecimals)
 					).toFixed(4)} LP for ${Number(
-						formatUnits(LiquidityAddedDetails[0], reserveTokenDecimals)
-					).toFixed(4)} ETH`
+						formatUnits(LiquidityAddedDetails[0], defaultDecimals)
+					).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol}`
+				} else {
+					description = `Allowance set to ${amount}`
 				}
 			}
 
@@ -244,7 +275,7 @@ export default function AddLiquidity(props: mintProps) {
 		amount,
 		wallet,
 		provider,
-		ibcContractAddress,
+		dashboardDataSet,
 		maxSlippage,
 		mintAmount,
 		currentTokenPrice,
@@ -258,7 +289,7 @@ export default function AddLiquidity(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, reserveTokenDecimals)
+		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, defaultDecimals)
 		const feeAdjustedAmount = BigInt(decimaledParsedAmount.toString()) * BigInt(10000 - totalFeePercent*10000) / BigInt(10000)
 
 		const mintAmount = BigNumber.from(
@@ -270,7 +301,7 @@ export default function AddLiquidity(props: mintProps) {
 		)
 
 		//calculate ibc credit
-		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, reserveTokenDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals))
+		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, defaultDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, defaultDecimals))
 
 		setMintAmount(mintAmount)
 		setIbcCredit(lpIbcCredit)
@@ -296,6 +327,7 @@ export default function AddLiquidity(props: mintProps) {
 					<NumberInput
 						value={amount}
 						onChange={(valueString) => handleAmountChange(valueString)}
+						isDisabled={Object.keys(bondingCurveParams).length === 0}
 					>
 						<NumberInputField
 							minWidth='auto'
@@ -349,7 +381,7 @@ export default function AddLiquidity(props: mintProps) {
 				>
 					<Text align='left'>Market Price</Text>
 					<Text align='right'>
-						{`${Number(formatUnits(currentTokenPrice, reserveTokenDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
+						{`${Number(formatUnits(currentTokenPrice, defaultDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>
 				</Stack>
 				<Stack

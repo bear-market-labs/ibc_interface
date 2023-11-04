@@ -182,7 +182,7 @@ export default function RemoveLiquidity(props: mintProps) {
 						['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
 						[
 							wallet.accounts[0].address,
-							ibcContractAddress,
+							dashboardDataSet.curveAddress,
 							true,
 							commandTypes.removeLiquidity,
 							commandBytes,
@@ -239,7 +239,7 @@ export default function RemoveLiquidity(props: mintProps) {
 
 				if (LiquidityRemovedDetails) {
 					description = `Received ${Number(
-						formatUnits(LiquidityRemovedDetails[1], reserveTokenDecimals)
+						formatUnits(LiquidityRemovedDetails[1], defaultDecimals)
 					).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol} for ${Number(
 						formatUnits(LiquidityRemovedDetails[0], lpTokenDecimals)
 					).toFixed(4)} LP`
@@ -298,16 +298,6 @@ export default function RemoveLiquidity(props: mintProps) {
 		userLpIbcPayment,
 	])
 
-	/*
-	parentSetters?.setNewLpIssuance(
-		lpTokenSupply.sub(userLpTokenBalance).toString()
-	)
-	parentSetters?.setNewReserve(
-		BigNumber.from(bondingCurveParams.reserveAmount)
-			.sub(parseUnits(userLpRedeemableReserves, reserveAssetDecimals))
-			.toString()
-	)
-	*/
 
 	return (
 		<Stack justifyContent={'space-between'} h='calc(100vh - 220px)'>
@@ -376,7 +366,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				>
 					<Text align='left'>Market price</Text>
 					<Text align='right'>
-						{`${Number(formatUnits(currentTokenPrice, reserveTokenDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
+						{`${Number(formatUnits(currentTokenPrice, defaultDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>
 				</Stack>
 				<Stack

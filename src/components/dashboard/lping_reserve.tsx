@@ -2,7 +2,7 @@ import {  ethers } from 'ethers'
 import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
-import { secondsPerDay } from '../../config/constants'
+import { defaultDecimals, secondsPerDay } from '../../config/constants'
 import { formatNumber } from '../../util/display_formatting'
 
 type mintProps = {
@@ -23,13 +23,9 @@ export default function LpingReserve(props: mintProps) {
 
   const lpTokenSupply = "lpTokenSupply" in dashboardDataSet ? BigNumber.from(dashboardDataSet.lpTokenSupply) : BigNumber.from('0')
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
-  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
-  const inverseTokenSymbol = "inverseTokenSymbol" in dashboardDataSet ? dashboardDataSet.inverseTokenSymbol : 'ASSET'; 
-
-
 
   const reserve24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) && lpRewardEma.reserveAsset > 0 ? Number(
-    Number(ethers.utils.formatUnits(lpRewardEma.reserveAsset, reserveTokenDecimals)) 
+    Number(ethers.utils.formatUnits(lpRewardEma.reserveAsset, defaultDecimals)) 
     * secondsPerDay 
     / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
@@ -37,7 +33,7 @@ export default function LpingReserve(props: mintProps) {
   '0.000'
 
   const ibc24HReward = Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals)) > 0 && lpRewardEma.ibcAsset > 0 ? Number(
-    Number(ethers.utils.formatUnits(lpRewardEma.ibcAsset, reserveTokenDecimals)) 
+    Number(ethers.utils.formatUnits(lpRewardEma.ibcAsset, defaultDecimals)) 
     * secondsPerDay 
     / Number(ethers.utils.formatUnits(lpTokenSupply, inverseTokenDecimals))
   ).toFixed(3)
@@ -50,14 +46,14 @@ export default function LpingReserve(props: mintProps) {
         <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
           <Stack direction="row" fontSize='2xl' fontWeight='700'>
-            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, reserveTokenDecimals.toNumber()), dashboardDataSet.reserveTokenSymbol)}`}</Text>
+            <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, defaultDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             {
               newReserve !== '0' && newReserve !== reserveAmount.toString() && 
               <>
                 <Box ml='7' mr='7'>
                   <Icon as={HiOutlineArrowRight} h='100%'/>
                 </Box>
-                <Text>{`${formatNumber(Number(Number(newReserve) / 10**reserveTokenDecimals.toNumber()).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
+                <Text>{`${formatNumber(Number(Number(newReserve) / 10**defaultDecimals).toString(), dashboardDataSet.reserveTokenSymbol)}`}</Text>
               </>
             }
           </Stack>

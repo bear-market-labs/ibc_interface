@@ -23,5 +23,4 @@ export const curves = [
         reserveAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         ibAssetAddress: '0x20758B1028c3cb738975666E09c8De776608E972'        
     }
-
 ]

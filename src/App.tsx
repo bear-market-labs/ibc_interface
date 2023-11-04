@@ -36,7 +36,10 @@ init({
       label: 'Base',
       rpcUrl: 'https://mainnet.base.org'
     }
-  ]
+  ],
+  connect:{
+    autoConnectLastWallet: true
+  }
 })
 
 export const App = () => {

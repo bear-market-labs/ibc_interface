@@ -22,6 +22,7 @@ export default function MintBurnPrice(props: mintProps) {
     ibcAsset: 0
   }; 
   const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply): BigNumber.from('0'); 
+  const reserveTokenSymbol = "reserveTokenSymbol" in dashboardDataSet ? dashboardDataSet.reserveTokenSymbol: 'ASSET'; 
 
 
   const reserve24HReward = Number(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals)) > 0 && Number(stakingRewardEma.reserveAsset) > 0 ? Number(
@@ -40,10 +41,10 @@ export default function MintBurnPrice(props: mintProps) {
   :
   '0'
 
-  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals, dashboardDataSet.reserveTokenSymbol)
+  const formattedCurrentPrice = formatPriceNumber(currentTokenPrice, reserveTokenDecimals, reserveTokenSymbol)
   const needSymbolLine = Number(formattedCurrentPrice) > 1e-9 && Number(formattedCurrentPrice) < 0.001 
 
-  const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals, "ETH")
+  const formattedNewPrice = formatPriceNumber(newPrice, reserveTokenDecimals, reserveTokenSymbol)
   const alsoNeedSymbolLine = Number(formattedNewPrice) > 1e-9 && Number(formattedNewPrice) < 0.001
 
   return (
@@ -53,11 +54,11 @@ export default function MintBurnPrice(props: mintProps) {
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
         <Stack direction='row' fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
           <Stack rowGap={0}>
-            <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ' + dashboardDataSet.reserveTokenSymbol}`}</Text>
+            <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ' + reserveTokenSymbol}`}</Text>
             {
               needSymbolLine && 
               <>
-                <Text textAlign={`left`}>{dashboardDataSet.reserveTokenSymbol}</Text>
+                <Text textAlign={`left`}>{reserveTokenSymbol}</Text>
               </>
             }
           </Stack>
@@ -70,11 +71,11 @@ export default function MintBurnPrice(props: mintProps) {
                     <Icon marginTop={`7px`} as={HiOutlineArrowRight}/>
                   </Box>
                   <Stack rowGap={0}>
-                    <Text>{`${formattedNewPrice}${alsoNeedSymbolLine ? '' : ' ' + dashboardDataSet.reserveTokenSymbol}`}</Text>
+                    <Text>{`${formattedNewPrice}${alsoNeedSymbolLine ? '' : ' ' + reserveTokenSymbol}`}</Text>
                     {
                       alsoNeedSymbolLine && 
                       <>
-                        <Text textAlign={`left`}>{dashboardDataSet.reserveTokenSymbol}</Text>
+                        <Text textAlign={`left`}>{reserveTokenSymbol}</Text>
                       </>
                     }
                   </Stack>
@@ -92,7 +93,7 @@ export default function MintBurnPrice(props: mintProps) {
             {
               <>
 
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
+                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, reserveTokenSymbol)} + ${formatNumber(ibc24HReward, reserveTokenSymbol, true, true)}`}</Text>
                 </>
             }
           </Stack>

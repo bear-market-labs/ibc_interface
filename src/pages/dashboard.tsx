@@ -406,6 +406,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveTokenAddress, "decimals", [], []),
           composeMulticallQuery(reserveTokenAddress, "symbol", [], []),
           composeMulticallQuery(reserveTokenAddress, "balanceOf", ["address"], [wallet.accounts[0].address]),
+          composeMulticallQuery(reserveTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
         ]
   
         multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -441,6 +442,9 @@ export function Dashboard( props: dashboardProps ){
 
         const userReserveTokenBalanceBytes = multicallResults[8][1];
         const userReserveTokenBalance = abiCoder.decode(["uint"], userReserveTokenBalanceBytes)[0]
+
+        const userReserveTokenAllowanceBytes = multicallResults[9][1];
+        const userReserveTokenAllowance = abiCoder.decode(["uint"], userReserveTokenAllowanceBytes)[0]
 
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], reserveTokenDecimals.toNumber())) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
@@ -514,6 +518,9 @@ export function Dashboard( props: dashboardProps ){
           reserveTokenDecimals: reserveTokenDecimals,
           reserveTokenSymbol: reserveTokenSymbol === "WETH" ? "ETH" : reserveTokenSymbol,
           userReserveTokenBalance: userReserveTokenBalance,
+          userReserveTokenAllowance: userReserveTokenAllowance,
+          reserveTokenAddress: reserveTokenAddress,
+          curveAddress: ibcContractAddress,
         });
       }
     }

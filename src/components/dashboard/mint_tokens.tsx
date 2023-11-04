@@ -137,7 +137,7 @@ export default function MintTokens(props: mintProps) {
 			let txDetails
 			let description = 'Error details'
 
-			if (userReserveTokenAllowance.lt(amount)){
+			if (userReserveTokenAllowance.lt(amount) && dashboardDataSet.reserveTokenSymbol.toUpperCase() !== "ETH"){
 				const functionDescriptorBytes = arrayify(
 					solidityKeccak256(
 						['string'],

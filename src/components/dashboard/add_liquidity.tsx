@@ -130,7 +130,7 @@ export default function AddLiquidity(props: mintProps) {
 			let txDetails
 			let description = 'Error details'
 
-			if (userReserveTokenAllowance.lt(parseUnits(Number(amount).toFixed(reserveTokenDecimals), reserveTokenDecimals))){
+			if (userReserveTokenAllowance.lt(parseUnits(Number(amount).toFixed(reserveTokenDecimals), reserveTokenDecimals)) && dashboardDataSet.reserveTokenSymbol.toUpperCase() !== "ETH"){
 				const functionDescriptorBytes = arrayify(
 					solidityKeccak256(
 						['string'],

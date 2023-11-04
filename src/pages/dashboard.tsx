@@ -22,7 +22,7 @@ import BondingCurveChart from "../components/bondingCurveChart/bonding_curve_cha
 import Logo from "../components/logo";
 import * as _ from "lodash";
 import MobileDisplay from '../components/dashboard/mobile_display'
-import { actionTypes, curveUtilization, lpTokenDecimals } from "../config/constants";
+import { actionTypes, curveUtilization, defaultDecimals, lpTokenDecimals } from "../config/constants";
 import ExternalLinks from '../components/dashboard/external_links'
 import HowItWorks from "../components/dashboard/how_it_works";
 import UsefulLinks from '../components/dashboard/useful_links'
@@ -447,11 +447,11 @@ export function Dashboard( props: dashboardProps ){
         const userReserveTokenAllowance = abiCoder.decode(["uint"], userReserveTokenAllowanceBytes)[0]
 
         // downstream calculation for lp removal, all in formatted (or sane) decimals
-        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], reserveTokenDecimals.toNumber())) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], defaultDecimals)) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
         const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
         * 
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], reserveTokenDecimals)) 
+        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals)) 
         / 
         Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
@@ -600,7 +600,7 @@ export function Dashboard( props: dashboardProps ){
 
     if (index === 1 && "lpTokenSupply" in dashboardDataSet && "userLpTokenBalance" in dashboardDataSet && "userLpRedeemableReserves" in dashboardDataSet){
       const newLpSupply = ethers.BigNumber.from(dashboardDataSet.lpTokenSupply).sub(dashboardDataSet.userLpTokenBalance)
-      const newReserve = ethers.BigNumber.from(dashboardDataSet.bondingCurveParams.reserveAmount).sub(ethers.utils.parseUnits(dashboardDataSet.userLpRedeemableReserves, dashboardDataSet.reserveTokenDecimals))
+      const newReserve = ethers.BigNumber.from(dashboardDataSet.bondingCurveParams.reserveAmount).sub(ethers.utils.parseUnits(dashboardDataSet.userLpRedeemableReserves, defaultDecimals))
 
       setNewLpIssuance(newLpSupply.toString())
       setNewReserve(newReserve.toString())

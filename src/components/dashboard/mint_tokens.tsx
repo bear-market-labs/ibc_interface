@@ -314,9 +314,9 @@ export default function MintTokens(props: mintProps) {
 			return
 		}
 
-		setAmount(parseUnits(parsedAmount, reserveTokenDecimals)) // will be fed into router; needs to reflect "real" decimals
+		setAmount(parseUnits(Number(parsedAmount).toFixed(reserveTokenDecimals), reserveTokenDecimals)) // will be fed into router; needs to reflect "real" decimals
 
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, defaultDecimals) // for all calcs, stay in default decimals (all curve params are in default decimals)
+		const decimaledParsedAmount = parseUnits(val === '' ? '0' : Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals) // for all calcs, stay in default decimals (all curve params are in default decimals)
 		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 

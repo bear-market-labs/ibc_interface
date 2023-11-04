@@ -1,4 +1,4 @@
-import { Box, Stack, Text, Link } from '@chakra-ui/react'
+import { Box, Stack, Link } from '@chakra-ui/react'
 import { colors } from '../../config/style'
 
 export default function UsefulLinks() {

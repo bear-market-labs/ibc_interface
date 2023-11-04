@@ -20,7 +20,6 @@ type mintProps = {
 export default function UnstakeIbc(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcETHCurveContract)
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>('')
@@ -81,7 +80,7 @@ export default function UnstakeIbc(props: mintProps) {
           ['address', 'address', 'bool', 'uint8', 'bytes'], // array of types; make sure to represent complex types as tuples
           [
             wallet.accounts[0].address,
-            ibcContractAddress,
+            dashboardDataSet.curveAddress,
             true,
             commandTypes.unstake,
             commandBytes,
@@ -128,7 +127,7 @@ export default function UnstakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, ibcContractAddress, amount, inverseTokenDecimals, ibcRouterAddress]);
+  }, [wallet, provider, dashboardDataSet, amount, inverseTokenDecimals, ibcRouterAddress]);
 
   return (
       <Stack fontWeight='500'>

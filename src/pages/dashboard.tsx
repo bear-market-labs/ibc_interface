@@ -990,9 +990,17 @@ export function Dashboard( props: dashboardProps ){
                 */}
                 {
                   headerTitle === 'HOW IT WORKS' &&
-                  <UsefulLinks/>
+                    <Tabs onChange={handleLiquidityNavInputSwitch} pl='5' pr='5'>
+                      <TabList borderBottom={'none'}>
+                          <Tab>Useful Links</Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel>
+                          <UsefulLinks/>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                 }
-
                 <Spacer/>
               </Stack>
           </GridItem>

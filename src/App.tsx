@@ -7,7 +7,6 @@ import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { ethers } from 'ethers'
 import { Route, Routes } from "react-router-dom";
-import { StagingPage } from "./pages/staging";
 import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
 import { contracts, } from "./config/contracts";
@@ -66,7 +65,6 @@ export const App = () => {
       <Routes>
         <Route path="/explore/" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={true} key="1"/>} />
         <Route path="/:reserveAsset?" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={false} key="2"/>} />
-        <Route path="/staging" element={<StagingPage key="3"/>}/>
       </Routes>
     </Box>
     <Analytics />

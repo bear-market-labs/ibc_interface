@@ -66,7 +66,7 @@ export default function CreateIBAsset(props: mintProps) {
 	const [fee, setFee] = useState<number>(0)
 	const [initialPrice, setInitialPrice] = useState<number>(0)
 
-	const INITIAL_RESERVE_DEDUCTION = 1e-10;
+	const INITIAL_RESERVE_DEDUCTION_DIVIDER = 1e4;
 
 	const [isProcessing, setIsProcessing] = useState(false)
 
@@ -272,13 +272,10 @@ export default function CreateIBAsset(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseEther(val === '' ? '0' : val)
-
 		const mintAmount = 1.0;
 		const price = 2/val;
 		const supply = val * val / 4;
-		const tokenToDead = supply * INITIAL_RESERVE_DEDUCTION/ val;
-		const lpToDead = INITIAL_RESERVE_DEDUCTION/ val;
+		const tokenToDead = supply / INITIAL_RESERVE_DEDUCTION_DIVIDER;
 
 
 		setMintAmount(mintAmount)
@@ -342,7 +339,7 @@ export default function CreateIBAsset(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${formatNumber(ibcCredit.toString(), "IBC")} bound to position`
+						`+ ${formatNumber(ibcCredit.toString(), reserveSymbol, true, true)} bound to position`
 					}
 				</Text>
 			</Stack>
@@ -356,7 +353,7 @@ export default function CreateIBAsset(props: mintProps) {
 				>
 					<Text align='left'>Creation Fee</Text>
 					<Text align='right'>
-						{reserveSymbol?`${Number(fee).toFixed(4)} ib${reserveSymbol}` : '-'}
+						{reserveSymbol?`${Number(fee)} ib${reserveSymbol}` : '-'}
 					</Text>
 				</Stack>
 				<Stack

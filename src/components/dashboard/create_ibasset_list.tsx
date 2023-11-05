@@ -159,16 +159,16 @@ export default function CreateIBAssetList(props: assetListProps) {
                 <TableContainer w='100%' maxH='calc(100vh - 350px)' overflowY='auto'>
                     <Table variant='simple'>
                         <Thead>
-                            <Tr >
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' textTransform='none' fontWeight='500' fontSize='sm' color={colors.WHITE}>ASSET</Th>
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>ADDRESS</Th>
+                            <Tr>
+                                <Th textTransform='none' fontWeight='500' fontSize='sm' color={colors.WHITE}>ASSET</Th>
+                                <Th fontWeight='500' fontSize='sm' color={colors.WHITE}>ADDRESS</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
                             {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
                                     <Tr h='70px'>
-                                        <Td borderColor='rgba(255, 255, 255, 0.16)'>
+                                        <Td>
                                             <Stack direction='row' align='center' gap='0'>
                                                 <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.reserveSymbol} />
@@ -179,7 +179,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.curveAddress}</Td>
+                                        <Td fontWeight='400'>{item.curveAddress}</Td>
                                     </Tr>
                                 )
                             })}

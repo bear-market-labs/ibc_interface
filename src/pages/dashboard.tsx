@@ -688,9 +688,9 @@ export function Dashboard( props: dashboardProps ){
                             <Stack>
                               <Text ml={4} mb='2'>{`TOTAL STAKED: ${'totalStakingBalance' in dashboardDataSet ? formatNumber(ethers.utils.formatUnits(dashboardDataSet.totalStakingBalance, dashboardDataSet.inverseTokenDecimals), dashboardDataSet.inverseTokenSymbol) : '0 IBC'}`}</Text>
                               <Tabs>
-                                <TabList mr='-7%' ml='-7%' pl='7%' borderBottomWidth={"0.5px"}>
-                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Stake</Tab>
-                                  <Tab borderBottomWidth={"0.5px"} marginBottom={"-1px"}>Unstake</Tab>
+                                <TabList mr='-7%' ml='-7%' pl='7%' borderBottom={`0.5px solid ${colors.GRAYED_OUT_GRAY}`}>
+                                  <Tab marginBottom={"-1px"}>Stake</Tab>
+                                  <Tab marginBottom={"-1px"}>Unstake</Tab>
                                 </TabList>
                                 <TabPanels pt='10'>
                                   <TabPanel>
@@ -718,15 +718,15 @@ export function Dashboard( props: dashboardProps ){
           </GridItem>
 
           <GridItem area={'horizline'} >
-            <Divider orientation={'horizontal'} colorScheme={'gray'}/>
+            <Divider orientation={'horizontal'}/>
           </GridItem>
 
           <GridItem area={'vertline1'} >
-            <Divider orientation={'vertical'} colorScheme={'gray'}/>
+            <Divider orientation={'vertical'}/>
           </GridItem>
 
           <GridItem area={'vertline2'} >
-            <Divider orientation={'vertical'} colorScheme={'gray'}/>
+            <Divider orientation={'vertical'}/>
           </GridItem>
 
           <GridItem area={'header'} fontWeight='500'>

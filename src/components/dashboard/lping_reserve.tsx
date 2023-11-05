@@ -63,7 +63,7 @@ export default function LpingReserve(props: mintProps) {
           </Stack>
         </Stack>
         <Stack direction='row' w='50%'>
-          <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+          <Divider height='69px' mr='7' mt='7' orientation='vertical'/>
           <Stack>
             <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
               {

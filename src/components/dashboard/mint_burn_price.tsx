@@ -86,7 +86,7 @@ export default function MintBurnPrice(props: mintProps) {
         </Stack>
       </Stack>
       <Stack w='50%' direction='row'>
-        <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+        <Divider height='69px' mr='7' mt='7' orientation='vertical' />
         <Stack align={'right'}>
           <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
           <Stack direction='row'>

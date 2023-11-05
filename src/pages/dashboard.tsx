@@ -805,6 +805,8 @@ export function Dashboard( props: dashboardProps ){
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 
+                    <Divider orientation={'horizontal'}/>
+
                     <MintBurnIssuance
                       dashboardDataSet={dashboardDataSet}
                       parentInputDynamicData={{
@@ -833,6 +835,7 @@ export function Dashboard( props: dashboardProps ){
                     <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
+                    <Divider orientation={'horizontal'}/>
 
                     <LpingIssuance
                       dashboardDataSet={dashboardDataSet}

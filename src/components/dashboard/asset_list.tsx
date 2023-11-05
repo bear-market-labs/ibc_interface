@@ -246,7 +246,7 @@ export default function AssetList(props: assetListProps) {
         if(search.startsWith("0x")){
             let filterResult = _.filter(curveList, curve => curve.curveAddress.toLowerCase() === search.toLowerCase());
             setFilteredCurveList(filterResult);
-            if(filterResult.length == 0){
+            if(filterResult.length === 0){
                 filterResult = await fectchCurveInfo(search);
                 setFilteredCurveList(filterResult);
             }
@@ -271,18 +271,19 @@ export default function AssetList(props: assetListProps) {
                             height={`unset`}
                             paddingInline={`unset`}
                             onChange={(event) => searchCurve(event.target.value)}
+                            _placeholder={{ color: colors.WHITE }}
                         />
                     </Stack>
                 </Stack>
                 <Stack w='50%' direction='row' fontSize={{ base: "xl", xl: "xl", "2xl": "2xl" }} fontWeight='700'>
-                    <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+                    <Divider height='69px' mr='7' mt='7' orientation='vertical' />
                     <Stack align={'right'}>
                         <Text mt={7} align="left" fontSize='md'>SORT BY</Text>
                         <Stack direction='row'>
                             <Menu>
                                 <MenuButton>
                                     <Stack direction='row' align='center' gap='0'>
-                                        <Text>{sortOption}</Text>
+                                        <Text fontWeight='700'>{sortOption}</Text>
                                         <Icon as={BsChevronCompactDown} fontSize='2xl' alignSelf={'right'} m='1' />
                                     </Stack>                                    
                                 </MenuButton>

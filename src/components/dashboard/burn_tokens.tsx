@@ -486,6 +486,7 @@ export default function BurnTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							marginBlockStart={`1rem`}
 						/>
 					</NumberInput>
 					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>

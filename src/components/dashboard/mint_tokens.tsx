@@ -465,6 +465,7 @@ export default function MintTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							marginBlockStart={`1rem`}
 						/>
 					</NumberInput>
 

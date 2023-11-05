@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Link, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Link, Stack } from '@chakra-ui/react'
 
 import {
     Table,
-    Thead,
     Tbody,
-    Tfoot,
     Tr,
-    Th,
     Td,
     TableContainer,
 } from '@chakra-ui/react'
@@ -89,8 +86,8 @@ export default function AssetHolding(props: assetListProps) {
                                 holdingBalance && holdingBalance.map((balance) => {
                                     return (
                                         <Tr h='70px'>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + balance.reserveAddress} isExternal>{balance.ibAsset}</Link></Td>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{balance.balance.toFixed(4)}</Td>
+                                            <Td fontWeight='400'><Link href={window.location.origin + "\/#\/" + balance.reserveAddress} isExternal>{balance.ibAsset}</Link></Td>
+                                            <Td fontWeight='400'>{balance.balance.toFixed(4)}</Td>
                                         </Tr>
                                     )
                                 })

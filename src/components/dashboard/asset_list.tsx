@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Box, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
 
 import {
     Table,
     Thead,
     Tbody,
-    Tfoot,
     Tr,
     Th,
     Td,
@@ -43,9 +42,7 @@ type CurveInfo = {
 
 export default function AssetList(props: assetListProps) {
     const { nonWalletProvider } = props
-    const [{ wallet, connecting }] = useConnectWallet()
-    const [provider, setProvider] =
-        useState<ethers.providers.Web3Provider | null>()
+    const [{ wallet }] = useConnectWallet()
 
     const [curveList, setCurveList] = useState<CurveInfo[]>();
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
@@ -304,18 +301,18 @@ export default function AssetList(props: assetListProps) {
                     <Table variant='simple'>
                         <Thead>
                             <Tr >
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' textTransform='none' fontWeight='500' fontSize='sm' color={colors.WHITE}>ibASSET</Th>
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>PRICE</Th>
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>RESERVES</Th>
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>STAKING APR</Th>
-                                <Th borderColor='rgba(255, 255, 255, 0.16)' fontWeight='500' fontSize='sm' color={colors.WHITE}>LP APR</Th>
+                                <Th textTransform='none' fontWeight='500' fontSize='sm' color={colors.WHITE}>ibASSET</Th>
+                                <Th fontWeight='500' fontSize='sm' color={colors.WHITE}>PRICE</Th>
+                                <Th fontWeight='500' fontSize='sm' color={colors.WHITE}>RESERVES</Th>
+                                <Th fontWeight='500' fontSize='sm' color={colors.WHITE}>STAKING APR</Th>
+                                <Th fontWeight='500' fontSize='sm' color={colors.WHITE}>LP APR</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
                             {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
                                     <Tr h='70px'>
-                                        <Td borderColor='rgba(255, 255, 255, 0.16)'>
+                                        <Td>
                                             <Stack direction='row' align='center' gap='0'>
                                                 <Box boxSize='28px' mr='4'>
                                                     <Image src={item.image} alt={item.ibAsset} />
@@ -326,10 +323,10 @@ export default function AssetList(props: assetListProps) {
                                             </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.stakingApr.toFixed(2)}%</Td>
-                                        <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{item.lpApr.toFixed(2)}%</Td>
+                                        <Td fontWeight='400'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400'>{item.stakingApr.toFixed(2)}%</Td>
+                                        <Td fontWeight='400'>{item.lpApr.toFixed(2)}%</Td>
                                     </Tr>
                                 )
                             })}

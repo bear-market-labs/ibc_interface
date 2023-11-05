@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { Box, Stack, Text, Icon, Divider, Center } from '@chakra-ui/react'
+import { Box, Stack, Text, Icon, Divider } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
@@ -85,7 +85,7 @@ export default function MintBurnPrice(props: mintProps) {
         </Stack>
       </Stack>
       <Stack w='50%' direction='row'>
-        <Divider height='69px' mr='7' mt='7' orientation='vertical' colorScheme={'gray'} />
+        <Divider height='69px' mr='7' mt='7' orientation='vertical' />
         <Stack align={'right'}>
           <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
           <Stack direction='row'>

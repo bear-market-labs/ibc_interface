@@ -7,7 +7,6 @@ import { init, useConnectWallet } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { ethers } from 'ethers'
 import { Route, Routes } from "react-router-dom";
-import { StagingPage } from "./pages/staging";
 import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
 import { contracts, } from "./config/contracts";

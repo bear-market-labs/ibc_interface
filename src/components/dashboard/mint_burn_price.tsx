@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';
 import { defaultDecimals, secondsPerDay } from '../../config/constants';
+import { font_sizes } from '../../config/style'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -51,7 +52,7 @@ export default function MintBurnPrice(props: mintProps) {
     <Stack direction="row" pr='7'>
       <Stack w='50%'>
         <Text ml={7} mt={7} align="left" fontSize='md'>MARKET PRICE</Text>
-        <Stack direction='row' fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
+        <Stack direction='row' fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
           <Stack rowGap={0}>
             <Text ml={7} align="left">{`${formattedCurrentPrice}${needSymbolLine ? '' : ' ' + reserveTokenSymbol}`}</Text>
             {
@@ -90,10 +91,7 @@ export default function MintBurnPrice(props: mintProps) {
           <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
           <Stack direction='row'>
             {
-              <>
-
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, reserveTokenSymbol)} + ${formatNumber(ibc24HReward, reserveTokenSymbol, true, true)}`}</Text>
-                </>
+              <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`${formatNumber(reserve24HReward, reserveTokenSymbol)} + ${formatNumber(ibc24HReward, reserveTokenSymbol, true, true)}`}</Text>
             }
           </Stack>
         </Stack>

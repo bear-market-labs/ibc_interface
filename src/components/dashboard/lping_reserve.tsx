@@ -1,9 +1,10 @@
 import {  ethers } from 'ethers'
-import { Box, Center, Divider, Icon, Stack, Text } from '@chakra-ui/react'
+import { Box, Divider, Icon, Stack, Text } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { defaultDecimals, secondsPerDay } from '../../config/constants'
 import { formatNumber } from '../../util/display_formatting'
+import { font_sizes } from '../../config/style'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -45,7 +46,7 @@ export default function LpingReserve(props: mintProps) {
       <Stack direction="row" pr='7'>
         <Stack w='50%'>
           <Text ml={7} mt={7} align="left" fontSize='md'>RESERVE</Text>
-          <Stack direction="row" fontSize='2xl' fontWeight='700'>
+          <Stack direction="row" fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
             <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, defaultDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
             {
               newReserve !== '0' && newReserve !== reserveAmount.toString() && 
@@ -63,10 +64,7 @@ export default function LpingReserve(props: mintProps) {
           <Stack>
             <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
               {
-                <>
-
-                <Text fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
-                </>
+                <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
               }
           </Stack>
         </Stack>

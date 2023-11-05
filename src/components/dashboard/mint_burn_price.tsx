@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { Box, Stack, Text, Icon, Divider, Center } from '@chakra-ui/react'
+import { Box, Stack, Text, Icon, Divider } from '@chakra-ui/react'
 import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting';

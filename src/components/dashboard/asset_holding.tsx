@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Link, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Link, Stack } from '@chakra-ui/react'
 
 import {
     Table,
-    Thead,
     Tbody,
-    Tfoot,
     Tr,
-    Th,
     Td,
     TableContainer,
 } from '@chakra-ui/react'

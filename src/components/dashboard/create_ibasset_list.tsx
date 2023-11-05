@@ -1,26 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Box, Input, Stack, Text, Image, Link } from '@chakra-ui/react'
 
 import {
     Table,
     Thead,
     Tbody,
-    Tfoot,
     Tr,
     Th,
     Td,
     TableContainer,
 } from '@chakra-ui/react'
-import { BsChevronCompactDown } from 'react-icons/bs'
 import * as _ from "lodash";
 
 import { curves } from '../../config/curves'
-import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
+import { composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
-import { formatNumber } from '../../util/display_formatting'
-import { blocksPerDay } from '../../config/constants'
 import { colors } from '../../config/style'
 
 import {
@@ -43,9 +39,7 @@ type CurveInfo = {
 
 export default function CreateIBAssetList(props: assetListProps) {
     const { nonWalletProvider, parentSetters, reserveListUpdateTimestamp } = props
-    const [{ wallet, connecting }] = useConnectWallet()
-    const [provider, setProvider] =
-        useState<ethers.providers.Web3Provider | null>()
+    const [{ wallet }] = useConnectWallet()
 
     const [curveList, setCurveList] = useState<CurveInfo[]>();
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
@@ -84,7 +78,7 @@ export default function CreateIBAssetList(props: assetListProps) {
     const searchCurve = async (search: string) => {
         let reserveAddress = '';
         setSearchValue(search);
-        const abiCoder = ethers.utils.defaultAbiCoder;
+
         if(search.startsWith("0x")){            
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
 

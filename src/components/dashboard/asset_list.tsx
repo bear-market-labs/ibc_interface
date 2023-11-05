@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Box, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link } from '@chakra-ui/react'
 
 import {
     Table,
     Thead,
     Tbody,
-    Tfoot,
     Tr,
     Th,
     Td,
@@ -43,9 +42,7 @@ type CurveInfo = {
 
 export default function AssetList(props: assetListProps) {
     const { nonWalletProvider } = props
-    const [{ wallet, connecting }] = useConnectWallet()
-    const [provider, setProvider] =
-        useState<ethers.providers.Web3Provider | null>()
+    const [{ wallet }] = useConnectWallet()
 
     const [curveList, setCurveList] = useState<CurveInfo[]>();
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();

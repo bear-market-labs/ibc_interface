@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers'
 import { HiOutlineArrowRight} from "react-icons/hi"
 import { formatNumber } from '../../util/display_formatting'
 import { defaultDecimals } from '../../config/constants'
+import { font_sizes } from '../../config/style'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -49,7 +50,7 @@ export default function MintBurnIssuance(props: mintProps) {
     <>
       <Stack>
         <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>ISSUANCE</Text>
-        <Stack direction="row" fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
+        <Stack direction="row" fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
           {
             newIbcIssuance > BigInt(0) && newIbcIssuance !== BigInt(inverseTokenSupply.toString()) &&
@@ -65,7 +66,7 @@ export default function MintBurnIssuance(props: mintProps) {
         <Spacer />
 
         <Text ml={7} mt={{base:4, xl:4, "2xl": 4, "3xl": 7}} align="left" fontSize='md'>RESERVE</Text>
-        <Stack direction="row" fontSize={{base: "xl", xl: "xl", "2xl": "2xl"}} fontWeight='700'>
+        <Stack direction="row" fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(reserveAmount, defaultDecimals), dashboardDataSet.reserveTokenSymbol)}`}</Text>
           {
             newReserve.gt(0) && !newReserve.eq(reserveAmount) &&

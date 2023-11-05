@@ -15,3 +15,7 @@ export const colors = {
   ROYAL: '#1C1931',
   GRAYED_OUT_GRAY: '#5F646C',
 }
+
+export const font_sizes = {
+  MAIN_VALUES: {base: "xl", xl: "xl", "2xl": "2xl"}
+}

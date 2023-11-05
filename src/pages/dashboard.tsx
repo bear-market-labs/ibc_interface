@@ -761,7 +761,7 @@ export function Dashboard( props: dashboardProps ){
           </GridItem>
 
 
-          <GridItem area={'main'} pb='40px' fontWeight='500'>
+          <GridItem area={'main'} fontWeight='500'>
             <Stack>
               {
                   headerTitle === "EXPLORE" &&
@@ -801,7 +801,7 @@ export function Dashboard( props: dashboardProps ){
                         newReserve: newReserve
                       }}
                     />
-                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 490px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
 
@@ -832,7 +832,7 @@ export function Dashboard( props: dashboardProps ){
                       }}
                     />
 
-                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 470px)" maxH="calc(28vw)" padding="10px 20px">
+                    <Box w="100%" maxW="min(calc(200vh - 940px), calc(56vw))" h="calc(100vh - 490px)" maxH="calc(28vw)" padding="10px 20px">
                       <BondingCurveChart  chartParam={chartParam}></BondingCurveChart>
                     </Box>
                     <Divider orientation={'horizontal'}/>

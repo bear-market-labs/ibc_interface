@@ -63,7 +63,8 @@ export const App = () => {
   <ChakraProvider theme={theme}>
     <Box textAlign="center" fontSize="xl">
       <Routes>
-        <Route path="/explore/" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={true} key="1"/>} />
+        <Route path="/explore" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={true} key="1"/>} />
+        <Route path="/terms" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={false} key="3"/>} />
         <Route path="/:reserveAsset?" element={<Dashboard mostRecentIbcBlock={mostRecentIbcBlock} nonWalletProvider={provider} setupEventListener={setupEventListener} isExplorePage={false} key="2"/>} />
       </Routes>
     </Box>

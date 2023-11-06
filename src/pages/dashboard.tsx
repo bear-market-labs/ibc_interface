@@ -49,6 +49,7 @@ export function Dashboard( props: dashboardProps ){
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
   const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.tenderly.wethAddress
+  const isTermsPage: boolean = location.hash.toLowerCase().includes("#/terms")
 
   let navOptions: any[]
 
@@ -69,6 +70,14 @@ export function Dashboard( props: dashboardProps ){
         displayText: 'How It Works',
         description: 'Learn the basics of inverse bonding curves'
       },
+      {
+        value:'terms',
+        displayText: 'Terms of Service',
+        description: 'Last Updated: October 10th, 2023'
+      }
+    ]
+  } else if (isTermsPage) {
+    navOptions = [
       {
         value:'terms',
         displayText: 'Terms of Service',
@@ -116,7 +125,7 @@ export function Dashboard( props: dashboardProps ){
   }
 
 
-  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[isExplorePage ? 0 : 1].value);
+  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[!isExplorePage && !isTermsPage ? 1 : 0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()

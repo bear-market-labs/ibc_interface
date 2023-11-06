@@ -34,7 +34,7 @@ import AssetHolding from "../components/dashboard/asset_holding";
 import LpPosition from "../components/dashboard/lp_position";
 import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
-import { useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { curves } from "../config/curves";
 
 type dashboardProps = {
@@ -78,6 +78,11 @@ export function Dashboard( props: dashboardProps ){
   } else {
     navOptions = [
       {
+        value: 'explorelink',
+        displayText: 'Explore',
+        description: 'Discover ibAssets and their stats [LINK]'
+      }, 
+      {
         value: 'mintBurn',
         displayText: 'Mint / Burn',
         description: 'Mint tokens with inversed market properties, the first of its kind'
@@ -111,7 +116,7 @@ export function Dashboard( props: dashboardProps ){
   }
 
 
-  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[0].value);
+  const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[isExplorePage ? 0 : 1].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()
@@ -571,10 +576,15 @@ export function Dashboard( props: dashboardProps ){
     setChartParam(updateChartParam);
   }, [dashboardDataSet, dashboardDataSet?.inverseTokenSupply, newIbcIssuance, newReserve, selectedNavItem])
 
+  const navigate = useNavigate();
+
   const handleRadioChange = async (val: any) => {
         
     if (val === "claim" || val === "stake"){
       onOpen()
+    }
+    else if (val === "explorelink") {
+      navigate("/explore", {relative: "path"} )
     } else {
       handleNavInputSwitch()
     }

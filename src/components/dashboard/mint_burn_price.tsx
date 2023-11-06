@@ -88,10 +88,10 @@ export default function MintBurnPrice(props: mintProps) {
       <Stack w='50%' direction='row'>
         <Divider height='69px' mr='7' mt='7' orientation='vertical' />
         <Stack align={'right'}>
-          <Text mt={7} align="left" fontSize='md'>APPROX. STAKED REWARDS</Text>
+          <Text mt={7} align="left" fontSize='md'>REWARDS PER STAKED ibASSET</Text>
           <Stack direction='row'>
             {
-              <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`${formatNumber(reserve24HReward, reserveTokenSymbol)} + ${formatNumber(ibc24HReward, reserveTokenSymbol, true, true)}`}</Text>
+              <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`~${formatNumber(reserve24HReward, reserveTokenSymbol)} + ~${formatNumber(ibc24HReward, reserveTokenSymbol, true, true)}`}</Text>
             }
           </Stack>
         </Stack>

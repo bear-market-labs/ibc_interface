@@ -181,7 +181,7 @@ export default function ClaimLpRewards(props: mintProps) {
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >
-            CLAIM
+            Claim
           </Button>
       </Stack>
     </>

@@ -1,5 +1,4 @@
 import {
-	Box,
 	Heading,
 	Stack,
 	Text,
@@ -193,61 +192,62 @@ export default function TermsOfService() {
 			<Heading as='h5' size='sm' mb='-6'>
 				Prohibited Activity
 			</Heading>
-			<Text>
+			<Text mb='-6'>
 				You agree not to engage in, or attempt to engage in, any of the
 				following categories of prohibited activity in relation to your access
 				and use of the Interface:
-				<UnorderedList>
-					<ListItem>
-						Intellectual Property Infringement. Activity that infringes on or
-						violates any copyright, trademark, service mark, patent, right of
-						publicity, right of privacy, or other proprietary or intellectual
-						property rights under the law.
-					</ListItem>
-					<ListItem>
-						Cyberattack. Activity that seeks to interfere with or compromise the
-						integrity, security, or proper functioning of any computer, server,
-						network, personal device, or other information technology system,
-						including (but not limited to) the deployment of viruses and denial
-						of service attacks.
-					</ListItem>
-					<ListItem>
-						Fraud and Misrepresentation. Activity that seeks to defraud us or
-						any other person or entity, including (but not limited to) providing
-						any false, inaccurate, or misleading information in order to
-						unlawfully obtain the property of another.
-					</ListItem>
-					<ListItem>
-						Market Manipulation. Activity that violates any applicable law,
-						rule, or regulation concerning the integrity of trading markets,
-						including (but not limited to) the manipulative tactics commonly
-						known as spoofing and wash trading.
-					</ListItem>
-					<ListItem>
-						Other Harmful Acts. Attempts to engage in or engage in, any
-						potentially harmful acts that are directed against us, including but
-						not limited to violating or attempting to violate any security
-						features of the App, Interface, Protocol, or Site, using manual or
-						automated software or other means to access, “scrape,” “crawl” or
-						“spider” any pages contained in or on the Interface, introducing
-						viruses, worms, or similar harmful code into the Interface, or
-						interfering or attempting to interfere with use of the Interface by
-						any other user, host or network, including by means of overloading,
-						“flooding,” “spamming,” “mail bombing,” or “crashing” the Interface
-						or any other properties of us.
-					</ListItem>
-					<ListItem>
-						Any Other Unlawful Conduct. Activity that violates any applicable
-						Law, including, without limitation, any relevant and applicable
-						anti-money laundering and anti-terrorist financing laws and any
-						relevant and applicable privacy and data collection laws, in each
-						case as may be amended.
-					</ListItem>
-					<ListItem>
-						encourage or enable any other person to do any of the foregoing.
-					</ListItem>
-				</UnorderedList>
 			</Text>
+
+			<UnorderedList>
+				<ListItem>
+					Intellectual Property Infringement. Activity that infringes on or
+					violates any copyright, trademark, service mark, patent, right of
+					publicity, right of privacy, or other proprietary or intellectual
+					property rights under the law.
+				</ListItem>
+				<ListItem>
+					Cyberattack. Activity that seeks to interfere with or compromise the
+					integrity, security, or proper functioning of any computer, server,
+					network, personal device, or other information technology system,
+					including (but not limited to) the deployment of viruses and denial of
+					service attacks.
+				</ListItem>
+				<ListItem>
+					Fraud and Misrepresentation. Activity that seeks to defraud us or any
+					other person or entity, including (but not limited to) providing any
+					false, inaccurate, or misleading information in order to unlawfully
+					obtain the property of another.
+				</ListItem>
+				<ListItem>
+					Market Manipulation. Activity that violates any applicable law, rule,
+					or regulation concerning the integrity of trading markets, including
+					(but not limited to) the manipulative tactics commonly known as
+					spoofing and wash trading.
+				</ListItem>
+				<ListItem>
+					Other Harmful Acts. Attempts to engage in or engage in, any
+					potentially harmful acts that are directed against us, including but
+					not limited to violating or attempting to violate any security
+					features of the App, Interface, Protocol, or Site, using manual or
+					automated software or other means to access, “scrape,” “crawl” or
+					“spider” any pages contained in or on the Interface, introducing
+					viruses, worms, or similar harmful code into the Interface, or
+					interfering or attempting to interfere with use of the Interface by
+					any other user, host or network, including by means of overloading,
+					“flooding,” “spamming,” “mail bombing,” or “crashing” the Interface or
+					any other properties of us.
+				</ListItem>
+				<ListItem>
+					Any Other Unlawful Conduct. Activity that violates any applicable Law,
+					including, without limitation, any relevant and applicable anti-money
+					laundering and anti-terrorist financing laws and any relevant and
+					applicable privacy and data collection laws, in each case as may be
+					amended.
+				</ListItem>
+				<ListItem>
+					encourage or enable any other person to do any of the foregoing.
+				</ListItem>
+			</UnorderedList>
 
 			<Heading as='h5' size='sm' mb='-6'>
 				No Professional Advice

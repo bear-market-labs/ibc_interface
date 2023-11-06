@@ -11,8 +11,8 @@ const links = [
 
 const ExternalLinks = () => (
 	<Flex gap='7' ml='7' mb='7' flexGrow='0' flexShrink={0}>
-		{links.map((link) => (
-			<Link href={link.address} isExternal>
+		{links.map((link, i) => (
+			<Link key={i} href={link.address} isExternal>
 				<Icon as={link.icon} fontFamily='l' />
 			</Link>
 		))}

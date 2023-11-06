@@ -356,7 +356,7 @@ export default function MintTokens(props: mintProps) {
 		setMintAmountDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(mintAmount.toString(), inverseTokenDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
-		parentSetters?.setNewPrice(Number(Number(newPrice) * 10**defaultDecimals).toString())
+		parentSetters?.setNewPrice(Number(Number(newPrice) * 10**defaultDecimals).toFixed(0))
 		parentSetters?.setNewIbcIssuance(newSupply) // this is wei format
 		parentSetters?.setNewReserve(
 			reserveAmount.add(decimaledParsedAmount).toString()

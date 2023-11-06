@@ -304,7 +304,7 @@ export function Dashboard( props: dashboardProps ){
       if (k < 0){
         k = 0
       }
-      const m = Number(ethers.utils.formatUnits(bondingCurveParams[0][3], dashboardDataSet.reserveTokenDecimals)) 
+      const m = Number(ethers.utils.formatUnits(bondingCurveParams[0][3], defaultDecimals)) 
       * 
       Math.pow(
         Number(ethers.utils.formatUnits(bondingCurveParams[0][1], dashboardDataSet.inverseTokenDecimals)),

@@ -51,7 +51,9 @@ export default function HowItWorks() {
 			<Text as='b'>
 				The distinctive properties of IBCs allow for the creation of DeFi
 				mechanisms previously unthought of, one of which is an oracle-free
-				derivatives protocol [hyperlink to be added].
+				derivatives protocol{' '}
+				<Link href='https://exponents.fi/'>https://exponents.fi/</Link>
+				.
 			</Text>
 			<Text>
 				The purpose of the IBC implementation is to increase awareness and

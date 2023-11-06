@@ -62,9 +62,9 @@ export default function LpingReserve(props: mintProps) {
         <Stack direction='row' w='50%'>
           <Divider height='69px' mr='7' mt='7' orientation='vertical'/>
           <Stack>
-            <Text  mt={7} align="left" fontSize='md'>APPROX. LP REWARDS</Text>
+            <Text  mt={7} align="left" fontSize='md'>REWARDS PER LP</Text>
               {
-                <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
+                <Text fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>{`~${formatNumber(reserve24HReward, dashboardDataSet.reserveTokenSymbol)} + ~${formatNumber(ibc24HReward, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
               }
           </Stack>
         </Stack>

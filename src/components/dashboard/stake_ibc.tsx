@@ -205,7 +205,7 @@ export default function StakeIbc(props: mintProps) {
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
         {
-              userInverseTokenAllowance.gt(0) ? "STAKE" : "Approve " + dashboardDataSet.inverseTokenSymbol
+              userInverseTokenAllowance.gt(0) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
         }
         </Button>
       </Stack>

@@ -14,7 +14,7 @@ export default function UsefulLinks() {
 			address: '',
 			isExternal: false,
 		},
-		{ text: 'The IBC Token', address: '', isExternal: false },
+		{ text: 'What are ibAssets?', address: '', isExternal: false },
 		{ text: 'Math on Mint / Burn', address: '', isExternal: false },
 		{ text: 'Math on Add / Remove Liquidity', address: '', isExternal: false },
 		{ text: 'GitHub Repositories', address: '', isExternal: true },

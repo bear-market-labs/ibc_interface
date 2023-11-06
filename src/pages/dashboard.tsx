@@ -41,15 +41,15 @@ type dashboardProps = {
   mostRecentIbcBlock: any;
   nonWalletProvider: any;
   setupEventListener: any;
-  isExplorePage: boolean;
 }
 
 export function Dashboard( props: dashboardProps ){
-  const {mostRecentIbcBlock, nonWalletProvider, setupEventListener, isExplorePage} = props
+  const {mostRecentIbcBlock, nonWalletProvider, setupEventListener} = props
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
   const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.tenderly.wethAddress
-  const isTermsPage: boolean = location.hash.toLowerCase().includes("#/terms")
+  const isTermsPage: boolean = window.location.hash.toLowerCase().includes("#/terms")
+  const isExplorePage: boolean = window.location.hash.toLowerCase().includes("#/explore")
 
   let navOptions: any[]
 

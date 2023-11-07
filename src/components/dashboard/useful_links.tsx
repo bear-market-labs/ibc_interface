@@ -8,16 +8,16 @@ export default function UsefulLinks() {
 			address: 'https://docs.inversebondingcurve.com/',
 			isExternal: true,
 		},
-		{ text: 'What is a Bonding Curve?', address: '', isExternal: false },
+		{ text: 'What is a Bonding Curve?', address: 'https://docs.inversebondingcurve.com/concepts-and-protocol/bonding-curves', isExternal: false },
 		{
 			text: 'What is an Inverse Bonding Curve?',
-			address: '',
+			address: 'https://docs.inversebondingcurve.com/concepts-and-protocol/inverse-bonding-curves-ibcs',
 			isExternal: false,
 		},
-		{ text: 'What are ibAssets?', address: '', isExternal: false },
-		{ text: 'Math on Mint / Burn', address: '', isExternal: false },
-		{ text: 'Math on Add / Remove Liquidity', address: '', isExternal: false },
-		{ text: 'GitHub Repositories', address: '', isExternal: true },
+		{ text: 'What are ibAssets?', address: 'https://docs.inversebondingcurve.com/concepts-and-protocol/inverse-bonded-assets-ibassets', isExternal: false },
+		{ text: 'Math on Mint / Burn', address: 'https://docs.inversebondingcurve.com/concepts-and-protocol/minting-burning', isExternal: false },
+		{ text: 'Math on Add / Remove Liquidity', address: 'https://docs.inversebondingcurve.com/concepts-and-protocol/liquidity-providing', isExternal: false },
+		{ text: 'GitHub Repositories', address: 'https://github.com/bear-market-labs', isExternal: true },
 	]
 	return (
 		<Stack textAlign='left'>

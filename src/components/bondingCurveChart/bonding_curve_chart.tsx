@@ -283,7 +283,7 @@ export default function BondingCurveChart(props: IProps) {
                 m = chartState.minM;
             }
         }
-        let currentPrice = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterM / curChartParam.currentSupply);
+        let currentPrice = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterK);
         let newSupply = (m / currentPrice) ** (1/k);
         // let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), chartState.maxM) : Math.log(Math.E + liquidityChange);
 

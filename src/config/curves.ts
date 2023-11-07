@@ -3,10 +3,11 @@ export const curves = [
         ibAsset: 'ibETH',
         reserveSymbol: "ETH",
         icon: 'ib_eth_logo.svg',
-        curveAddress: '0x0cA20d3386fb97C9412587fBD5D95BaCa4FeA1f2',
+        curveAddress: '0x5594B3D6EbeAbbc13aFC39f569961521e9425262',
         reserveAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-        ibAssetAddress: '0x6c818B5F193030b18f1c22301b8c50cc3279C8Cb'
+        ibAssetAddress: '0xE73EE64adB39a443A251c910e4e3B56f7a4130DC'
     },
+    /*
     {
         ibAsset: 'ibUSDC',
         reserveSymbol: "USDC",
@@ -23,4 +24,5 @@ export const curves = [
         reserveAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         ibAssetAddress: '0xc43F303555F30B39228F810e9f0aAbFFf6B6ceb1'        
     }
+    */
 ]

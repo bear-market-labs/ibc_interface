@@ -73,7 +73,7 @@ export function Dashboard( props: dashboardProps ){
       {
         value:'terms',
         displayText: 'Terms of Service',
-        description: 'Last Updated: October 10th, 2023'
+        description: 'Last Updated: November 7th, 2023'
       }
     ]
   } else if (isTermsPage) {
@@ -81,7 +81,7 @@ export function Dashboard( props: dashboardProps ){
       {
         value:'terms',
         displayText: 'Terms of Service',
-        description: 'Last Updated: October 10th, 2023'
+        description: 'Last Updated: November 7th, 2023'
       }
     ]
   } else {
@@ -119,7 +119,7 @@ export function Dashboard( props: dashboardProps ){
       {
         value:'terms',
         displayText: 'Terms of Service',
-        description: 'Last Updated: October 10th, 2023'
+        description: 'Last Updated: November 7th, 2023'
       }
     ]  
   }

@@ -7,6 +7,14 @@ export const curves = [
         reserveAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         ibAssetAddress: '0xE73EE64adB39a443A251c910e4e3B56f7a4130DC'
     },
+    {
+        ibAsset: 'ibPEPE',
+        reserveSymbol: "PEPE",
+        icon: 'ib_pepe_logo.png',
+        curveAddress: '0x6E2b3983698eE5F4f8dc9a0809B25962A243fA1F',
+        reserveAddress: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+        ibAssetAddress: '0x7337299eB291496c4aF9fC45483277f2C15dCD41'        
+    },
     /*
     {
         ibAsset: 'ibUSDC',

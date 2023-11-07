@@ -173,7 +173,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400'>{item.curveAddress}</Td>
+                                        <Td fontWeight='400'>{item.reserveAddress}</Td>
                                     </Tr>
                                 )
                             })}

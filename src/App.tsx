@@ -18,6 +18,7 @@ const injected = injectedModule();
 const rpcUrl = `https://eth.llamarpc.com`
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+provider.pollingInterval = 30000
 
 init({
   // apiKey,

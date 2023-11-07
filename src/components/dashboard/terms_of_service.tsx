@@ -4,6 +4,7 @@ import {
 	Text,
 	UnorderedList,
 	ListItem,
+	Link,
 } from '@chakra-ui/react'
 
 export default function TermsOfService() {
@@ -16,7 +17,7 @@ export default function TermsOfService() {
 				https://inversebondingcurve.com/ is a website (“Site”) that provides
 				access to https://app.inversebondingcurve.com/, a website-hosted user
 				interface (the “App”) (collectively referred to as the “Interface”)
-				provided by Bear Market Labs (”We”, “Us”, or “Our”). The Interface
+				provided by Bear Market Labs Inc. (”We”, “Us”, or “Our”). The Interface
 				provides access to a decentralized protocol on the Ethereum blockchain
 				which enables the minting, burning, and providing of liquidity of
 				certain digital assets to and from an autonomous pricing algorithm (the
@@ -137,7 +138,7 @@ export default function TermsOfService() {
 				We reserve the right, in our sole discretion, to modify this Agreement
 				from time to time. If we make any modifications, we will notify you by
 				updating the date at the top of the Agreement and by maintaining a
-				current version of the Agreement at [link].
+				current version of the Agreement at [<Link href="https://app.inversebondingcurve.com/#/terms" isExternal>https://app.inversebondingcurve.com/#/terms</Link>].
 			</Text>
 
 			<Text>

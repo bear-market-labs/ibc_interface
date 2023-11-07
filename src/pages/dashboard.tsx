@@ -139,7 +139,7 @@ export function Dashboard( props: dashboardProps ){
   const [newIbcIssuance, setNewIbcIssuance] = useState<any>()
   const [newReserve, setNewReserve] = useState<any>()
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
-  const [reserveAssetAddress, setReserveAssetAddress] = useState<any>(contracts.tenderly.wethAddress)
+  const [reserveAssetAddress, setReserveAssetAddress] = useState<string>('-')
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
 
   const [updated, updateState] = React.useState<any>();
@@ -223,6 +223,7 @@ export function Dashboard( props: dashboardProps ){
         dashboardDataSet.inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
       } else {
         // use hardcoded eth defaults
+        setReserveAssetAddress(contracts.tenderly.wethAddress)
         dashboardDataSet.reserveTokenSymbol = curves[0].reserveSymbol
         dashboardDataSet.inverseTokenSymbol = curves[0].ibAsset
         dashboardDataSet.inverseTokenAddress = curves[0].ibAssetAddress
@@ -660,9 +661,19 @@ export function Dashboard( props: dashboardProps ){
             <Stack spacing={10} minHeight='100%'>
               <Stack spacing={0} flexGrow={0} flexShrink={0}>
                 <Logo/>
+                {
+                  !isExplorePage && !isTermsPage &&
+                  <>
+                    <Text align='left' borderRadius={'20px'} px={7} py={2} mb={0} fontSize={`15`}> 
+                    {
+                      `Asset: ${reserveAssetAddress === contracts.tenderly.wethAddress ? "ETH" : reserveAssetAddress === '-' ? reserveAssetAddress : reserveAssetAddress.substring(0,5) + "..." + reserveAssetAddress.slice(-4)}`
+                    }
+                    </Text>
+                  </>
+                }
               </Stack>
 
-              <Stack {...group} spacing='5' mt='7' flexGrow={1}>
+              <Stack {...group} spacing='5' mt='-3' flexGrow={1}>
                 {navOptions.map((item) => {
                   const radio = getRadioProps({ value: item.value })
                   if(item.value === 'terms') {

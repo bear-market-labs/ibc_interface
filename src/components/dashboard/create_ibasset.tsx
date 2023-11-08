@@ -54,7 +54,7 @@ export default function CreateIBAsset(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
+	const ibcFactoryAddress = contracts.default.ibcFactoryContract;
 	const { reserveAddress, parentSetters } = props
 	const [reserveSymbol, setReserveSymbol] = useState<string>('');
 	const [reserveDecimal, setReserveDecimal] = useState<number>(0);
@@ -85,7 +85,7 @@ export default function CreateIBAsset(props: mintProps) {
 						composeMulticallQuery(reserveAddress, "allowance", ['address', 'address'], [wallet.accounts[0].address, ibcFactoryAddress]),
 				]
 
-				let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+				let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 				let multicallBytes = await web3Provider.call(multicallQuery)
 				let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 

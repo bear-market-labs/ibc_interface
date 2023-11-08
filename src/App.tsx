@@ -45,8 +45,6 @@ init({
 export const App = () => {
   const [mostRecentIbcBlock, setMostRecentIbcBlock ] = useState<any>()
   const handleLog = (log: any) => {
-    // Process the log data here
-    console.log('Received LOG:', log);
     setMostRecentIbcBlock(log.blockNumber)
   };
 
@@ -58,7 +56,7 @@ export const App = () => {
     provider.on(eventFilter, handleLog)
   }
 
-  setupEventListener(contracts.tenderly.ibcETHCurveContract)
+  setupEventListener(contracts.default.ibcETHCurveContract)
 
   return (
   <ChakraProvider theme={theme}>

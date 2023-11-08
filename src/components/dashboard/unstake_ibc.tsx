@@ -20,7 +20,7 @@ type mintProps = {
 export default function UnstakeIbc(props: mintProps) {
   const [{ wallet, connecting }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>('')
 

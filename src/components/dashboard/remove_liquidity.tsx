@@ -3,14 +3,11 @@ import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, constants } from 'ethers'
 
 import {
-	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -31,7 +28,6 @@ import {
 	parse,
 	format,
 	commandTypes,
-	reserveAssetDecimals,
 	defaultDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'

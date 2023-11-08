@@ -26,7 +26,6 @@ import {
 	explorerUrl,
 	maxSlippagePercent,
 	maxReserveChangePercent,
-	reserveAssetDecimals,
 	format,
 	parse,
   commandTypes,
@@ -106,7 +105,7 @@ export default function MintTokens(props: mintProps) {
 			: '0'
 	)
 
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : defaultDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 
 	const [resultPrice, setResultPrice] = useState<bignumber>(

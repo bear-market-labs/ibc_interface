@@ -4,6 +4,7 @@ export const maxSlippagePercent = 1
 export const maxReserveChangePercent = 1
 export const explorerUrl = "https://etherscan.io/tx/"
 export const curveUtilization = 0.5
+export const providerPollingIntervalMilliSeconds = 30000
 
 export const actionTypes = [
   "buyTokens",

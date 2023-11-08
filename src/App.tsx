@@ -12,13 +12,14 @@ import theme from "./theme";
 import { contracts, } from "./config/contracts";
 import { useState } from "react";
 import { Analytics } from '@vercel/analytics/react';
+import { providerPollingIntervalMilliSeconds } from "./config/constants";
 
 const injected = injectedModule();
-const currentEnv = process.env.VERCEL_ENV ?? "dev"
+const currentEnv = process.env.VERCEL_ENV ?? "local"
 const rpcUrl = currentEnv  === "production" ?  process.env.PROD_RPC : process.env.DEV_RPC
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-provider.pollingInterval = currentEnv == "production" ? Number(process.env.PROD_PROVIDER_POLLING ?? 30000) : Number(process.env.DEV_PROVIDER_POLLING ?? 30000)
+provider.pollingInterval = currentEnv == "production" ? Number(process.env.PROD_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds) : Number(process.env.DEV_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds)
 
 init({
   // apiKey,

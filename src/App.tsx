@@ -11,14 +11,14 @@ import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
 import { contracts, } from "./config/contracts";
 import { useState } from "react";
-import { curves } from "./config/curves";
 import { Analytics } from '@vercel/analytics/react';
 
 const injected = injectedModule();
-const rpcUrl = `https://eth.llamarpc.com`
+const currentEnv = process.env.VERCEL_ENV ?? "dev"
+const rpcUrl = currentEnv  === "production" ?  process.env.PROD_RPC : process.env.DEV_RPC
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-provider.pollingInterval = 30000
+provider.pollingInterval = currentEnv == "production" ? Number(process.env.PROD_PROVIDER_POLLING ?? 30000) : Number(process.env.DEV_PROVIDER_POLLING ?? 30000)
 
 init({
   // apiKey,

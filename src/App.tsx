@@ -17,7 +17,7 @@ import { CgNametag } from "react-icons/cg";
 
 const injected = injectedModule();
 
-const currentEnv = process.env.VERCEL_ENV ?? "local"
+const currentEnv = process.env.REACT_APP_VERCEL_ENV ?? "local"
 console.log(currentEnv)
 const rpcUrl = currentEnv  === "production" ?  process.env.PROD_RPC ?? process.env.REACT_APP_PROD_RPC : process.env.DEV_RPC ?? process.env.REACT_APP_DEV_RPC
 

@@ -52,7 +52,7 @@ export default function AddLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))

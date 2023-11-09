@@ -47,7 +47,7 @@ export function Dashboard( props: dashboardProps ){
   const {mostRecentIbcBlock, nonWalletProvider, setupEventListener} = props
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
-  const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.tenderly.wethAddress
+  const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.default.wethAddress
   const isTermsPage: boolean = window.location.hash.toLowerCase().includes("#/terms")
   const isExplorePage: boolean = window.location.hash.toLowerCase().includes("#/explore")
 
@@ -129,8 +129,8 @@ export function Dashboard( props: dashboardProps ){
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()
-  const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)
-  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
+  const [ibcAdminAddress, ] = useState<string>(contracts.default.ibcAdminContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -169,10 +169,10 @@ export function Dashboard( props: dashboardProps ){
 
       // check validity of curveAddress param from url router
       let multicallQueries = [
-        composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "getCurve", ["address"], [reserveAsset])
+        composeMulticallQuery(contracts.default.ibcFactoryContract, "getCurve", ["address"], [reserveAsset])
       ]
 
-      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
       let multicallBytes = await provider.call(multicallQuery)
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -193,7 +193,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveAsset, "symbol", [], []),
         ]
 
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         multicallBytes = await provider.call(multicallQuery)
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -212,7 +212,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "symbol", [], [])
         ]
 
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         multicallBytes = await provider.call(multicallQuery)
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -223,7 +223,7 @@ export function Dashboard( props: dashboardProps ){
         dashboardDataSet.inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
       } else {
         // use hardcoded eth defaults
-        setReserveAssetAddress(contracts.tenderly.wethAddress)
+        setReserveAssetAddress(contracts.default.wethAddress)
         dashboardDataSet.reserveTokenSymbol = curves[0].reserveSymbol
         dashboardDataSet.inverseTokenSymbol = curves[0].ibAsset
         dashboardDataSet.inverseTokenAddress = curves[0].ibAssetAddress
@@ -234,7 +234,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveAsset, "decimals", [], []),
         ]
 
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         multicallBytes = await provider.call(multicallQuery)
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -274,7 +274,7 @@ export function Dashboard( props: dashboardProps ){
         composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
-      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
       let multicallBytes = await provider.call(multicallQuery)
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -358,7 +358,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         ].concat(feeQueries)
 
-        let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
         const queryResults = await Promise.all([
           provider.getBalance(wallet.accounts[0].address),
@@ -424,7 +424,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
         ]
   
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         const tokenQueryResults = await provider.call(multicallQuery);
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], tokenQueryResults)[0]
 
@@ -666,7 +666,7 @@ export function Dashboard( props: dashboardProps ){
                   <>
                     <Text align='left' borderRadius={'20px'} px={7} py={2} mb={0} fontSize={`15`}> 
                     {
-                      `Asset: ${reserveAssetAddress === contracts.tenderly.wethAddress ? "ETH" : reserveAssetAddress === '-' ? reserveAssetAddress : reserveAssetAddress.substring(0,5) + "..." + reserveAssetAddress.slice(-4)}`
+                      `Asset: ${reserveAssetAddress === contracts.default.wethAddress ? "ETH" : reserveAssetAddress === '-' ? reserveAssetAddress : reserveAssetAddress.substring(0,5) + "..." + reserveAssetAddress.slice(-4)}`
                     }
                     </Text>
                   </>

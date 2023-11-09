@@ -14,7 +14,6 @@ type addProps = {
 
 export default function AddIbc(props: addProps) {
   const [{ wallet, }] = useConnectWallet()
-  const [ibcContractAddress, ] = useState<string>(contracts.tenderly.ibcContract)
   const {tokenDecimals, tokenAddress, tokenSymbol} = props;
 
   const curveInfo = _.find(curves, (curve) => curve.ibAssetAddress === tokenAddress)
@@ -47,7 +46,7 @@ export default function AddIbc(props: addProps) {
     } catch (error) {
       console.log(error);
     }
-  }, [wallet, ibcContractAddress, tokenAddress, tokenDecimals, tokenSymbol, tokenImage]);
+  }, [wallet, tokenAddress, tokenDecimals, tokenSymbol, tokenImage]);
 
   return (
     <>

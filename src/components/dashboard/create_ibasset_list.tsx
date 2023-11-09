@@ -45,7 +45,7 @@ export default function CreateIBAssetList(props: assetListProps) {
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
     const [searchValue, setSearchValue] = useState<string>('');
 
-    const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
+    const ibcFactoryAddress = contracts.default.ibcFactoryContract;
 
     const getProvider = () => {
         return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
@@ -173,7 +173,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400'>{item.curveAddress}</Td>
+                                        <Td fontWeight='400'>{item.reserveAddress}</Td>
                                     </Tr>
                                 )
                             })}

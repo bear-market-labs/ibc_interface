@@ -18,8 +18,8 @@ import * as _ from "lodash";
 import { curves } from '../../config/curves'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
-import { formatNumber } from '../../util/display_formatting'
-import { secondsPerDay } from '../../config/constants'
+import { formatNumber, formatPriceNumber } from '../../util/display_formatting'
+import { defaultDecimals, secondsPerDay } from '../../config/constants'
 import { colors } from '../../config/style'
 import { DefaultSpinner } from '../spinner'
 
@@ -77,14 +77,14 @@ export default function AssetList(props: assetListProps) {
 
         const abiCoder = ethers.utils.defaultAbiCoder;
         let multicallQueries = [
-            composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "allCurvesLength", [], [])
+            composeMulticallQuery(contracts.default.ibcFactoryContract, "allCurvesLength", [], [])
         ]
         // Try to get 10 curves, will get 0 if not that many curves
         //TODO: improve code below to fetch the actual curve which is not in current list
         for(let i = 0; i < 10; i++){
-            multicallQueries.push(composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "curves", ["uint256"], [i+ (curveList? curveList.length : 0)]));
+            multicallQueries.push(composeMulticallQuery(contracts.default.ibcFactoryContract, "curves", ["uint256"], [i+ (curveList? curveList.length : 0)]));
         }
-        let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
         const totalCurveCountBytes = multicallResults[0][0] ? multicallResults[0][1] : [0];
@@ -114,7 +114,7 @@ export default function AssetList(props: assetListProps) {
 
         const multicallCurveQueries = _.flattenDepth(curveQueries, 1);
 
-        const multicallCurveQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallCurveQueries])
+        const multicallCurveQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallCurveQueries])
         multicallBytes = await getProvider().call(multicallCurveQuery)
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -179,7 +179,7 @@ export default function AssetList(props: assetListProps) {
 
             let multicallQueries = _.flattenDepth(curveQueries, 1);
 
-            let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+            let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
             let multicallBytes = await getProvider().call(multicallQuery)
             let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -295,7 +295,7 @@ export default function AssetList(props: assetListProps) {
             composeMulticallQuery(curveAddress, "reserveTokenAddress", [], [])
         ]
 
-        let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -349,7 +349,7 @@ export default function AssetList(props: assetListProps) {
                 composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], [])
             ]
 
-            multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+            multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
             multicallBytes = await getProvider().call(multicallQuery)
             multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
@@ -462,7 +462,7 @@ export default function AssetList(props: assetListProps) {
                                             </Stack>
 
                                         </Td>
-                                        <Td fontWeight='400'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400'>{formatPriceNumber(ethers.utils.parseUnits(item.price.toFixed(defaultDecimals), defaultDecimals), defaultDecimals, item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{item.stakingApr.toFixed(2)}%</Td>
                                         <Td fontWeight='400'>{item.lpApr.toFixed(2)}%</Td>

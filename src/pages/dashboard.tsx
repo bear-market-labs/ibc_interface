@@ -36,7 +36,6 @@ import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { curves } from "../config/curves";
-import { BigNumber as bignumber } from 'bignumber.js'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -465,9 +464,7 @@ export function Dashboard( props: dashboardProps ){
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], defaultDecimals)) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
-        const numerator = bignumber(userLpTokenBalance.toString()).multipliedBy(bignumber(bondingCurveParams[0][1].toString()))
-        const denominator = bignumber(bondingCurveParams[0][2].toString())
-        const userLpIbcDebit = numerator.dividedBy(denominator).toFixed(0)
+        const userLpIbcDebit = userLpTokenBalance.mul(bondingCurveParams[0][1]).div(bondingCurveParams[0][2])
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -518,11 +515,11 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: Number(userLpIbcDebit) === 0 ? 
+          userLpIbcDebit: userLpIbcDebit.eq(0) ? 
             ethers.BigNumber.from(0) 
             : 
-            ethers.BigNumber.from(userLpIbcDebit).add(
-              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit) !== Number(userLpIbcCredit.toString()) ? 
+              userLpIbcDebit.add(
+              inverseTokenDecimals.gt(13) && !userLpIbcDebit.eq(userLpIbcCredit) ? 
               ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
               : 
               ethers.BigNumber.from(0)

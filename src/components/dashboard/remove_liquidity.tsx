@@ -183,7 +183,7 @@ export default function RemoveLiquidity(props: mintProps) {
 						[
 							wallet.accounts[0].address,
 							dashboardDataSet.curveAddress,
-							true,
+							dashboardDataSet.reserveTokenSymbol.toUpperCase() === "ETH",
 							commandTypes.removeLiquidity,
 							commandBytes,
 						] // arg values

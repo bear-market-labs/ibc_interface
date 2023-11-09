@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers, constants } from 'ethers'
-import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
+import {  ethers } from 'ethers'
+import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
@@ -18,7 +18,7 @@ type mintProps = {
 }
 
 export default function StakeIbc(props: mintProps) {
-  const [{ wallet, connecting }] = useConnectWallet()
+  const [{ wallet,  }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
@@ -60,7 +60,7 @@ export default function StakeIbc(props: mintProps) {
       let description = "Error details"
       let txDetails;
 
-      if (userInverseTokenAllowance.gte(BigNumber.from(amount) ?? BigNumber.from(0))){
+      if (userInverseTokenAllowance.gte(BigNumber.from(amount ?? 0))){
 
         const functionDescriptorBytes = arrayify(
           solidityKeccak256(
@@ -164,7 +164,7 @@ export default function StakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress]);
+  }, [wallet, provider, dashboardDataSet, amount, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress, amountDisplay, forceUpdate]);
 
   return (
       <Stack fontWeight='500'>

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import {  ethers } from 'ethers'
-import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { commandTypes, displayDecimals, explorerUrl, sanitizeNumberInput } from '../../config/constants'
+import { commandTypes, explorerUrl, sanitizeNumberInput } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
@@ -18,7 +18,7 @@ type mintProps = {
 }
 
 export default function UnstakeIbc(props: mintProps) {
-  const [{ wallet, connecting }] = useConnectWallet()
+  const [{ wallet,  }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
@@ -128,7 +128,7 @@ export default function UnstakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, amount, inverseTokenDecimals, ibcRouterAddress]);
+  }, [wallet, provider, dashboardDataSet, amount, ibcRouterAddress, amountDisplay, forceUpdate]);
 
   return (
       <Stack fontWeight='500'>

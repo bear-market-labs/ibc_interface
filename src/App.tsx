@@ -13,14 +13,16 @@ import { contracts, } from "./config/contracts";
 import { useState } from "react";
 import { Analytics } from '@vercel/analytics/react';
 import { providerPollingIntervalMilliSeconds } from "./config/constants";
+import { CgNametag } from "react-icons/cg";
 
 const injected = injectedModule();
 
 const currentEnv = process.env.VERCEL_ENV ?? "local"
+console.log(currentEnv)
 const rpcUrl = currentEnv  === "production" ?  process.env.PROD_RPC ?? process.env.REACT_APP_PROD_RPC : process.env.DEV_RPC ?? process.env.REACT_APP_DEV_RPC
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-provider.pollingInterval = currentEnv == "production" ? Number(process.env.PROD_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds) : Number(process.env.REACT_APP_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds)
+provider.pollingInterval = currentEnv === "production" ? Number(process.env.REACT_APP_PROD_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds) : Number(process.env.REACT_APP_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds)
 
 init({
   // apiKey,

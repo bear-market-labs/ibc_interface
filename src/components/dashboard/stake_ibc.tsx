@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers, constants } from 'ethers'
-import { Box, Button, Input, Link, NumberInput, NumberInputField, Spacer, Stack, Text } from '@chakra-ui/react'
+import {  ethers } from 'ethers'
+import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { commandTypes, explorerUrl } from '../../config/constants'
+import { commandTypes, explorerUrl, sanitizeNumberInput } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
@@ -18,11 +18,12 @@ type mintProps = {
 }
 
 export default function StakeIbc(props: mintProps) {
-  const [{ wallet, connecting }] = useConnectWallet()
+  const [{ wallet,  }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>()
+  const [amountDisplay, setAmountDisplay] = useState<string>()
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const inverseTokenAddress = "inverseTokenAddress" in dashboardDataSet ? dashboardDataSet.inverseTokenAddress : "";
@@ -59,7 +60,7 @@ export default function StakeIbc(props: mintProps) {
       let description = "Error details"
       let txDetails;
 
-      if (userInverseTokenAllowance.gte(parseUnits(amount, inverseTokenDecimals) ?? BigNumber.from(0))){
+      if (userInverseTokenAllowance.gte(BigNumber.from(amount ?? 0))){
 
         const functionDescriptorBytes = arrayify(
           solidityKeccak256(
@@ -77,7 +78,7 @@ export default function StakeIbc(props: mintProps) {
           ], // array of types; make sure to represent complex types as tuples 
           [
             wallet.accounts[0].address, //ignored via router
-            parseUnits(amount.toString(), inverseTokenDecimals)
+            BigNumber.from(amount), 
           ] // arg values
         ))
   
@@ -99,7 +100,7 @@ export default function StakeIbc(props: mintProps) {
           data: hexlify(concat([functionDescriptorBytes, payloadBytes])),
         }
 
-        description = `${amount} IBC staked`
+        description = `${amountDisplay} ${dashboardDataSet.inverseTokenSymbol} staked`
       } else {
         const functionDescriptorBytes = arrayify(solidityKeccak256(
           [
@@ -118,7 +119,7 @@ export default function StakeIbc(props: mintProps) {
           ], // array of types; make sure to represent complex types as tuples 
           [
             ibcRouterAddress,
-            parseUnits(amount, inverseTokenDecimals)
+            BigNumber.from(amount)
           ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
         ))
 
@@ -163,15 +164,19 @@ export default function StakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, amount, inverseTokenDecimals, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress]);
+  }, [wallet, provider, dashboardDataSet, amount, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress, amountDisplay, forceUpdate]);
 
   return (
       <Stack fontWeight='500'>
         <Text align="left" fontSize='sm'>YOU STAKE</Text>
         <Stack direction="row">
           <NumberInput
-            value={amount}
-            onChange={valueString => setAmount(valueString)}
+            value={amountDisplay}
+            onChange={valueString => {
+              setAmountDisplay(sanitizeNumberInput(valueString))
+              setAmount(parseUnits(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals).toString())
+            }
+            }
           >
             <NumberInputField
               minWidth="auto"
@@ -191,7 +196,11 @@ export default function StakeIbc(props: mintProps) {
           <Text>
             {`Balance: ${Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
-          <Box as='button' color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => {
+            setAmountDisplay(Number(formatUnits(userIbcTokenBalance, inverseTokenDecimals)).toString())
+            setAmount(userIbcTokenBalance.toString())
+
+          }}>MAX</Box>
         </Stack>
         {
           isProcessing &&
@@ -203,9 +212,9 @@ export default function StakeIbc(props: mintProps) {
           w='100%'
           fontSize='lg'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amountDisplay) || isProcessing}>
         {
-              userInverseTokenAllowance.gte(parseUnits(amount ?? '0', inverseTokenDecimals) ?? BigNumber.from(0)) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
+              userInverseTokenAllowance.gte(BigNumber.from(amount?? 0)) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
         }
         </Button>
       </Stack>

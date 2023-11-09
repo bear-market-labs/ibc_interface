@@ -148,7 +148,7 @@ export default function BurnTokens(props: mintProps) {
 			let txDetails
 			let description = 'Error details'
 
-			if (userInverseTokenAllowance.gt(0)) {
+			if (userInverseTokenAllowance.gte(amount ?? BigNumber.from(0))) {
 				if (!amount) {
 					return
 				}
@@ -222,7 +222,7 @@ export default function BurnTokens(props: mintProps) {
 				const payloadBytes = arrayify(
 					abiCoder.encode(
 						['address', 'uint'], // array of types; make sure to represent complex types as tuples
-						[ibcRouterAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+						[ibcRouterAddress, amount] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
 					)
 				)
 
@@ -566,7 +566,7 @@ export default function BurnTokens(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
 				>
-					{userInverseTokenAllowance.gt(0) ? 'Burn' : 'Approve ' + dashboardDataSet.inverseTokenSymbol}
+					{userInverseTokenAllowance.gte(amount ?? BigNumber.from(0)) ? 'Burn' : 'Approve ' + dashboardDataSet.inverseTokenSymbol}
 				</Button>
 			</Stack>
 		</Stack>

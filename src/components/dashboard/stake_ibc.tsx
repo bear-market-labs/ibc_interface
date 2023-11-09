@@ -59,7 +59,7 @@ export default function StakeIbc(props: mintProps) {
       let description = "Error details"
       let txDetails;
 
-      if (userInverseTokenAllowance.gt(0)){
+      if (userInverseTokenAllowance.gte(parseUnits(amount, inverseTokenDecimals) ?? BigNumber.from(0))){
 
         const functionDescriptorBytes = arrayify(
           solidityKeccak256(
@@ -118,7 +118,7 @@ export default function StakeIbc(props: mintProps) {
           ], // array of types; make sure to represent complex types as tuples 
           [
             ibcRouterAddress,
-            constants.MaxUint256
+            parseUnits(amount, inverseTokenDecimals)
           ] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
         ))
 
@@ -205,7 +205,7 @@ export default function StakeIbc(props: mintProps) {
           onClick={sendTransaction}
           isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}>
         {
-              userInverseTokenAllowance.gt(0) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
+              userInverseTokenAllowance.gte(parseUnits(amount, inverseTokenDecimals) ?? BigNumber.from(0)) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
         }
         </Button>
       </Stack>

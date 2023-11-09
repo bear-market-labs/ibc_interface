@@ -6,7 +6,7 @@ import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, so
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { commandTypes, explorerUrl } from '../../config/constants'
+import { commandTypes, displayDecimals, explorerUrl, sanitizeNumberInput } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
@@ -22,7 +22,8 @@ export default function UnstakeIbc(props: mintProps) {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
   const {dashboardDataSet} = props
-  const [amount, setAmount] = useState<string>('')
+  const [amount, setAmount] = useState<string>()
+  const [amountDisplay, setAmountDisplay] = useState<string>()
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0'); 
   const userStakingBalance = BigNumber.from("userStakingBalance" in dashboardDataSet ? dashboardDataSet.userStakingBalance : '0'); 
@@ -71,7 +72,7 @@ export default function UnstakeIbc(props: mintProps) {
         ], // array of types; make sure to represent complex types as tuples 
         [
           wallet.accounts[0].address, //ignored via router
-          parseUnits(amount.toString(), inverseTokenDecimals)
+          BigNumber.from(amount)
         ] // arg values
       ))
 
@@ -98,7 +99,7 @@ export default function UnstakeIbc(props: mintProps) {
 
       const url = explorerUrl + result.transactionHash
       const description = result.status === 1 ?
-        `${amount} IBC unstaked`
+        `${amountDisplay} ${dashboardDataSet.inverseTokenSymbol} unstaked`
         :
         "Error details";
 
@@ -134,9 +135,11 @@ export default function UnstakeIbc(props: mintProps) {
         <Text align="left" fontSize='sm'>YOU UNSTAKE</Text>
         <Stack direction="row">
           <NumberInput
-              value={amount}
-              onChange={valueString => setAmount(valueString)}
-            >
+              value={amountDisplay}
+              onChange={valueString => {
+                setAmountDisplay(sanitizeNumberInput(valueString))
+                setAmount(parseUnits(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals).toString())
+              }}>
             <NumberInputField
               minWidth="auto"
               border="none"
@@ -154,7 +157,10 @@ export default function UnstakeIbc(props: mintProps) {
           <Text>
             {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
           </Text>
-          <Box as='button' color={colors.TEAL} onClick={() => setAmount(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())}>MAX</Box>
+          <Box as='button' color={colors.TEAL} onClick={() => {
+            setAmountDisplay(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())
+            setAmount(userStakingBalance.toString())
+          }}>MAX</Box>
         </Stack>
 
         {
@@ -167,7 +173,7 @@ export default function UnstakeIbc(props: mintProps) {
           w='100%'
           fontSize='lg'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || isProcessing}
+          isDisabled={!isAbleToSendTransaction(wallet, provider, amountDisplay) || isProcessing}
           >
             Unstake
           </Button>

@@ -36,6 +36,7 @@ import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { curves } from "../config/curves";
+import { BigNumber as bignumber } from 'bignumber.js'
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -464,11 +465,9 @@ export function Dashboard( props: dashboardProps ){
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], defaultDecimals)) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
-        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
-        * 
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals)) 
-        / 
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        const numerator = bignumber(userLpTokenBalance.toString()).multipliedBy(bignumber(bondingCurveParams[0][1].toString()))
+        const denominator = bignumber(bondingCurveParams[0][2].toString())
+        const userLpIbcDebit = numerator.dividedBy(denominator).toFixed(0)
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -519,11 +518,11 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: userLpIbcDebit === 0 ? 
+          userLpIbcDebit: Number(userLpIbcDebit) === 0 ? 
             ethers.BigNumber.from(0) 
             : 
-            ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(
-              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit.toString()) !== Number(ethers.utils.formatUnits(userLpIbcCredit, dashboardDataSet.inverseTokenDecimals)) ? 
+            ethers.BigNumber.from(userLpIbcDebit).add(
+              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit) !== Number(userLpIbcCredit.toString()) ? 
               ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
               : 
               ethers.BigNumber.from(0)

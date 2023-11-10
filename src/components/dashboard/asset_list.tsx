@@ -89,9 +89,12 @@ export default function AssetList(props: assetListProps) {
         let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
         const totalCurveCountBytes = multicallResults[0][0] ? multicallResults[0][1] : [0];
-        const totalCurveCount = (abiCoder.decode(["uint"], totalCurveCountBytes)[0]).toNumber();
-        console.log("totalCurveCount", totalCurveCount);
-        setTotalCurveCount(totalCurveCount);
+        const totalCurveCnt = (abiCoder.decode(["uint"], totalCurveCountBytes)[0]).toNumber();
+        // if(totalCurveCnt <= curveMetaList.length){
+        //     return;
+        // }
+        console.log("totalCurveCount", totalCurveCnt);
+        setTotalCurveCount(totalCurveCnt);
 
         const curveAddressList = [];
         for (let i = 0; i < 10; i++) {

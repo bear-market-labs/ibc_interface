@@ -187,6 +187,7 @@ export function Dashboard( props: dashboardProps ){
         inverseTokenDecimals: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenDecimals")),
         inverseTokenSymbol: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenSymbol")),
       }
+      setReserveAssetAddress(reserveAsset)
 
       // if either the curve or inversetokenaddress are missing, re-fetch the curve and downstream data
       if (true === Object.values(cachedData).map(x => x == null ? true : false).find(x => x === true)){
@@ -220,7 +221,6 @@ export function Dashboard( props: dashboardProps ){
             cacheToLocal(getStorageKey(reserveAsset, "ibTokenAddress"), cachedData["inverseTokenAddress"])
           }
 
-          setReserveAssetAddress(reserveAsset)
         } else {
           // invalid curve
           // for now default to eth

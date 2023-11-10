@@ -102,7 +102,7 @@ export default function CreateIBAsset(props: mintProps) {
 				setUserAllowance(abiCoder.decode(["uint256"], userAllowanceBytes)[0]);
 			}
 		}
-		if(reserveAddress){
+		if(reserveAddress && reserveAddress !== '-'){
 			fetchTokenInfo()
 			.then()
 			.catch((err) => console.log("error", err))

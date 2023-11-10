@@ -58,7 +58,7 @@ export default function MintBurnPrice(props: mintProps) {
             {
               needSymbolLine && 
               <>
-                <Text textAlign={`left`}>{reserveTokenSymbol}</Text>
+                <Text ml={7} textAlign={`left`}>{reserveTokenSymbol}</Text>
               </>
             }
           </Stack>

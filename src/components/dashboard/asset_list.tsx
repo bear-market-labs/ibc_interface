@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers } from 'ethers'
-import { Box, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link, Button } from '@chakra-ui/react'
+import { Box, Divider, Icon, Input, Menu, MenuButton, MenuItem, MenuList, Stack, Text, Image, Link, Button, Tooltip } from '@chakra-ui/react'
 
 import {
     Table,
@@ -39,11 +39,12 @@ type CurveInfo = {
     lpApr: number,
     image: any,
     reserveAddress: string,
-    ibAssetAddress: string
+    ibAssetAddress: string,
+    verified: boolean,
 }
 
 export default function AssetList(props: assetListProps) {
-    const { nonWalletProvider } = props
+    const { nonWalletProvider, parentSetters } = props
     const [{ wallet }] = useConnectWallet()
 
     const [totalCurveCount, setTotalCurveCount] = useState<number>(0);
@@ -54,15 +55,14 @@ export default function AssetList(props: assetListProps) {
     const [isLoading, setIsLoading] = useState(false)
 
     const getProvider = () => {
-        return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
+        return wallet?.provider ? new ethers.providers.Web3Provider(wallet.provider, 'any') : nonWalletProvider;
     }
 
-    const fetchCurvesAddress = async() => {
-        console.log('in fetchCurveAddress');
+    const fetchCurvesAddress = async () => {
         setIsLoading(true);
-        let curveMetaList = curveMetadataList || [];
-        if(curveMetaList.length == 0){
-            curveMetaList = _.map(curves, curve =>{
+        let curveMetaList = [ ...curveMetadataList || []];
+        if (curveMetaList.length == 0) {
+            curveMetaList = _.map(curves, curve => {
                 return {
                     ...curve,
                     price: 0,
@@ -70,6 +70,7 @@ export default function AssetList(props: assetListProps) {
                     stakingApr: 0,
                     lpApr: 0,
                     image: '',
+                    verified: false
                 }
             })
         }
@@ -81,28 +82,26 @@ export default function AssetList(props: assetListProps) {
         ]
         // Try to get 10 curves, will get 0 if not that many curves
         //TODO: improve code below to fetch the actual curve which is not in current list
-        for(let i = 0; i < 10; i++){
-            multicallQueries.push(composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "curves", ["uint256"], [i+ (curveList? curveList.length : 0)]));
+        for (let i = 0; i < 10; i++) {
+            multicallQueries.push(composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "curves", ["uint256"], [i + (curveList ? curveList.length : 0)]));
         }
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
         const totalCurveCountBytes = multicallResults[0][0] ? multicallResults[0][1] : [0];
         const totalCurveCount = (abiCoder.decode(["uint"], totalCurveCountBytes)[0]).toNumber();
-        console.log("totalCurveCount",totalCurveCount);
+        console.log("totalCurveCount", totalCurveCount);
         setTotalCurveCount(totalCurveCount);
 
         const curveAddressList = [];
-        for(let i = 0; i < 10; i++){
-            if(multicallResults[i+1][0]){
-                const curveAddress = abiCoder.decode(["address"], multicallResults[i+1][1])[0];
-                if(curveAddress != ethers.constants.AddressZero){
+        for (let i = 0; i < 10; i++) {
+            if (multicallResults[i + 1][0]) {
+                const curveAddress = abiCoder.decode(["address"], multicallResults[i + 1][1])[0];
+                if (curveAddress != ethers.constants.AddressZero) {
                     curveAddressList.push(curveAddress);
                 }
             }
         }
-        console.log('curve address list:')
-        console.log(curveAddressList);
 
         const curvesUnlisted = _.difference(curveAddressList, _.map(curveMetaList, 'curveAddress'));
         let curveQueries = _.map(curvesUnlisted, (curveAddress) => {
@@ -118,7 +117,7 @@ export default function AssetList(props: assetListProps) {
         multicallBytes = await getProvider().call(multicallCurveQuery)
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-        
+
         for (let i = 0; i < curvesUnlisted.length; i++) {
             const inverseTokenAddressBytes = multicallResults[i * 2][0] ? multicallResults[i * 2][1] : [""];
             const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0];
@@ -138,22 +137,27 @@ export default function AssetList(props: assetListProps) {
                 stakingApr: 0,
                 lpApr: 0,
                 image: '',
+                verified: false
             }
 
             curveMetaList.push(curveMeta);
 
         }
         setCurveMetadataList(curveMetaList);
+        parentSetters.setCurveList(curveMetaList);
         setIsLoading(false);
     }
 
     useEffect(() => {
         const fetchCurveMetrics = async () => {
-            setIsLoading(true);
             const abiCoder = ethers.utils.defaultAbiCoder;
 
             const curvesMissingInfo = _.differenceBy(curveMetadataList, curveList || [], 'curveAddress');
 
+            if (curvesMissingInfo.length == 0) {
+                return;
+            }
+            setIsLoading(true);
             let curveStates = _.map(curvesMissingInfo, curve => {
                 return {
                     ...curve,
@@ -161,7 +165,8 @@ export default function AssetList(props: assetListProps) {
                     reserves: 0,
                     stakingApr: 0,
                     lpApr: 0,
-                    image: null
+                    image: null,
+                    verified: false
                 }
             });
 
@@ -200,7 +205,7 @@ export default function AssetList(props: assetListProps) {
 
                 const reserveTokenSymbolBytes = multicallResults[i * requestCountPerCurve + 4][0] ? multicallResults[i * requestCountPerCurve + 4][1] : [""];
                 let reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0];
-                if(reserveTokenSymbol == 'WETH'){
+                if (reserveTokenSymbol == 'WETH') {
                     reserveTokenSymbol = 'ETH';
                 }
 
@@ -224,7 +229,7 @@ export default function AssetList(props: assetListProps) {
                     Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
                     * secondsPerDay * 365
                 )
-                curveStates[i].stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
+                curveStates[i].stakingApr = totalStakingBalance > 0 ? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)) : 0;
 
                 const reserveStakingReward = Number(
                     Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
@@ -236,71 +241,57 @@ export default function AssetList(props: assetListProps) {
                     * secondsPerDay * 365 * curveStates[i].price
                 )
                 curveStates[i].lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveStates[i].reserves;
-
+                curveStates[i].verified = curveStates[i].icon !== 'ib_asset_logo.svg';
                 curveStates[i].image = require('../../assets/' + curveStates[i].icon);
             }
             const newCurveList = _.concat(curveList || [], curveStates);
-            console.log(newCurveList);
             setCurveList(newCurveList);
             setFilteredCurveList(newCurveList);
             setIsLoading(false);
         }
 
         fetchCurveMetrics().then(() => { }).catch((err) => { console.log(err) })
-    },[curveMetadataList, curveMetadataList.length]);
-
-    // useEffect(() => {
-    //     const curveMetaList = _.map(curves, curve =>{
-    //         return {
-    //             ...curve,
-    //             price: 0,
-    //             reserves: 0,
-    //             stakingApr: 0,
-    //             lpApr: 0,
-    //             image: '',
-    //         }
-    //     })
-    //     setCurveMetadataList(curveMetaList);
-    // }, [curves])
+    }, [curveMetadataList, curveMetadataList.length]);
 
     useEffect(() => {
         fetchCurvesAddress().then(() => { }).catch((err) => { console.log(err) });
 
     }, [nonWalletProvider, wallet?.provider])
 
-    const fectchCurveInfo = async(curveAddress: string) => { 
+    const fectchCurveInfo = async (curveAddress: string) => {
         const abiCoder = ethers.utils.defaultAbiCoder;
-        const curveInfo = 
+        const curveInfo =
         {
             curveAddress: curveAddress,
             ibAssetAddress: '',
-            reserveAddress : '',
+            reserveAddress: '',
             reserveSymbol: '',
-            icon: 'unlisted_logo.png',
+            icon: '',
             ibAsset: '',
             price: 0,
             reserves: 0,
             stakingApr: 0,
             lpApr: 0,
             image: '',
+            verified: false
         }
 
-        let multicallQueries =  
-        [
-            composeMulticallQuery(curveAddress, "curveParameters", [], []),
-            composeMulticallQuery(curveAddress, "totalStaked", [], []),
-            composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [0]),
-            composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [1]),
-            composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
-            composeMulticallQuery(curveAddress, "reserveTokenAddress", [], [])
-        ]
+        let multicallQueries =
+            [
+                composeMulticallQuery(curveAddress, "curveParameters", [], []),
+                composeMulticallQuery(curveAddress, "totalStaked", [], []),
+                composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [0]),
+                composeMulticallQuery(curveAddress, "rewardEMAPerSecond", ["uint8"], [1]),
+                composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
+                composeMulticallQuery(curveAddress, "reserveTokenAddress", [], [])
+            ]
 
         let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         let multicallBytes = await getProvider().call(multicallQuery)
         let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-        if(multicallResults[0][0] && multicallResults[1][0] && multicallResults[2][0] && multicallResults[3][0] && multicallResults[4][0] && multicallResults[5][0]){
-            const bondingCurveParamsBytes = multicallResults[0][1] 
+        if (multicallResults[0][0] && multicallResults[1][0] && multicallResults[2][0] && multicallResults[3][0] && multicallResults[4][0] && multicallResults[5][0]) {
+            const bondingCurveParamsBytes = multicallResults[0][1]
             const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
 
             const totalStakingBalanceBytes = multicallResults[1][1]
@@ -329,7 +320,7 @@ export default function AssetList(props: assetListProps) {
                 Number(ethers.utils.formatEther(stakingRewardEma[0].toString()))
                 * secondsPerDay * 365
             )
-            curveInfo.stakingApr = totalStakingBalance > 0? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)): 0;
+            curveInfo.stakingApr = totalStakingBalance > 0 ? (reserveStakingRewardInIbc + ibcStakingReward) * 100 / Number(ethers.utils.formatEther(totalStakingBalance)) : 0;
 
             const reserveStakingReward = Number(
                 Number(ethers.utils.formatEther(lpRewardEma[1].toString()))
@@ -343,11 +334,11 @@ export default function AssetList(props: assetListProps) {
             curveInfo.lpApr = (reserveStakingReward + ibcStakingRewardInReserve) * 100 / curveInfo.reserves;
 
 
-            multicallQueries =  
-            [
-                composeMulticallQuery(curveInfo.ibAssetAddress, "symbol", [], []),
-                composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], [])
-            ]
+            multicallQueries =
+                [
+                    composeMulticallQuery(curveInfo.ibAssetAddress, "symbol", [], []),
+                    composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], [])
+                ]
 
             multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
@@ -358,39 +349,38 @@ export default function AssetList(props: assetListProps) {
             curveInfo.image = require('../../assets/' + curveInfo.icon);
 
             return [curveInfo];
-        }else{
+        } else {
             return [];
         }
     }
-
 
     const sortCurves = (order: string) => {
         setSortOption(order);
         let orderField = "stakingApr";
         if (order === "HIGHEST STAKING APR") {
             orderField = "stakingApr";
-        }else{
+        } else {
             orderField = "lpApr";
         }
         setFilteredCurveList(_.orderBy(curveList, [orderField], ['desc']));
     }
 
-    const searchCurve = async(search: string) => {
+    const searchCurve = async (search: string) => {
 
-        if(search.startsWith("0x")){
+        if (search.startsWith("0x")) {
             let filterResult = _.filter(curveList, curve => curve.curveAddress.toLowerCase() === search.toLowerCase());
             setFilteredCurveList(filterResult);
-            if(filterResult.length === 0){
+            if (filterResult.length === 0) {
                 filterResult = await fectchCurveInfo(search);
                 setFilteredCurveList(filterResult);
             }
-            
-        }else{
+
+        } else {
             setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.ibAsset.toLowerCase(), search.toLowerCase())));
         }
     }
 
-    const loadCurves = async() => {
+    const loadCurves = async () => {
         await fetchCurvesAddress();
     }
 
@@ -423,11 +413,11 @@ export default function AssetList(props: assetListProps) {
                                     <Stack direction='row' align='center' gap='0'>
                                         <Text fontWeight='700'>{sortOption}</Text>
                                         <Icon as={BsChevronCompactDown} fontSize='2xl' alignSelf={'right'} m='1' />
-                                    </Stack>                                    
+                                    </Stack>
                                 </MenuButton>
                                 <MenuList>
-                                    <MenuItem onClick={async() => await sortCurves("HIGHEST STAKING APR")}>HIGHEST STAKING APR</MenuItem>
-                                    <MenuItem onClick={async() => await sortCurves("HIGHEST LP APR")}>HIGHEST LP APR</MenuItem>
+                                    <MenuItem onClick={async () => await sortCurves("HIGHEST STAKING APR")}>HIGHEST STAKING APR</MenuItem>
+                                    <MenuItem onClick={async () => await sortCurves("HIGHEST LP APR")}>HIGHEST LP APR</MenuItem>
                                 </MenuList>
                             </Menu>
                         </Stack>
@@ -451,17 +441,34 @@ export default function AssetList(props: assetListProps) {
                             {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
                                     <Tr h='70px'>
-                                        <Td>
-                                            <Stack direction='row' align='center' gap='0'>
-                                                <Box boxSize='28px' mr='4'>
-                                                    <Image src={item.image} alt={item.ibAsset} />
-                                                </Box>
-                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
-                                                    {item.ibAsset}
-                                                </Link>
-                                            </Stack>
+                                        {
+                                            !item.verified ?
+                                                <Tooltip label="Unverified" aria-label='Unverified' placement='top' bg='gray'>
+                                                    <Td>
+                                                        <Stack direction='row' align='center' gap='0'>
+                                                            <Box boxSize='28px' mr='4'>
+                                                                <Image src={item.image} alt={item.ibAsset} />
+                                                            </Box>
+                                                            <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                                {item.ibAsset}
+                                                            </Link>
+                                                        </Stack>
+                                                    </Td>
+                                                </Tooltip>
+                                                :
+                                                <Td>
+                                                    <Stack direction='row' align='center' gap='0'>
+                                                        <Box boxSize='28px' mr='4'>
+                                                            <Image src={item.image} alt={item.ibAsset} />
+                                                        </Box>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                            {item.ibAsset}
+                                                        </Link>
+                                                    </Stack>
+                                                </Td>
 
-                                        </Td>
+                                        }
+
                                         <Td fontWeight='400'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{item.stakingApr.toFixed(2)}%</Td>
@@ -475,13 +482,13 @@ export default function AssetList(props: assetListProps) {
 
             </Stack>
             <Stack direction="row" mt='12' w='100%' justifyContent='center'>
-            {isLoading && <DefaultSpinner />}
+                {isLoading && <DefaultSpinner />}
                 <Button
-                        onClick={loadCurves}
-                        isDisabled={isLoading || (curveList? totalCurveCount <= curveList.length: true)}
-                    >
-					Load More
-				</Button>
+                    onClick={loadCurves}
+                    isDisabled={isLoading || (curveList ? totalCurveCount <= curveList.length : true)}
+                >
+                    Load More
+                </Button>
             </Stack>
         </Stack>
     )

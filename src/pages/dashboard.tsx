@@ -141,6 +141,7 @@ export function Dashboard( props: dashboardProps ){
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
   const [reserveAssetAddress, setReserveAssetAddress] = useState<string>('-')
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
+  const [curveList, setCurveList] = useState<any[]>([]);
 
   const [updated, updateState] = React.useState<any>();
 
@@ -799,6 +800,7 @@ export function Dashboard( props: dashboardProps ){
                     <AssetList
                       nonWalletProvider = {nonWalletProvider}
                       parentSetters={{
+                        setCurveList: setCurveList
                       }}
                     />
                   
@@ -813,6 +815,7 @@ export function Dashboard( props: dashboardProps ){
                       parentSetters={{
                         setReserveAssetAddress: setReserveAssetAddress
                       }}
+                      curveList={curveList}
                       reserveListUpdateTimestamp={reserveListUpdateTimestamp}
                     />
                   
@@ -903,10 +906,10 @@ export function Dashboard( props: dashboardProps ){
 
                         <TabPanels>
                           <TabPanel p='0'>
-                            <AssetHolding parentSetters={{}}></AssetHolding>
+                            <AssetHolding parentSetters={{}} curveList={curveList}></AssetHolding>
                           </TabPanel>
                           <TabPanel p='0'>
-                            <LpPosition parentSetters={{}}></LpPosition>
+                            <LpPosition parentSetters={{}} curveList={curveList}></LpPosition>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>

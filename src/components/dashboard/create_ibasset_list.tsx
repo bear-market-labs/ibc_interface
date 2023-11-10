@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers } from 'ethers'
-import { Box, Input, Stack, Text, Image, Link } from '@chakra-ui/react'
+import { Box, Input, Stack, Text, Image, Link, Tooltip } from '@chakra-ui/react'
 
 import {
     Table,
@@ -15,27 +15,34 @@ import {
 import * as _ from "lodash";
 
 import { curves } from '../../config/curves'
-import { composeQuery } from '../../util/ethers_utils'
+import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 
 import {
-	defaultAbiCoder
+    defaultAbiCoder
 } from 'ethers/lib/utils'
+
+
+type CurveInfo = {
+    curveAddress: string,
+    reserveSymbol: string,
+    icon: string,
+    // ibAsset: string,
+    image: any,
+    reserveAddress: string,
+    verified: boolean,
+    // ibAssetAddress: string
+}
 
 type assetListProps = {
     nonWalletProvider: any,
     reserveListUpdateTimestamp: number,
-    parentSetters: any
+    parentSetters: any,
+    curveList: CurveInfo[],
 }
 
-type CurveInfo = {
-    curveAddress: string,
-    reserveAddress: string,
-    reserveSymbol: string,
-    icon: string,
-    image: any
-}
+
 
 export default function CreateIBAssetList(props: assetListProps) {
     const { nonWalletProvider, parentSetters, reserveListUpdateTimestamp } = props
@@ -48,7 +55,7 @@ export default function CreateIBAssetList(props: assetListProps) {
     const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
 
     const getProvider = () => {
-        return wallet?.provider? new ethers.providers.Web3Provider(wallet.provider, 'any'): nonWalletProvider;
+        return wallet?.provider ? new ethers.providers.Web3Provider(wallet.provider, 'any') : nonWalletProvider;
     }
 
     useEffect(() => {
@@ -56,22 +63,55 @@ export default function CreateIBAssetList(props: assetListProps) {
         //     const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
         //     setProvider(web3Provider);
         // }
-        let curveStates = _.map(curves, curve => {
-            return {
-                ...curve,
-                price: 0,
-                reserves: 0,
-                stakingApr: 0,
-                lpApr: 0,
-                image: require('../../assets/' + curve.icon)
-            }
-        });
 
-        setCurveList(curveStates);
-        setFilteredCurveList(curveStates);
-        if(searchValue){
-            searchCurve(searchValue).then().catch((err) => console.log("error", err))
-        }        
+        const fetchCurvesInfo = async () => {
+            const abiCoder = ethers.utils.defaultAbiCoder;
+            if (wallet?.provider) {
+                const web3Provider = new ethers.providers.Web3Provider(wallet.provider, 'any');
+
+                const curves = props.curveList;
+                let curveStates = _.map(curves, curve => {
+                    return {
+                        ...curve,
+                        price: 0,
+                        reserves: 0,
+                        stakingApr: 0,
+                        lpApr: 0,
+                        image: require('../../assets/' + curve.icon),
+                        verified: curve.icon !== 'ib_asset_logo.svg',
+                    }
+                });
+
+                let queries = _.map(curves, curve => {
+                    return [
+                        composeMulticallQuery(curve.reserveAddress, "symbol", [], []),
+                    ]
+                });
+
+                let multicallQueries = _.flattenDepth(queries, 1);
+
+                let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+                let multicallBytes = await web3Provider.call(multicallQuery)
+                let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+
+                for (let i = 0; i < curveStates.length; i++) {
+                    const symbolBytes = multicallResults[i][0] ? multicallResults[i][1] : [""];
+                    const symbol = abiCoder.decode(["string"], symbolBytes)[0];
+                    curveStates[i].reserveSymbol = symbol;
+                }
+                setCurveList(curveStates);
+                setFilteredCurveList(curveStates);
+                if (searchValue) {
+                    searchCurve(searchValue).then().catch((err) => console.log("error", err))
+                }
+            }
+        }
+
+        fetchCurvesInfo()
+            .then()
+            .catch((err) => console.log("error", err))
+
+
     }, [nonWalletProvider, wallet?.provider, reserveListUpdateTimestamp])
 
 
@@ -79,49 +119,50 @@ export default function CreateIBAssetList(props: assetListProps) {
         let reserveAddress = '';
         setSearchValue(search);
 
-        if(search.startsWith("0x")){            
+        if (search.startsWith("0x")) {
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
 
-            if(search.length == 42){
+            if (search.length == 42) {
                 const provider = getProvider();
-                if(provider){
+                if (provider) {
                     try {
                         let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
                         let callResultBytes = await provider.call(query)
                         let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                        if(callResult == ethers.constants.AddressZero){
-                            reserveAddress = search;                        
-                        }else{
+                        if (callResult == ethers.constants.AddressZero) {
+                            reserveAddress = search;
+                        } else {
                             let curveInfo = {
                                 curveAddress: '',
                                 reserveAddress: '',
                                 reserveSymbol: '',
-                                icon: 'unlisted_logo.png',
+                                icon: 'ib_asset_logo.svg',
+                                verified: false,
                                 image: ''
                             }
-                            const curveAddress = callResult.toString() 
+                            const curveAddress = callResult.toString()
                             curveInfo.curveAddress = curveAddress;
                             query = composeQuery(curveAddress, "reserveTokenAddress", [], [])
                             callResultBytes = await provider.call(query)
                             callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
                             curveInfo.reserveAddress = search;
-                            
+
                             query = composeQuery(callResult, "symbol", [], [])
                             callResultBytes = await provider.call(query)
                             curveInfo.reserveSymbol = defaultAbiCoder.decode(["string"], callResultBytes)[0]
 
-                            
+
                             curveInfo.image = require('../../assets/' + curveInfo.icon);
 
                             setFilteredCurveList([curveInfo]);
                         }
                     } catch (error) {
                         console.log(error);
-                    }  
+                    }
                 }
             }
 
-        }else{
+        } else {
             setFilteredCurveList(_.filter(curveList, curve => _.includes(curve.reserveSymbol.toLowerCase(), search.toLowerCase())));
         }
 
@@ -143,7 +184,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                             height={`unset`}
                             paddingInline={`unset`}
                             value={searchValue}
-                            onChange={async(event) => {await searchCurve(event.target.value)}}
+                            onChange={async (event) => { await searchCurve(event.target.value) }}
                         />
                     </Stack>
                 </Stack>
@@ -161,20 +202,38 @@ export default function CreateIBAssetList(props: assetListProps) {
                         <Tbody>
                             {filteredCurveList && filteredCurveList.map((item) => {
                                 return (
-                                    <Tr h='70px'>
-                                        <Td>
-                                            <Stack direction='row' align='center' gap='0'>
-                                                <Box boxSize='28px' mr='4'>
-                                                    <Image src={item.image} alt={item.reserveSymbol} />
-                                                </Box>
-                                                <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
-                                                    {item.reserveSymbol}
-                                                </Link>
-                                               </Stack>
+                                    !item.verified ?
+                                        <Tr h='70px'>
+                                            <Tooltip label="Unverified" aria-label='Unverified' placement='top' bg='gray'>
+                                                <Td>
+                                                    <Stack direction='row' align='center' gap='0'>
+                                                        <Box boxSize='28px' mr='4'>
+                                                            <Image src={item.image} alt={item.reserveSymbol} />
+                                                        </Box>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                            {item.reserveSymbol}
+                                                        </Link>
+                                                    </Stack>
 
-                                        </Td>
-                                        <Td fontWeight='400'>{item.curveAddress}</Td>
-                                    </Tr>
+                                                </Td>
+                                            </Tooltip>
+                                            <Td fontWeight='400'>{item.curveAddress}</Td>
+                                        </Tr>
+                                        :
+                                        <Tr h='70px'>
+                                            <Td>
+                                                <Stack direction='row' align='center' gap='0'>
+                                                    <Box boxSize='28px' mr='4'>
+                                                        <Image src={item.image} alt={item.reserveSymbol} />
+                                                    </Box>
+                                                    <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                        {item.reserveSymbol}
+                                                    </Link>
+                                                </Stack>
+
+                                            </Td>
+                                            <Td fontWeight='400'>{item.curveAddress}</Td>
+                                        </Tr>
                                 )
                             })}
                         </Tbody>

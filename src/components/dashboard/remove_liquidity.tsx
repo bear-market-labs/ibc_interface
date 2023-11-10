@@ -25,8 +25,6 @@ import { colors } from '../../config/style'
 import {
 	explorerUrl,
 	maxSlippagePercent,
-	parse,
-	format,
 	commandTypes,
 	defaultDecimals,
 } from '../../config/constants'
@@ -38,7 +36,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatNumber, formatReceiveNumber, format, parse } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any

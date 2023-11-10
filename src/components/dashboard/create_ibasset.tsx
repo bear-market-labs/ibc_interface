@@ -28,20 +28,16 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	format,
-	parse,
-	commandTypes,
-	sanitizeNumberInput,
+	commandTypes
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
-import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 
 type mintProps = {

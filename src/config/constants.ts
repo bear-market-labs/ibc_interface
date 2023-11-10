@@ -23,17 +23,6 @@ export const commandTypes = {
   "unstake": 6,
 }
 
-
-export const format = (val: any) => val + `%`
-export const parse = (val: any) => val.replace(/^\%/, '')
-export function sanitizeNumberInput(input: any){
-  const sanitizedValue = input
-  .replace(/[-+e]/g, "")
-  .replace(/(\.\d*)\./g, "$1");
-
-  return sanitizedValue
-}
-
 export const ibcImageUrl = 'http://placekitten.com/200/300'
 export const blocksPerDay = 7200
 export const secondsPerDay = 86400

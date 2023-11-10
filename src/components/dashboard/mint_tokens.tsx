@@ -26,10 +26,7 @@ import {
 	explorerUrl,
 	maxSlippagePercent,
 	maxReserveChangePercent,
-	format,
-	parse,
   commandTypes,
-	sanitizeNumberInput,
 	curveUtilization,
 	defaultDecimals,
 } from '../../config/constants'
@@ -42,7 +39,7 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any

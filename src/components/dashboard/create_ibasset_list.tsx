@@ -217,7 +217,7 @@ export default function CreateIBAssetList(props: assetListProps) {
 
                                                 </Td>
                                             </Tooltip>
-                                            <Td fontWeight='400'>{item.curveAddress}</Td>
+                                            <Td fontWeight='400'>{item.reserveAddress}</Td>
                                         </Tr>
                                         :
                                         <Tr h='70px'>
@@ -232,7 +232,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                 </Stack>
 
                                             </Td>
-                                            <Td fontWeight='400'>{item.curveAddress}</Td>
+                                            <Td fontWeight='400'>{item.reserveAddress}</Td>
                                         </Tr>
                                 )
                             })}

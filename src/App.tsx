@@ -15,9 +15,10 @@ import { curves } from "./config/curves";
 import { Analytics } from '@vercel/analytics/react';
 
 const injected = injectedModule();
-const rpcUrl = `https://rpc.tenderly.co/fork/cc2b5331-1bfa-4756-84ab-e2f2f63a91d5`
+const rpcUrl = `https://eth.llamarpc.com`
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+provider.pollingInterval = 30000
 
 init({
   // apiKey,

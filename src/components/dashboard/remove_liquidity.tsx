@@ -143,7 +143,7 @@ export default function RemoveLiquidity(props: mintProps) {
 			const abiCoder = defaultAbiCoder
 			let txDetails
 
-			if (userInverseTokenAllowance.gt(0)) {
+			if (userInverseTokenAllowance.gte(userLpIbcPayment)) {
 
 				const functionDescriptorBytes = arrayify(
 					solidityKeccak256(
@@ -183,7 +183,7 @@ export default function RemoveLiquidity(props: mintProps) {
 						[
 							wallet.accounts[0].address,
 							dashboardDataSet.curveAddress,
-							true,
+							dashboardDataSet.reserveTokenSymbol.toUpperCase() === "ETH",
 							commandTypes.removeLiquidity,
 							commandBytes,
 						] // arg values
@@ -207,7 +207,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				const payloadBytes = arrayify(
 					abiCoder.encode(
 						['address', 'uint'], // array of types; make sure to represent complex types as tuples
-						[ibcRouterAddress, constants.MaxUint256] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
+						[ibcRouterAddress, userLpIbcPayment] // arg values; note https://docs.ethers.org/v5/api/utils/abi/coder/#AbiCoder--methods
 					)
 				)
 
@@ -399,7 +399,7 @@ export default function RemoveLiquidity(props: mintProps) {
 					onClick={sendTransaction}
 					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
-					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? `Insufficient ${dashboardDataSet.inverseTokenSymbol}` : userInverseTokenAllowance.gt(0) ? 'Remove Liquidity' : 'Approve LP'}
+					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? `Insufficient ${dashboardDataSet.inverseTokenSymbol}` : userInverseTokenAllowance.gte(userLpIbcPayment) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>
 			</Stack>
 		</Stack>

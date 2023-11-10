@@ -465,11 +465,7 @@ export function Dashboard( props: dashboardProps ){
         // downstream calculation for lp removal, all in formatted (or sane) decimals
         const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], defaultDecimals)) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
 
-        const userLpIbcDebit = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) 
-        * 
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][1], inverseTokenDecimals)) 
-        / 
-        Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
+        const userLpIbcDebit = userLpTokenBalance.mul(bondingCurveParams[0][1]).div(bondingCurveParams[0][2])
 
         setDashboardDataSet({
           userEthBalance: ethBalance.toString(),
@@ -520,11 +516,11 @@ export function Dashboard( props: dashboardProps ){
           },
           contractInverseTokenBalance,
           userLpRedeemableReserves: userLpRedeemableReserves.toString(),
-          userLpIbcDebit: userLpIbcDebit === 0 ? 
+          userLpIbcDebit: userLpIbcDebit.eq(0) ? 
             ethers.BigNumber.from(0) 
             : 
-            ethers.utils.parseUnits(userLpIbcDebit.toString(), inverseTokenDecimals).add(
-              inverseTokenDecimals.gt(13) && Number(userLpIbcDebit.toString()) !== Number(ethers.utils.formatUnits(userLpIbcCredit, dashboardDataSet.inverseTokenDecimals)) ? 
+              userLpIbcDebit.add(
+              inverseTokenDecimals.gt(13) && !userLpIbcDebit.eq(userLpIbcCredit) ? 
               ethers.BigNumber.from(10).pow(inverseTokenDecimals.sub(13)) // for high decimals, js will lose precision, undercounting the true ibc debt. we will add some dust 
               : 
               ethers.BigNumber.from(0)

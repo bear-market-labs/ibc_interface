@@ -18,8 +18,8 @@ import * as _ from "lodash";
 import { curves } from '../../config/curves'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
-import { formatNumber } from '../../util/display_formatting'
-import { secondsPerDay } from '../../config/constants'
+import { formatNumber, formatPriceNumber } from '../../util/display_formatting'
+import { defaultDecimals, secondsPerDay } from '../../config/constants'
 import { colors } from '../../config/style'
 import { DefaultSpinner } from '../spinner'
 
@@ -468,8 +468,7 @@ export default function AssetList(props: assetListProps) {
                                                 </Td>
 
                                         }
-
-                                        <Td fontWeight='400'>{formatNumber(item.price.toString(), item.reserveSymbol)}</Td>
+                                        <Td fontWeight='400'>{formatPriceNumber(ethers.utils.parseUnits(item.price.toFixed(defaultDecimals), defaultDecimals), defaultDecimals, item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{formatNumber(item.reserves.toString(), item.reserveSymbol)}</Td>
                                         <Td fontWeight='400'>{item.stakingApr.toFixed(2)}%</Td>
                                         <Td fontWeight='400'>{item.lpApr.toFixed(2)}%</Td>

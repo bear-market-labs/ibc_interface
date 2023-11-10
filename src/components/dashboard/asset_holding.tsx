@@ -64,7 +64,7 @@ export default function AssetHolding(props: assetListProps) {
 
                 let multicallQueries = _.flattenDepth(queries, 1);
 
-                let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+                let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
                 let multicallBytes = await web3Provider.call(multicallQuery)
                 let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 

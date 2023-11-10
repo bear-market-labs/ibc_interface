@@ -3,14 +3,11 @@ import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, constants } from 'ethers'
 
 import {
-	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -31,7 +28,6 @@ import {
 	parse,
 	format,
 	commandTypes,
-	reserveAssetDecimals,
 	defaultDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -54,8 +50,8 @@ export default function RemoveLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcContractAddress] = useState<string>(contracts.default.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 

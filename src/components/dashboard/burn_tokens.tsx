@@ -27,10 +27,8 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	ibcSymbol,
 	maxSlippagePercent,
 	maxReserveChangePercent,
-	reserveAssetDecimals,
 	format,
 	parse,
 	commandTypes,
@@ -60,7 +58,7 @@ export default function BurnTokens(props: mintProps) {
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>()
 	const [amountDisplay, setAmountDisplay] = useState<number>()
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -113,7 +111,7 @@ export default function BurnTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : defaultDecimals;
 	const maxBurn = "inverseTokenSupply" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) : 0
 	const maxWithdraw = "reserveAmount" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals)) : 0
 	const [resultPrice, setResultPrice] = useState<bignumber>(

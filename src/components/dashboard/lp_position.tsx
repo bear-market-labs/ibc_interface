@@ -106,7 +106,7 @@ export default function LpPosition(props: assetListProps) {
                                     return (
                                         !position.verified ?
                                             <Tr h='70px'>
-                                                <Tooltip label="Unverified" aria-label='Unverified'  placement='top' bg='gray'>
+                                                <Tooltip label="Unverified" aria-label='Unverified'  placement='top' bg='gray' top="20px">
                                                 <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>
                                                     <Stack direction='row' align='center' gap='0'>
                                                         <Box boxSize='28px' mr='4'>

@@ -204,7 +204,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                 return (
                                     !item.verified ?
                                         <Tr h='70px'>
-                                            <Tooltip label="Unverified" aria-label='Unverified' placement='top' bg='gray'>
+                                            <Tooltip label="Unverified" aria-label='Unverified' placement='top' bg='gray' top="20px">
                                                 <Td>
                                                     <Stack direction='row' align='center' gap='0'>
                                                         <Box boxSize='28px' mr='4'>

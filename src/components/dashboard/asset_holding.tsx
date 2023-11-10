@@ -109,7 +109,7 @@ export default function AssetHolding(props: assetListProps) {
                                     return (
                                         !balance.verified ?                                        
                                         <Tr h='70px'>
-                                            <Tooltip label="Unverified" aria-label='Unverified'  placement='top' bg='gray'>
+                                            <Tooltip label="Unverified" aria-label='Unverified'  placement='top' bg='gray' top="20px">
                                             <Td>
                                                
                                                     <Stack direction='row' align='center' gap='0'>

@@ -11,8 +11,6 @@ export function keyToParts(key: string){
   } : {address: '', field: ''}
 }
 
-// fetch from localstorage
-// if not available, generate the multicall query
 export function fetchFromLocal(key: string){
   return window.localStorage.getItem(key)
 }

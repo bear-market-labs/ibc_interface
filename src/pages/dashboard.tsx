@@ -187,10 +187,10 @@ export function Dashboard( props: dashboardProps ){
         inverseTokenDecimals: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenDecimals")),
         inverseTokenSymbol: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenSymbol")),
       }
-      setReserveAssetAddress(reserveAsset)
+      let isValidCurve = true
 
-      // if either the curve or inversetokenaddress are missing, re-fetch the curve and downstream data
-      if (true === Object.values(cachedData).map(x => x == null ? true : false).find(x => x === true)){
+      // if any field in cachedData is null, re-fetch metadata
+      if (Object.values(cachedData).reduce((acc, x) => acc || (x==null), false)){
         multicallQueries.push(composeMulticallQuery(contracts.default.ibcFactoryContract, "getCurve", ["address"], [reserveAsset]))
   
         multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -200,7 +200,7 @@ export function Dashboard( props: dashboardProps ){
         const curveAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
         let curveAddress = abiCoder.decode(["address"], curveAddressBytes)[0]
 
-        if (ethers.utils.isAddress(curveAddress)){
+        if (ethers.utils.isAddress(curveAddress) && ethers.constants.AddressZero !== curveAddress){
           // cache curve address
           cachedData["curveAddress"] = curveAddress
           cacheToLocal(getStorageKey(reserveAsset, "ibc"), curveAddress)
@@ -230,10 +230,10 @@ export function Dashboard( props: dashboardProps ){
           cachedData["inverseTokenDecimals"] = "18"
           cachedData["inverseTokenSymbol"] = "ibETH"
           cachedData["inverseTokenAddress"] = curves[0].ibAssetAddress
-          setReserveAssetAddress(contracts.default.wethAddress)
+          isValidCurve = false
         }
 
-        if (cachedData["inverseTokenAddress"]){
+        if (cachedData["inverseTokenAddress"] && isValidCurve){
           //fetch token metadata
           multicallQueries = [
             composeMulticallQuery(reserveAsset, "decimals", [], []),
@@ -268,6 +268,7 @@ export function Dashboard( props: dashboardProps ){
       Object.assign(dashboardDataSet, cachedData)
 
       // triggers another hook for additioanl data collection
+      setReserveAssetAddress(isValidCurve ? reserveAsset : contracts.default.wethAddress)
       setIbcContractAddress(cachedData["curveAddress"] ?? contracts.default.ibcETHCurveContract)
       setupEventListener(cachedData["curveAddress"])
     }

@@ -153,19 +153,22 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, provider, dashboardDataSet, ibcRouterAddress]);
 
-  const IBC_rewards = formatNumber((Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))).toString(), dashboardDataSet.inverseTokenSymbol, false)
-  const ETH_rewards = formatNumber((Number(formatUnits(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, defaultDecimals))).toString(), dashboardDataSet.reserveTokenSymbol, false)
+  const IBC_rewards = Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))
+  const IBC_rewards_display = formatNumber(IBC_rewards.toString(), dashboardDataSet.inverseTokenSymbol, false)
+
+  const ETH_rewards = Number(formatUnits(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, defaultDecimals))
+  const ETH_rewards_display = formatNumber(ETH_rewards.toString(), dashboardDataSet.reserveTokenSymbol, false)
   
   return (
     <>
       <Stack p='4' mt='50px' textAlign='left' fontWeight='500' >
         <Text fontSize='sm' mb='3'>YOU HAVE ACCRUED</Text>
           <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
-            <Text>{IBC_rewards}</Text>
+            <Text>{IBC_rewards_display}</Text>
             <Text>{dashboardDataSet.inverseTokenSymbol}</Text>
           </Stack>
           <Stack direction='row' justifyContent='space-between' fontSize='5xl' lineHeight={1}>
-            <Text>{ETH_rewards}</Text>
+            <Text>{ETH_rewards_display}</Text>
             <Text>{dashboardDataSet.reserveTokenSymbol}</Text>
           </Stack>
 

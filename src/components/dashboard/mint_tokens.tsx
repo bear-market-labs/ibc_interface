@@ -321,21 +321,8 @@ export default function MintTokens(props: mintProps) {
 		const bigOne = parseUnits("1", defaultDecimals)
 		const reserveDeltaBig = decimaledParsedAmount.mul(bigOne).div(reserveAmount)
 
-		const reserveDelta =
-			Number(formatUnits(decimaledParsedAmount, defaultDecimals)) /
-			Number(formatUnits(reserveAmount, defaultDecimals))
-
-		// keep calc in non-under/overflow numeric domains - supply * (1+reserve_delta)**(1/u)
+		// updated_supply = supply * (1+reserve_delta)**(1/u)
 		const newSupplyBig = inverseTokenSupply.mul((reserveDeltaBig.add(bigOne)).pow(2)).div(bigOne.pow(2))
-
-		const logMintedTokensPlusSupply =
-			Math.log(1 + reserveDelta) / curveUtilization +
-			Math.log(
-				Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
-			)
-			
-		const newSupply = BigInt(Math.floor(Math.exp(logMintedTokensPlusSupply) * 10**(inverseTokenDecimals.toNumber())))
-		const mintAmount = newSupply - BigInt(inverseTokenSupply.toString()) // wei format
 
 		// calculate spot price post mint
 		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
@@ -343,8 +330,7 @@ export default function MintTokens(props: mintProps) {
 
 		setResultPrice(bignumber(newPriceBig.toString()))
 		setMintAmount(newSupplyBig.sub(inverseTokenSupply))
-		setMintAmountDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(mintAmount.toString(), inverseTokenDecimals)) *
-		(1 - totalFeePercent)).toString())))
+		setMintAmountDisplay(Number(newSupplyBig.sub(inverseTokenSupply).mul(Number((1-totalFeePercent)*(10**defaultDecimals)).toFixed(0)).div(bigOne).div(bigOne).toString()))
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(BigInt(newSupplyBig.toString())) // this is wei format

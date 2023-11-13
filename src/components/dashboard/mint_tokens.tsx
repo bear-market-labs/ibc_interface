@@ -40,6 +40,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { computeSquareRoot } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -317,43 +318,36 @@ export default function MintTokens(props: mintProps) {
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
 		// this should be a non-under/overflow number
+		const bigOne = parseUnits("1", defaultDecimals)
+		const reserveDeltaBig = decimaledParsedAmount.mul(bigOne).div(reserveAmount)
+
 		const reserveDelta =
 			Number(formatUnits(decimaledParsedAmount, defaultDecimals)) /
 			Number(formatUnits(reserveAmount, defaultDecimals))
 
-		// keep calc in non-under/overflow numeric domains
+		// keep calc in non-under/overflow numeric domains - supply * (1+reserve_delta)**(1/u)
+		const newSupplyBig = inverseTokenSupply.mul((reserveDeltaBig.add(bigOne)).pow(2)).div(bigOne.pow(2))
+
 		const logMintedTokensPlusSupply =
 			Math.log(1 + reserveDelta) / curveUtilization +
 			Math.log(
 				Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
 			)
 			
-		const newSupplySaneFormat = Math.exp(logMintedTokensPlusSupply)
 		const newSupply = BigInt(Math.floor(Math.exp(logMintedTokensPlusSupply) * 10**(inverseTokenDecimals.toNumber())))
 		const mintAmount = newSupply - BigInt(inverseTokenSupply.toString()) // wei format
 
 		// calculate spot price post mint
-		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
+		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
+		const newPriceBig = curveInvariantBig.mul(parseUnits(curveUtilization.toString(), defaultDecimals)).div(computeSquareRoot(newSupplyBig)).div(parseUnits("1", defaultDecimals/2))
 
-		const newPrice = Number(
-			curveInvariant 
-			* 
-			curveUtilization 
-			/
-			Math.pow(
-				newSupplySaneFormat // this is in sane format
-				, 
-				1 - curveUtilization
-			)
-		).toFixed(defaultDecimals) 
-
-		setResultPrice(bignumber(parseUnits(newPrice, defaultDecimals).toString()))
-		setMintAmount(BigNumber.from(mintAmount))
+		setResultPrice(bignumber(newPriceBig.toString()))
+		setMintAmount(newSupplyBig.sub(inverseTokenSupply))
 		setMintAmountDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(mintAmount.toString(), inverseTokenDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
-		parentSetters?.setNewPrice(Number(Number(newPrice) * 10**defaultDecimals).toFixed(0))
-		parentSetters?.setNewIbcIssuance(newSupply) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig.toString())
+		parentSetters?.setNewIbcIssuance(BigInt(newSupplyBig.toString())) // this is wei format
 		parentSetters?.setNewReserve(
 			reserveAmount.add(decimaledParsedAmount).toString()
 		)

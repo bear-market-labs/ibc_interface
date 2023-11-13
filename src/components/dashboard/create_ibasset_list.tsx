@@ -14,7 +14,6 @@ import {
 } from '@chakra-ui/react'
 import * as _ from "lodash";
 
-import { curves } from '../../config/curves'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'

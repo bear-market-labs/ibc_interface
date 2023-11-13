@@ -6,12 +6,13 @@ import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, so
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { commandTypes, explorerUrl, sanitizeNumberInput } from '../../config/constants'
+import { commandTypes, explorerUrl } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { colors } from '../../config/style'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
   dashboardDataSet: any;

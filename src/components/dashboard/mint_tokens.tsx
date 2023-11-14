@@ -29,6 +29,7 @@ import {
   commandTypes,
 	curveUtilization,
 	defaultDecimals,
+	bigOne,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -39,8 +40,8 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot } from '../../util/ethers_utils'
+import { formatBalanceNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { computeSquareRoot, } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -52,13 +53,13 @@ export default function MintTokens(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
-	const [amountDisplay, setAmountDisplay] = useState<number>() // tied to display amount
+	const [amountDisplay, setAmountDisplay] = useState<string>() // tied to display amount
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0)) // this is tied to the actual number sent for tx
-	const [mintAmountDisplay, setMintAmountDisplay] = useState<number>() // this is tied to the numberinput of the received assets
+	const [mintAmountDisplay, setMintAmountDisplay] = useState<string>() // this is tied to the numberinput of the received assets
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -310,15 +311,13 @@ export default function MintTokens(props: mintProps) {
 		if (isNaN(val) || val.trim() === '') {
 			return
 		}
+		setAmount(BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**reserveTokenDecimals)).toFixed(0))) // will be fed into router; needs to reflect "real" decimals
 
-		setAmount(parseUnits(Number(parsedAmount).toFixed(reserveTokenDecimals), reserveTokenDecimals)) // will be fed into router; needs to reflect "real" decimals
-
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals) // for all calcs, stay in default decimals (all curve params are in default decimals)
+		const decimaledParsedAmount = val === '' ? BigNumber.from('0') : BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**defaultDecimals)).toFixed(0)) // for all calcs, stay in default decimals (all curve params are in default decimals)
 		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
 		// this should be a non-under/overflow number
-		const bigOne = parseUnits("1", defaultDecimals)
 		const reserveDeltaBig = decimaledParsedAmount.mul(bigOne).div(reserveAmount)
 
 		// updated_supply = supply * (1+reserve_delta)**(1/u)
@@ -330,10 +329,10 @@ export default function MintTokens(props: mintProps) {
 
 		setResultPrice(bignumber(newPriceBig.toString()))
 		setMintAmount(newSupplyBig.sub(inverseTokenSupply))
-		setMintAmountDisplay(Number(newSupplyBig.sub(inverseTokenSupply).mul(Number((1-totalFeePercent)*(10**defaultDecimals)).toFixed(0)).div(bigOne).div(bigOne).toString()))
+		setMintAmountDisplay(newSupplyBig.sub(inverseTokenSupply).mul(Number((1-totalFeePercent)*(10**defaultDecimals)).toFixed(0)).div(bigOne).div(bigOne).toString())
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
-		parentSetters?.setNewIbcIssuance(BigInt(newSupplyBig.toString())) // this is wei format
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
 			reserveAmount.add(decimaledParsedAmount).toString()
 		)
@@ -348,10 +347,21 @@ export default function MintTokens(props: mintProps) {
 		}
 
 		const mintAmount = parsedAmount / (1 - totalFeePercent) // full mint-amount
+		const mintAmountBig = BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**inverseTokenDecimals.toNumber())).dividedBy(bignumber(1-totalFeePercent)).toFixed(0))
+		setMintAmount(mintAmountBig)
 
-		setMintAmount(parseUnits(mintAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
+		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
+		const newSupplyBig = currentInverseTokenSupplyBig.add(mintAmountBig)
 
 		// calculate ETH payment
+
+		const mBig = BigNumber.from(bondingCurveParams.currentTokenPrice).mul(
+			computeSquareRoot(currentInverseTokenSupplyBig)
+		)
+		const newPriceBig = mBig.div(computeSquareRoot(newSupplyBig))
+		const diffRootSupply = computeSquareRoot(newSupplyBig).sub(computeSquareRoot(currentInverseTokenSupplyBig))
+		const reserveNeededBig = mBig.mul(diffRootSupply).mul(2).div(bigOne)
+
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
 		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
@@ -365,13 +375,13 @@ export default function MintTokens(props: mintProps) {
 		const k_1 = 1 - k
 		const reserveNeeded = (m/k_1)*((currentInverseTokenSupply + mintAmount)**k_1 - currentInverseTokenSupply**k_1)
 
-		setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
+		setResultPrice(bignumber(newPriceBig.toString()))
 
-		setAmount(parseUnits(reserveNeeded.toFixed(reserveTokenDecimals), reserveTokenDecimals)) // sent to router, needs to be the 'real' decimals
-		setAmountDisplay(reserveNeeded)
+		setAmount(reserveNeededBig.div(10**(defaultDecimals - reserveTokenDecimals))) // sent to router, needs to be the 'real' decimals
+		setAmountDisplay(bignumber(reserveNeededBig.toString()).dividedBy(bignumber(bigOne.toString())).toFixed(defaultDecimals))
 
-		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
-		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply + mintAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig.toString())
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
 			BigNumber.from(bondingCurveParams.reserveAmount).add(parseUnits(reserveNeeded.toFixed(defaultDecimals), defaultDecimals).toString()
 		))

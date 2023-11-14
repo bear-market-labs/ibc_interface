@@ -1,6 +1,6 @@
 import { arrayify, concat, defaultAbiCoder, hexlify, Interface, parseEther, solidityKeccak256 } from 'ethers/lib/utils'
-import { multicallContinueOnErrorFlag } from '../config/constants'
-import { ethers, BigNumber } from "ethers";
+import { bigOne, multicallContinueOnErrorFlag } from '../config/constants'
+import { BigNumber } from "ethers";
 import { BigNumber as bignumber } from "bignumber.js"
 
 export function getFunctionDescriptorBytes(functionName: string, argTypes: string[]){
@@ -56,4 +56,18 @@ export function computeSquareRoot(num: BigNumber){
 
   const sqrt = bignumber(num.toString()).sqrt()
   return BigNumber.from(sqrt.toFixed(0))
+}
+
+// uses bignumber.js to replicate ethers.utils.formatUnits, w/o the over/underflow error
+export function formatUnitsBnJs(num: BigNumber, decimals: number){
+  const decimalsInt = Number(decimals.toFixed(0))
+
+  const decFormatted = bignumber(num.toString()).div(bignumber(10**decimals))
+
+  return decFormatted.toFixed(decimals)
+}
+
+export function mulPercent(numA: BigNumber, percentAsDecimal: number){
+  const result = bignumber(percentAsDecimal).multipliedBy(bignumber(numA.toString()))
+  return BigNumber.from(result.toFixed(0))
 }

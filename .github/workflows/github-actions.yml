@@ -1,6 +1,11 @@
 name: ibc interface github actions
 run-name: ibc interface is ready to launch 🚀
-on: [push | pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
 jobs:
   build:
     runs-on: ubuntu-latest

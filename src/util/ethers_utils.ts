@@ -62,9 +62,17 @@ export function computeSquareRoot(num: BigNumber){
 export function formatUnitsBnJs(num: BigNumber, decimals: number){
   const decimalsInt = Number(decimals.toFixed(0))
 
-  const decFormatted = bignumber(num.toString()).div(bignumber(10**decimals))
+  const decFormatted = bignumber(num.toString()).div(bignumber(10**decimalsInt))
 
   return decFormatted.toFixed(decimals)
+}
+
+export function parseUnitsBnJs(num: string, decimals: number){
+  const decimalsInt = Number(decimals.toFixed(0))
+
+  const decFormatted = bignumber(num.toString()).multipliedBy(bignumber(10**decimalsInt))
+
+  return BigNumber.from(decFormatted.toFixed(0))
 }
 
 export function mulPercent(numA: BigNumber, percentAsDecimal: number){

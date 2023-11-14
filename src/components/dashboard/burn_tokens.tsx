@@ -40,6 +40,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { computeSquareRoot, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -310,23 +311,27 @@ export default function BurnTokens(props: mintProps) {
 			return
 		}
 
-		setAmount(parseUnits(parsedAmount, inverseTokenDecimals.toNumber()))
+		setAmount(parseUnitsBnJs(parsedAmount, inverseTokenDecimals.toNumber()))
 
-		const decimaledParsedAmount = parseUnits(parsedAmount,
+		const decimaledParsedAmount = parseUnitsBnJs(parsedAmount,
 			inverseTokenDecimals.toNumber()
 		)
 		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
 		// this should be a non-under/overflow number between 0,1
-		const fee = parseUnits(
+		const fee = parseUnitsBnJs(
 			Number(
 				Number(formatUnits(decimaledParsedAmount, inverseTokenDecimals)) *
 					totalFeePercent
 			).toFixed(Number(inverseTokenDecimals)),
-			inverseTokenDecimals
+			inverseTokenDecimals.toNumber()
 		)
 		const burnedAmount = decimaledParsedAmount.sub(fee)
+
+		const supplyDeltaBig = bignumber(inverseTokenSupply.sub(burnedAmount).toString()).dividedBy(bignumber(inverseTokenSupply.toString()))
+		const liquidityReceivedBig = reserveAmount.sub(mulPercent(reserveAmount, supplyDeltaBig.sqrt().toNumber()))
+
 		const supplyDelta =
 			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)) /
 			Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
@@ -335,7 +340,7 @@ export default function BurnTokens(props: mintProps) {
 		const logSupplyDeltaTimesUtilization =
 			Math.log(supplyDelta) * curveUtilization
 
-		const liquidityReceived = parseUnits(
+		const liquidityReceived = parseUnitsBnJs(
 			Number(
 				-1 *
 					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
@@ -346,19 +351,22 @@ export default function BurnTokens(props: mintProps) {
 		)
 
 		// calculate spot price post mint
+		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
+		const newPriceBig = curveInvariantBig.mul(parseUnits(curveUtilization.toString(), defaultDecimals)).div(computeSquareRoot(inverseTokenSupply.sub(burnedAmount))).div(parseUnits("1", defaultDecimals/2))
+
 		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
 		const newPrice = curveInvariant * curveUtilization
 		/
 		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
 
-		setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
+		setResultPrice(bignumber(newPriceBig.toString()))
 		setLiquidityReceived(liquidityReceived) 
 		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, defaultDecimals)) *
 		(1 - totalFeePercent)).toString())))
 
-		parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
+		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(
-			BigInt(inverseTokenSupply.sub(burnedAmount).toString())
+			inverseTokenSupply.sub(burnedAmount)
 		)
 		parentSetters?.setNewReserve(
 			reserveAmount.sub(liquidityReceived).toString()

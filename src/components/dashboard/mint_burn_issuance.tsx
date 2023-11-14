@@ -56,7 +56,7 @@ export default function MintBurnIssuance(props: mintProps) {
         <Stack direction="row" fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
           {
-            newIbcIssuance > BigInt(0) && newIbcIssuance !== BigInt(inverseTokenSupply.toString()) &&
+            newIbcIssuance.gt(0) && !newIbcIssuance.eq(inverseTokenSupply) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>

@@ -79,3 +79,7 @@ export function mulPercent(numA: BigNumber, percentAsDecimal: number){
   const result = bignumber(percentAsDecimal).multipliedBy(bignumber(numA.toString()))
   return BigNumber.from(result.toFixed(0))
 }
+
+export function divBnJs(top: BigNumber, bottom: BigNumber){
+  return bignumber(top.toString()).dividedBy(bottom.toString()).toNumber()
+}

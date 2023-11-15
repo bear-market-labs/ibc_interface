@@ -38,6 +38,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -53,7 +54,7 @@ export default function AddLiquidity(props: mintProps) {
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
-	const [ibcCredit, setIbcCredit] = useState<number>(0)
+	const [ibcCredit, setIbcCredit] = useState<BigNumber>(BigNumber.from('0'))
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -286,26 +287,19 @@ export default function AddLiquidity(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, defaultDecimals)
-		const feeAdjustedAmount = BigInt(decimaledParsedAmount.toString()) * BigInt(10000 - totalFeePercent*10000) / BigInt(10000)
+		const decimaledParsedAmount = parseUnitsBnJs(val === '' ? '0' : val, defaultDecimals)
+		const feeAdjustedAmountBig = mulPercent(decimaledParsedAmount, 1-totalFeePercent)
 
-		const mintAmount = BigNumber.from(
-			bignumber(Number(lpTokenSupply.toString()) * Number(feeAdjustedAmount))
-				.dividedBy(
-					bignumber(bondingCurveParams.reserveAmount)
-				)
-				.toFixed(0)
-		)
+		const mintAmountBig = mulPercent(feeAdjustedAmountBig, divBnJs(lpTokenSupply, BigNumber.from(bondingCurveParams.reserveAmount)))
+		const lpIbcCreditBig = mulPercent(feeAdjustedAmountBig, divBnJs(BigNumber.from(bondingCurveParams.inverseTokenSupply), BigNumber.from(bondingCurveParams.reserveAmount)))
 
 		//calculate ibc credit
-		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, defaultDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, defaultDecimals))
+		setMintAmount(mintAmountBig)
+		setIbcCredit(lpIbcCreditBig)
 
-		setMintAmount(mintAmount)
-		setIbcCredit(lpIbcCredit)
-
-		parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
+		parentSetters?.setNewLpIssuance(mintAmountBig.add(lpTokenSupply).toString())
 		parentSetters?.setNewReserve(
-			Number(Number(feeAdjustedAmount) + Number(bondingCurveParams.reserveAmount)).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).add(feeAdjustedAmountBig).toString()
 		)
 	}
 
@@ -364,7 +358,7 @@ export default function AddLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${formatNumber(ibcCredit.toString(), dashboardDataSet.reserveTokenSymbol, true, true)} bound to position`
+						`+ ${formatNumber(formatUnitsBnJs(ibcCredit, defaultDecimals).toString(), dashboardDataSet.reserveTokenSymbol, true, true)} bound to position`
 					}
 				</Text>
 			</Stack>

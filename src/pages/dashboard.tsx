@@ -36,6 +36,7 @@ import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { curves } from "../config/curves";
+import { cacheToLocal, fetchFromLocal, getStorageKey } from "../util/caching";
 
 type dashboardProps = {
   mostRecentIbcBlock: any;
@@ -47,7 +48,7 @@ export function Dashboard( props: dashboardProps ){
   const {mostRecentIbcBlock, nonWalletProvider, setupEventListener} = props
   const params = useParams();
   const reserveAssetParam = params.reserveAsset
-  const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.tenderly.wethAddress
+  const reserveAsset = reserveAssetParam && ethers.utils.isAddress(reserveAssetParam) ? reserveAssetParam : contracts.default.wethAddress
   const isTermsPage: boolean = window.location.hash.toLowerCase().includes("#/terms")
   const isExplorePage: boolean = window.location.hash.toLowerCase().includes("#/explore")
 
@@ -129,8 +130,8 @@ export function Dashboard( props: dashboardProps ){
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
   const [{ wallet,  }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()
-  const [ibcAdminAddress, ] = useState<string>(contracts.tenderly.ibcAdminContract)
-  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
+  const [ibcAdminAddress, ] = useState<string>(contracts.default.ibcAdminContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
 
   const [dashboardDataSet, setDashboardDataSet] = useState<any>({})
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -141,6 +142,7 @@ export function Dashboard( props: dashboardProps ){
   const [newLpIssuance, setNewLpIssuance] = useState<any>()
   const [reserveAssetAddress, setReserveAssetAddress] = useState<string>('-')
   const [reserveListUpdateTimestamp, setReserveListUpdateTimestamp] = useState<number>(Date.now())
+  const [curveList, setCurveList] = useState<any[]>([]);
 
   const [updated, updateState] = React.useState<any>();
 
@@ -167,87 +169,108 @@ export function Dashboard( props: dashboardProps ){
       const abiCoder = ethers.utils.defaultAbiCoder
       const provider = getProvider();
 
-      // check validity of curveAddress param from url router
-      let multicallQueries = [
-        composeMulticallQuery(contracts.tenderly.ibcFactoryContract, "getCurve", ["address"], [reserveAsset])
-      ]
+      let multicallQueries = []
+      let multicallQuery
 
-      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-      let multicallBytes = await provider.call(multicallQuery)
-      let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+      // check localStorage for various metadata
+      // reserve token - decimals, symbol
+      // curve address
+      // inverse token - address, decimals, symbol
+      
+      const cachedData = {
+        reserveTokenDecimals: fetchFromLocal(getStorageKey(reserveAsset, "decimals")),
+        reserveTokenSymbol: fetchFromLocal(getStorageKey(reserveAsset, "symbol")),
 
-      const curveAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
-      let curveAddress = abiCoder.decode(["address"], curveAddressBytes)[0]
+        curveAddress: fetchFromLocal(getStorageKey(reserveAsset, "ibc")),
 
-      const validReserveAsset: boolean = curveAddress !== ""
-      // if invalid reserve asset, assume eth is focused asset
-      curveAddress = validReserveAsset ? curveAddress : curves.find(x => x.reserveSymbol === "ETH")?.curveAddress
+        inverseTokenAddress: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenAddress")),
+        inverseTokenDecimals: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenDecimals")),
+        inverseTokenSymbol: fetchFromLocal(getStorageKey(reserveAsset, "ibTokenSymbol")),
+      }
+      let isValidCurve = true
 
-      if (validReserveAsset){
-        setReserveAssetAddress(reserveAsset)
-        
-        //fetch curve metadata
-        multicallQueries = [
-          composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
-          composeMulticallQuery(reserveAsset, "decimals", [], []),
-          composeMulticallQuery(reserveAsset, "symbol", [], []),
-        ]
+      // if any field in cachedData is null, re-fetch metadata
+      if (Object.values(cachedData).reduce((acc, x) => acc || (x==null), false)){
+        multicallQueries.push(composeMulticallQuery(contracts.default.ibcFactoryContract, "getCurve", ["address"], [reserveAsset]))
+  
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallBytes = await provider.call(multicallQuery)
+        let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+  
+        const curveAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
+        let curveAddress = abiCoder.decode(["address"], curveAddressBytes)[0]
 
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-        multicallBytes = await provider.call(multicallQuery)
-        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+        if (ethers.utils.isAddress(curveAddress) && ethers.constants.AddressZero !== curveAddress){
+          // cache curve address
+          cachedData["curveAddress"] = curveAddress
+          cacheToLocal(getStorageKey(reserveAsset, "ibc"), curveAddress)
 
-        const inverseTokenAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
-        dashboardDataSet.inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+          // find ib address
+          multicallQueries = []
+          multicallQueries.push(composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []))
+          multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+          let multicallBytes = await provider.call(multicallQuery)
+          let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+          const inverseTokenAddressBytes = multicallResults[0][0] ? multicallResults[0][1] : [""]
 
-        const reserveTokenDecimalsBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
-        dashboardDataSet.reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+          // cache ib address
+          cachedData["inverseTokenAddress"] = abiCoder.decode(["address"], inverseTokenAddressBytes)[0]
+          cachedData["inverseTokenDecimals"] = null
+          cachedData["inverseTokenSymbol"] = null
+          if (cachedData["inverseTokenAddress"]){
+            cacheToLocal(getStorageKey(reserveAsset, "ibTokenAddress"), cachedData["inverseTokenAddress"])
+          }
 
-        const reserveTokenSymbolBytes = multicallResults[2][0] ? multicallResults[2][1] : [""]
-        dashboardDataSet.reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0]
-        dashboardDataSet.reserveTokenSymbol = dashboardDataSet.reserveTokenSymbol === "WETH" ? "ETH" : dashboardDataSet.reserveTokenSymbol
+        } else {
+          // invalid curve
+          // for now default to eth
+          cachedData["curveAddress"] = contracts.default.ibcETHCurveContract
+          cachedData["reserveTokenDecimals"] = "18"
+          cachedData["reserveTokenSymbol"] = "ETH"
+          cachedData["inverseTokenDecimals"] = "18"
+          cachedData["inverseTokenSymbol"] = "ibETH"
+          cachedData["inverseTokenAddress"] = curves[0].ibAssetAddress
+          isValidCurve = false
+        }
 
-        multicallQueries = [
-          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "decimals", [], []),
-          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "symbol", [], [])
-        ]
+        if (cachedData["inverseTokenAddress"] && isValidCurve){
+          //fetch token metadata
+          multicallQueries = [
+            composeMulticallQuery(reserveAsset, "decimals", [], []),
+            composeMulticallQuery(reserveAsset, "symbol", [], []),
+            composeMulticallQuery(cachedData["inverseTokenAddress"], "decimals", [], []),
+            composeMulticallQuery(cachedData["inverseTokenAddress"], "symbol", [], []),
+          ]
 
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-        multicallBytes = await provider.call(multicallQuery)
-        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+          multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+          let multicallBytes = await provider.call(multicallQuery)
+          let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+          cachedData["reserveTokenDecimals"] = abiCoder.decode(["uint"], multicallResults[0][1])[0]
+          cachedData["reserveTokenSymbol"] = abiCoder.decode(["string"], multicallResults[1][1])[0]
+          cachedData["inverseTokenDecimals"] = abiCoder.decode(["uint"], multicallResults[2][1])[0]
+          cachedData["inverseTokenSymbol"] = abiCoder.decode(["string"], multicallResults[3][1])[0]
 
-        const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
-        dashboardDataSet.inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
-
-        const inverseTokenSymbolBytes = multicallResults[1][0] ? multicallResults[1][1] : [""]
-        dashboardDataSet.inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0]
-      } else {
-        // use hardcoded eth defaults
-        setReserveAssetAddress(contracts.tenderly.wethAddress)
-        dashboardDataSet.reserveTokenSymbol = curves[0].reserveSymbol
-        dashboardDataSet.inverseTokenSymbol = curves[0].ibAsset
-        dashboardDataSet.inverseTokenAddress = curves[0].ibAssetAddress
-
-        //fetch curve metadata
-        multicallQueries = [
-          composeMulticallQuery(dashboardDataSet.inverseTokenAddress, "decimals", [], []),
-          composeMulticallQuery(reserveAsset, "decimals", [], []),
-        ]
-
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-        multicallBytes = await provider.call(multicallQuery)
-        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
-
-        const inverseTokenDecimalsBytes = multicallResults[0][0] ? multicallResults[0][1] : [0]
-        dashboardDataSet.inverseTokenDecimals = abiCoder.decode(["uint"], inverseTokenDecimalsBytes)[0]
-
-        const reserveTokenDecimalsBytes = multicallResults[1][0] ? multicallResults[1][1] : [0]
-        dashboardDataSet.reserveTokenDecimals = abiCoder.decode(["uint"], reserveTokenDecimalsBytes)[0]
+          if (cachedData["reserveTokenDecimals"]){
+            cacheToLocal(getStorageKey(reserveAsset, "decimals"), cachedData["reserveTokenDecimals"])
+          }
+          if (cachedData["reserveTokenSymbol"]){
+            cacheToLocal(getStorageKey(reserveAsset, "symbol"), cachedData["reserveTokenSymbol"])
+          }
+          if (cachedData["inverseTokenDecimals"]){
+            cacheToLocal(getStorageKey(reserveAsset, "ibTokenDecimals"), cachedData["inverseTokenDecimals"])
+          }
+          if (cachedData["inverseTokenSymbol"]){
+            cacheToLocal(getStorageKey(reserveAsset, "ibTokenSymbol"), cachedData["inverseTokenSymbol"])
+          }
+        }
       }
 
+      Object.assign(dashboardDataSet, cachedData)
+
       // triggers another hook for additioanl data collection
-      setIbcContractAddress(curveAddress)
-      setupEventListener(curveAddress)
+      setReserveAssetAddress(isValidCurve ? reserveAsset : contracts.default.wethAddress)
+      setIbcContractAddress(cachedData["curveAddress"] ?? contracts.default.ibcETHCurveContract)
+      setupEventListener(cachedData["curveAddress"])
     }
 
     fetchFocusedAssetInfo().then(() =>{}).catch((err) => {console.log(err)})
@@ -274,7 +297,7 @@ export function Dashboard( props: dashboardProps ){
         composeMulticallQuery(ibcContractAddress, "totalStaked", [], []),
       ]
 
-      let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+      let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
       let multicallBytes = await provider.call(multicallQuery)
       let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -358,7 +381,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(ibcContractAddress, "reserveTokenAddress", [], []),
         ].concat(feeQueries)
 
-        let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 
         const queryResults = await Promise.all([
           provider.getBalance(wallet.accounts[0].address),
@@ -424,7 +447,7 @@ export function Dashboard( props: dashboardProps ){
           composeMulticallQuery(reserveTokenAddress, "allowance", ["address", "address"], [wallet.accounts[0].address, ibcRouterAddress]),
         ]
   
-        multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+        multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
         const tokenQueryResults = await provider.call(multicallQuery);
         multicallResults = abiCoder.decode(["(bool,bytes)[]"], tokenQueryResults)[0]
 
@@ -662,7 +685,7 @@ export function Dashboard( props: dashboardProps ){
                   <>
                     <Text align='left' borderRadius={'20px'} px={7} py={2} mb={0} fontSize={`15`}> 
                     {
-                      `Asset: ${reserveAssetAddress === contracts.tenderly.wethAddress ? "ETH" : reserveAssetAddress === '-' ? reserveAssetAddress : reserveAssetAddress.substring(0,5) + "..." + reserveAssetAddress.slice(-4)}`
+                      `Asset: ${reserveAssetAddress === contracts.default.wethAddress ? "ETH" : reserveAssetAddress === '-' ? reserveAssetAddress : reserveAssetAddress.substring(0,5) + "..." + reserveAssetAddress.slice(-4)}`
                     }
                     </Text>
                   </>
@@ -795,6 +818,7 @@ export function Dashboard( props: dashboardProps ){
                     <AssetList
                       nonWalletProvider = {nonWalletProvider}
                       parentSetters={{
+                        setCurveList: setCurveList
                       }}
                     />
                   
@@ -809,6 +833,7 @@ export function Dashboard( props: dashboardProps ){
                       parentSetters={{
                         setReserveAssetAddress: setReserveAssetAddress
                       }}
+                      curveList={curveList}
                       reserveListUpdateTimestamp={reserveListUpdateTimestamp}
                     />
                   
@@ -899,10 +924,10 @@ export function Dashboard( props: dashboardProps ){
 
                         <TabPanels>
                           <TabPanel p='0'>
-                            <AssetHolding parentSetters={{}}></AssetHolding>
+                            <AssetHolding parentSetters={{}} curveList={curveList}></AssetHolding>
                           </TabPanel>
                           <TabPanel p='0'>
-                            <LpPosition parentSetters={{}}></LpPosition>
+                            <LpPosition parentSetters={{}} curveList={curveList}></LpPosition>
                           </TabPanel>
                         </TabPanels>
                       </Tabs>

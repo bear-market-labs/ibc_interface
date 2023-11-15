@@ -28,20 +28,16 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	format,
-	parse,
-	commandTypes,
-	sanitizeNumberInput,
+	commandTypes
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
-import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 
 type mintProps = {
@@ -54,7 +50,7 @@ export default function CreateIBAsset(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const ibcFactoryAddress = contracts.tenderly.ibcFactoryContract;
+	const ibcFactoryAddress = contracts.default.ibcFactoryContract;
 	const { reserveAddress, parentSetters } = props
 	const [reserveSymbol, setReserveSymbol] = useState<string>('');
 	const [reserveDecimal, setReserveDecimal] = useState<number>(0);
@@ -85,7 +81,7 @@ export default function CreateIBAsset(props: mintProps) {
 						composeMulticallQuery(reserveAddress, "allowance", ['address', 'address'], [wallet.accounts[0].address, ibcFactoryAddress]),
 				]
 
-				let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+				let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
 				let multicallBytes = await web3Provider.call(multicallQuery)
 				let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
@@ -102,7 +98,7 @@ export default function CreateIBAsset(props: mintProps) {
 				setUserAllowance(abiCoder.decode(["uint256"], userAllowanceBytes)[0]);
 			}
 		}
-		if(reserveAddress){
+		if(reserveAddress && reserveAddress !== '-'){
 			fetchTokenInfo()
 			.then()
 			.catch((err) => console.log("error", err))

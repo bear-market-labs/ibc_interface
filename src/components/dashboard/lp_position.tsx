@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
-import { Button, Divider, Icon, Input, Link, Menu, MenuButton, MenuItem, MenuList, Stack, Text } from '@chakra-ui/react'
+import { Box, Button, Divider, Icon, Input, Link, Stack, Text, Image, Tooltip } from '@chakra-ui/react'
 
 import {
     Table,
@@ -18,14 +18,27 @@ import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { curves } from '../../config/curves'
 import { contracts } from '../../config/contracts'
 
+type CurveInfo = {
+    curveAddress: string,
+    reserveSymbol: string,
+    icon: string,
+    ibAsset: string,
+    image: any,
+    reserveAddress: string,
+    ibAssetAddress: string
+}
+
 type assetListProps = {
-    parentSetters: any
+    parentSetters: any,
+    curveList: CurveInfo[],
 }
 
 type lpPosition = {
     ibAsset: string,
     balance: number,
     reserveAddress: string,
+    image: any,
+    verified: boolean
 }
 
 export default function LpPosition(props: assetListProps) {
@@ -35,6 +48,7 @@ export default function LpPosition(props: assetListProps) {
     const [lpPosition, setLpPosition] = useState<lpPosition[]>();
 
     useEffect(() => {
+        const curves = props.curveList;
         const fetchWalletInfo = async () => {
             const abiCoder = ethers.utils.defaultAbiCoder;
             if (wallet?.provider) {
@@ -44,25 +58,30 @@ export default function LpPosition(props: assetListProps) {
                 let queries = _.map(curves, curve => {
                     return [
                         composeMulticallQuery(curve.curveAddress, "liquidityPositionOf", ["address"], [wallet.accounts[0].address]),
+                        composeMulticallQuery(curve.ibAssetAddress, "symbol", [], []),
                     ]
                 });
 
                 let multicallQueries = _.flattenDepth(queries, 1);
 
-                let multicallQuery = composeQuery(contracts.tenderly.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+                let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
                 let multicallBytes = await web3Provider.call(multicallQuery)
                 let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
                 let lpPositions: lpPosition[] = [];
                 for (let i = 0; i < curves.length; i++) {
-                    const lpPositionBytes = multicallResults[i][0] ? multicallResults[i][1] : [0];
-                    const lpBalance = Number(ethers.utils.formatEther(abiCoder.decode(["uint256", "uint256"], lpPositionBytes)[0]))
+                    const lpPositionBytes = multicallResults[i * 2 + 0][0] ? multicallResults[i * 2 + 0][1] : [0];
+                    const lpBalance = Number(ethers.utils.formatEther(abiCoder.decode(["uint256", "uint256"], lpPositionBytes)[0]));
+                    const symbolBytes = multicallResults[i * 2 + 1][0] ? multicallResults[i * 2 + 1][1] : [""];
+                    const symbol = abiCoder.decode(["string"], symbolBytes)[0];
 
                     if (lpBalance > 0) {
                         lpPositions.push({
-                            ibAsset: curves[i].ibAsset,
+                            ibAsset: symbol,
                             balance: lpBalance,
                             reserveAddress: curves[i].reserveAddress,
+                            image: require('../../assets/' + curves[i].icon),
+                            verified: curves[i].icon !== 'ib_asset_logo.svg',
                         })
                     }
                 }
@@ -71,11 +90,10 @@ export default function LpPosition(props: assetListProps) {
             }
         }
 
-
         fetchWalletInfo()
             .then()
             .catch((err) => console.log("error", err))
-    }, [wallet])
+    }, [wallet, props.curveList])
     return (
         <Stack justifyContent={'start'} h='calc(100vh - 220px)'>
             <Stack direction="row" w='100%'>
@@ -84,11 +102,42 @@ export default function LpPosition(props: assetListProps) {
                         <Tbody>
                             {
                                 lpPosition && lpPosition.map((position) => {
+
                                     return (
-                                        <Tr h='70px'>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>{position.ibAsset}</Link></Td>
-                                            <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
-                                        </Tr>
+                                        !position.verified ?
+                                            <Tr h='70px'>
+                                                <Tooltip label="Unverified" aria-label='Unverified'  placement='top' bg='gray' top="20px">
+                                                <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>
+                                                    <Stack direction='row' align='center' gap='0'>
+                                                        <Box boxSize='28px' mr='4'>
+                                                            <Image src={position.image} alt={position.reserveAddress} />
+                                                        </Box>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>
+                                                            {position.ibAsset}
+                                                        </Link>
+                                                    </Stack>
+                                                </Td>
+                                                </Tooltip>
+
+                                                {/* <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>{position.ibAsset}</Link></Td> */}
+                                                <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
+                                            </Tr>
+                                            :
+                                            <Tr h='70px'>
+                                                <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>
+                                                    <Stack direction='row' align='center' gap='0'>
+                                                        <Box boxSize='28px' mr='4'>
+                                                            <Image src={position.image} alt={position.reserveAddress} />
+                                                        </Box>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>
+                                                            {position.ibAsset}
+                                                        </Link>
+                                                    </Stack>
+                                                </Td>
+
+                                                {/* <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'><Link href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>{position.ibAsset}</Link></Td> */}
+                                                <Td fontWeight='400' borderColor='rgba(255, 255, 255, 0.16)'>{position.balance.toFixed(4)} LP</Td>
+                                            </Tr>
                                     )
                                 })
                             }

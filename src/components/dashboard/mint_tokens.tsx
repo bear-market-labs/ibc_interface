@@ -26,11 +26,7 @@ import {
 	explorerUrl,
 	maxSlippagePercent,
 	maxReserveChangePercent,
-	reserveAssetDecimals,
-	format,
-	parse,
   commandTypes,
-	sanitizeNumberInput,
 	curveUtilization,
 	defaultDecimals,
 } from '../../config/constants'
@@ -43,7 +39,7 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -56,7 +52,7 @@ export default function MintTokens(props: mintProps) {
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
 	const [amountDisplay, setAmountDisplay] = useState<number>() // tied to display amount
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -106,7 +102,7 @@ export default function MintTokens(props: mintProps) {
 			: '0'
 	)
 
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? Number(dashboardDataSet.reserveTokenDecimals) : defaultDecimals;
 	const contractReserveTokenBalance = "contractReserveTokenBalance" in dashboardDataSet ? dashboardDataSet.contractReserveTokenBalance : BigNumber.from(0);
 
 	const [resultPrice, setResultPrice] = useState<bignumber>(

@@ -5,11 +5,9 @@ import {
 	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -27,18 +25,12 @@ import { contracts } from '../../config/contracts'
 import { colors } from '../../config/style'
 import {
 	explorerUrl,
-	ibcSymbol,
 	maxSlippagePercent,
 	maxReserveChangePercent,
-	reserveAssetDecimals,
-	format,
-	parse,
 	commandTypes,
-	sanitizeNumberInput,
 	curveUtilization,
 	defaultDecimals,
 } from '../../config/constants'
-import { composeQuery } from '../../util/ethers_utils'
 import { CgArrowDownR } from 'react-icons/cg'
 
 import { BigNumber as bignumber } from 'bignumber.js'
@@ -47,7 +39,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -60,7 +52,7 @@ export default function BurnTokens(props: mintProps) {
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>()
 	const [amountDisplay, setAmountDisplay] = useState<number>()
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
@@ -113,7 +105,7 @@ export default function BurnTokens(props: mintProps) {
 			? bondingCurveParams.currentTokenPrice
 			: '0'
 	)
-	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : reserveAssetDecimals;
+	const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? Number(dashboardDataSet.reserveTokenDecimals) : defaultDecimals;
 	const maxBurn = "inverseTokenSupply" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) : 0
 	const maxWithdraw = "reserveAmount" in bondingCurveParams ? Number(formatUnits(bondingCurveParams.reserveAmount, reserveTokenDecimals)) : 0
 	const [resultPrice, setResultPrice] = useState<bignumber>(

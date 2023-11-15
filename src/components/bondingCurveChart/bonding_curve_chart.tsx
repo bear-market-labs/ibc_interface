@@ -163,7 +163,7 @@ export default function BondingCurveChart(props: IProps) {
 
         let currentY = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterK);
         let maxM = currentY * ((dataRange[dataRange.length -1]) ** curChartParam.curveParameter.parameterK);
-        // let minM = currentY * ((dataRange[0]) ** curChartParam.curveParameter.parameterK);
+        let minM = (dataRange[0] ** curChartParam.curveParameter.parameterK) * currentPrice;
 
         const xScale = d3.scaleLinear().domain(xDomain).range([0, innerWidth]);
         const yScale = d3.scaleLinear().domain(yDomain).range([innerHeight, 0]);
@@ -176,7 +176,7 @@ export default function BondingCurveChart(props: IProps) {
             yScale: yScale,
             chart: chartState?.chart,
             maxM: maxM,
-            minM: 0.65 // proper number to avoid y value lower than y domain bound
+            minM: minM, // proper number to avoid y value lower than y domain bound
         }
 
         setChartState(curChartState);
@@ -268,24 +268,26 @@ export default function BondingCurveChart(props: IProps) {
         let k = 1 - curveUtilization;
         let liquidityChange = curChartParam.targetLiquidityChange ?? 0;
         let m = Math.log(Math.E + liquidityChange);
-
         // limit the range of m to make the curve show properly with the old curve
         if(liquidityChange  > 0){
             if(m < 1.05 ){
                 m = 1.05;
-            }else if(m > chartState.maxM){
-                m = chartState.maxM;
             }
         }else{
             if(m > 0.95 ){
                 m = 0.95;
-            }else if(m < chartState.minM){
-                m = chartState.minM;
             }
         }
+
+        m = curChartParam.curveParameter.parameterM * m;
+        if(m > chartState.maxM){ 
+            m = chartState.maxM;
+        }else if(m < chartState.minM){
+            m = chartState.minM;
+        }
+        
         let currentPrice = curChartParam.curveParameter.parameterM / (curChartParam.currentSupply ** curChartParam.curveParameter.parameterK);
         let newSupply = (m / currentPrice) ** (1/k);
-        // let m = liquidityChange > 0 ? Math.min(Math.log(Math.E + liquidityChange), chartState.maxM) : Math.log(Math.E + liquidityChange);
 
         return {
             currentSupply: newSupply,
@@ -432,7 +434,7 @@ export default function BondingCurveChart(props: IProps) {
             }));
 
             _.remove(data, item =>{
-                return item.y > yDomain[1];
+                return item.y > yDomain[1] || item.y < yDomain[0];
             })
 
             // Line generator

@@ -6,12 +6,13 @@ import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, so
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
-import { commandTypes, explorerUrl, sanitizeNumberInput } from '../../config/constants'
+import { commandTypes, explorerUrl, } from '../../config/constants'
 import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { colors } from '../../config/style'
 import { isAbleToSendTransaction } from '../../config/validation'
+import { sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -20,7 +21,7 @@ type mintProps = {
 export default function UnstakeIbc(props: mintProps) {
   const [{ wallet,  }] = useConnectWallet()
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
-  const [ibcRouterAddress, ] = useState<string>(contracts.tenderly.ibcRouterContract)
+  const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
   const {dashboardDataSet} = props
   const [amount, setAmount] = useState<string>()
   const [amountDisplay, setAmountDisplay] = useState<string>()

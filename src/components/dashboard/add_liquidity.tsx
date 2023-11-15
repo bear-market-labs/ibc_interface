@@ -25,10 +25,7 @@ import { colors } from '../../config/style'
 import {
 	explorerUrl,
 	maxSlippagePercent,
-	format,
-	parse,
 	commandTypes,
-	sanitizeNumberInput,
 	lpTokenDecimals,
 	defaultDecimals,
 } from '../../config/constants'
@@ -40,7 +37,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -52,7 +49,7 @@ export default function AddLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))

@@ -11,14 +11,17 @@ import { Dashboard } from "./pages/dashboard";
 import theme from "./theme";
 import { contracts, } from "./config/contracts";
 import { useState } from "react";
-import { curves } from "./config/curves";
 import { Analytics } from '@vercel/analytics/react';
+import { providerPollingIntervalMilliSeconds } from "./config/constants";
+import { CgNametag } from "react-icons/cg";
 
 const injected = injectedModule();
-const rpcUrl = `https://eth.llamarpc.com`
+
+const currentEnv = process.env.REACT_APP_VERCEL_ENV ?? "local"
+const rpcUrl = currentEnv  === "production" ?  process.env.PROD_RPC ?? process.env.REACT_APP_PROD_RPC : process.env.DEV_RPC ?? process.env.REACT_APP_DEV_RPC
 
 let provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-provider.pollingInterval = 30000
+provider.pollingInterval = currentEnv === "production" ? Number(process.env.REACT_APP_PROD_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds) : Number(process.env.REACT_APP_PROVIDER_POLLING ?? providerPollingIntervalMilliSeconds)
 
 init({
   // apiKey,
@@ -45,8 +48,6 @@ init({
 export const App = () => {
   const [mostRecentIbcBlock, setMostRecentIbcBlock ] = useState<any>()
   const handleLog = (log: any) => {
-    // Process the log data here
-    console.log('Received LOG:', log);
     setMostRecentIbcBlock(log.blockNumber)
   };
 
@@ -58,7 +59,7 @@ export const App = () => {
     provider.on(eventFilter, handleLog)
   }
 
-  setupEventListener(contracts.tenderly.ibcETHCurveContract)
+  setupEventListener(contracts.default.ibcETHCurveContract)
 
   return (
   <ChakraProvider theme={theme}>

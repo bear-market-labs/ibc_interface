@@ -3,14 +3,11 @@ import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, constants } from 'ethers'
 
 import {
-	Box,
 	Button,
 	Icon,
-	Input,
 	Link,
 	NumberInput,
 	NumberInputField,
-	Spacer,
 	Stack,
 	Text,
 } from '@chakra-ui/react'
@@ -28,10 +25,7 @@ import { colors } from '../../config/style'
 import {
 	explorerUrl,
 	maxSlippagePercent,
-	parse,
-	format,
 	commandTypes,
-	reserveAssetDecimals,
 	defaultDecimals,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
@@ -42,7 +36,7 @@ import { Toast } from '../toast'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatNumber, formatReceiveNumber } from '../../util/display_formatting'
+import { formatNumber, formatReceiveNumber, format, parse } from '../../util/display_formatting'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -54,8 +48,8 @@ export default function RemoveLiquidity(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
-	const [ibcContractAddress] = useState<string>(contracts.tenderly.ibcETHCurveContract)
-	const [ibcRouterAddress] = useState<string>(contracts.tenderly.ibcRouterContract)
+	const [ibcContractAddress] = useState<string>(contracts.default.ibcETHCurveContract)
+	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 

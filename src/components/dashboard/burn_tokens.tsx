@@ -40,7 +40,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -52,7 +52,7 @@ export default function BurnTokens(props: mintProps) {
 	const [provider, setProvider] =
 		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>()
-	const [amountDisplay, setAmountDisplay] = useState<number>()
+	const [amountDisplay, setAmountDisplay] = useState<string>()
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
 	const { dashboardDataSet, parentSetters } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
@@ -332,44 +332,20 @@ export default function BurnTokens(props: mintProps) {
 		const supplyDeltaBig = bignumber(inverseTokenSupply.sub(burnedAmount).toString()).dividedBy(bignumber(inverseTokenSupply.toString()))
 		const liquidityReceivedBig = reserveAmount.sub(mulPercent(reserveAmount, supplyDeltaBig.sqrt().toNumber()))
 
-		const supplyDelta =
-			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)) /
-			Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
-
-		// this will be a negative number
-		const logSupplyDeltaTimesUtilization =
-			Math.log(supplyDelta) * curveUtilization
-
-		const liquidityReceived = parseUnitsBnJs(
-			Number(
-				-1 *
-					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-					Number(formatUnits(reserveAmount, defaultDecimals))
-			).toFixed(defaultDecimals)
-			,
-			defaultDecimals
-		)
-
 		// calculate spot price post mint
 		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
 		const newPriceBig = curveInvariantBig.mul(parseUnits(curveUtilization.toString(), defaultDecimals)).div(computeSquareRoot(inverseTokenSupply.sub(burnedAmount))).div(parseUnits("1", defaultDecimals/2))
 
-		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
-		const newPrice = curveInvariant * curveUtilization
-		/
-		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
-
 		setResultPrice(bignumber(newPriceBig.toString()))
-		setLiquidityReceived(liquidityReceived) 
-		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, defaultDecimals)) *
-		(1 - totalFeePercent)).toString())))
+		setLiquidityReceived(liquidityReceivedBig) 
+		setLiquidityReceivedDisplay(Number(formatReceiveNumber(formatUnitsBnJs(mulPercent(liquidityReceivedBig, 1-totalFeePercent), defaultDecimals))))
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(
 			inverseTokenSupply.sub(burnedAmount)
 		)
 		parentSetters?.setNewReserve(
-			reserveAmount.sub(liquidityReceived).toString()
+			reserveAmount.sub(liquidityReceivedBig).toString()
 		)
 	}
 
@@ -380,14 +356,18 @@ export default function BurnTokens(props: mintProps) {
 		if (isNaN(val) || val.trim() === '' || Number(val) > maxWithdraw) {
 			return
 		}
-
-		const liquidityReceived = parsedAmount / (1 - totalFeePercent) // full mint-amount
-
-		setLiquidityReceived(parseUnits(liquidityReceived.toFixed(defaultDecimals), defaultDecimals)) 
+		const liquidityReceivedBig = mulPercent(parseUnitsBnJs(parsedAmount, defaultDecimals), 1/(1-totalFeePercent))
+		setLiquidityReceived(liquidityReceivedBig) 
 
 		// calculate ibc burn amount
+		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
+
+		const mBig = BigNumber.from(bondingCurveParams.currentTokenPrice).mul(
+			computeSquareRoot(currentInverseTokenSupplyBig)
+		)
+
 		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
 		* 
 		Math.pow(
@@ -397,30 +377,21 @@ export default function BurnTokens(props: mintProps) {
 		const k_1 = 1 - k
 
 		//solve for burn amount
-		const burnAmount = (
-			currentInverseTokenSupply
-			-
-			Math.pow(
-				liquidityReceived * k_1 / m - currentInverseTokenSupply**k_1,
-				1/k_1
-			)
-		)
-		/
-		(1 - totalFeePercent)
+		const bigTerm = mulPercent(liquidityReceivedBig, k_1/m).div(BigNumber.from(10**9)).sub(computeSquareRoot(currentInverseTokenSupplyBig))
+		const burnAmountBig = mulPercent(currentInverseTokenSupplyBig.sub(bigTerm.pow(2)), 1/(1-totalFeePercent))
+		const newSupplyBig = currentInverseTokenSupplyBig.sub(mulPercent(burnAmountBig, 1-totalFeePercent))
+		const newPriceBig = mBig.div(computeSquareRoot(newSupplyBig))
 
-		const newSupply = currentInverseTokenSupply - burnAmount * (1 - totalFeePercent)
-		const newPrice = Number(m * newSupply ** (-k)).toFixed(defaultDecimals)
+		setResultPrice(bignumber(newPriceBig.toString()))
 
-		setResultPrice(bignumber(parseUnits(newPrice, defaultDecimals).toString()))
+		setAmount(burnAmountBig)
+		setAmountDisplay(formatUnitsBnJs(burnAmountBig, inverseTokenDecimals.toNumber()))
 
-		setAmount(parseUnits(burnAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
-		setAmountDisplay(burnAmount)
-
-		parentSetters?.setNewPrice(parseUnits(newPrice, defaultDecimals).toString())
-		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig)
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals).toString()
-		))
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig)
+		)
 	}
 
 

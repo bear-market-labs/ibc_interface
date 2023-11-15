@@ -41,7 +41,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot, } from '../../util/ethers_utils'
+import { computeSquareRoot, parseUnitsBnJs, } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -346,7 +346,6 @@ export default function MintTokens(props: mintProps) {
 			return
 		}
 
-		const mintAmount = parsedAmount / (1 - totalFeePercent) // full mint-amount
 		const mintAmountBig = BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**inverseTokenDecimals.toNumber())).dividedBy(bignumber(1-totalFeePercent)).toFixed(0))
 		setMintAmount(mintAmountBig)
 
@@ -362,29 +361,15 @@ export default function MintTokens(props: mintProps) {
 		const diffRootSupply = computeSquareRoot(newSupplyBig).sub(computeSquareRoot(currentInverseTokenSupplyBig))
 		const reserveNeededBig = mBig.mul(diffRootSupply).mul(2).div(bigOne)
 
-		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
-		const k = 1 - curveUtilization
-		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
-		* 
-		Math.pow(
-			currentInverseTokenSupply,
-			k
-		)
-
-		const newPrice = Number(m * (currentInverseTokenSupply + mintAmount) ** (-k)).toFixed(inverseTokenDecimals.toNumber())
-		const k_1 = 1 - k
-		const reserveNeeded = (m/k_1)*((currentInverseTokenSupply + mintAmount)**k_1 - currentInverseTokenSupply**k_1)
-
 		setResultPrice(bignumber(newPriceBig.toString()))
-
 		setAmount(reserveNeededBig.div(10**(defaultDecimals - reserveTokenDecimals))) // sent to router, needs to be the 'real' decimals
 		setAmountDisplay(bignumber(reserveNeededBig.toString()).dividedBy(bignumber(bigOne.toString())).toFixed(defaultDecimals))
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).add(parseUnits(reserveNeeded.toFixed(defaultDecimals), defaultDecimals).toString()
-		))
+			BigNumber.from(bondingCurveParams.reserveAmount).add(reserveNeededBig)
+		)
 	}
 
 

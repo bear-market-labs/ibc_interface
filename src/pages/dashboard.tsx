@@ -6,7 +6,7 @@ import MintTokens from "../components/dashboard/mint_tokens";
 import { RadioCard } from "../components/radio_card";
 import { ethers } from 'ethers'
 import { contracts } from "../config/contracts";
-import { composeMulticallQuery, composeQuery } from "../util/ethers_utils";
+import { composeMulticallQuery, composeQuery, divBnJs, formatUnitsBnJs, mulPercent } from "../util/ethers_utils";
 import BurnTokens from "../components/dashboard/burn_tokens";
 import AddLiquidity from "../components/dashboard/add_liquidity";
 import RemoveLiquidity from "../components/dashboard/remove_liquidity";
@@ -485,8 +485,7 @@ export function Dashboard( props: dashboardProps ){
         const userReserveTokenAllowance = abiCoder.decode(["uint"], userReserveTokenAllowanceBytes)[0]
 
         // downstream calculation for lp removal, all in formatted (or sane) decimals
-        const userLpRedeemableReserves = Number(ethers.utils.formatUnits(userLpTokenBalance, lpTokenDecimals)) * Number(ethers.utils.formatUnits(bondingCurveParams[0][0], defaultDecimals)) / Number(ethers.utils.formatUnits(bondingCurveParams[0][2], lpTokenDecimals))
-
+        const userLpRedeemableReserves = formatUnitsBnJs(mulPercent(userLpTokenBalance, divBnJs(bondingCurveParams[0][0], bondingCurveParams[0][2])), lpTokenDecimals)
         const userLpIbcDebit = userLpTokenBalance.mul(bondingCurveParams[0][1]).div(bondingCurveParams[0][2])
 
         setDashboardDataSet({

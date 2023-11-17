@@ -2,6 +2,7 @@ export const curves = [
     {
         ibAsset: 'ibETH',
         reserveSymbol: "ETH",
+        reserveDecimals: 18,
         icon: 'ib_eth_logo.svg',
         curveAddress: '0x5594B3D6EbeAbbc13aFC39f569961521e9425262',
         reserveAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -10,6 +11,7 @@ export const curves = [
     {
         ibAsset: 'ibPEPE',
         reserveSymbol: "PEPE",
+        reserveDecimals: 18,
         icon: 'ib_pepe_logo.svg',
         curveAddress: '0x6E2b3983698eE5F4f8dc9a0809B25962A243fA1F',
         reserveAddress: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',

@@ -15,13 +15,14 @@ import {
 import { BsChevronCompactDown } from 'react-icons/bs'
 import * as _ from "lodash";
 
-import { curves } from '../../config/curves'
+// import { curves } from '../../config/curves'
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
 import { contracts } from '../../config/contracts'
 import { formatNumber, formatPriceNumber } from '../../util/display_formatting'
 import { defaultDecimals, secondsPerDay } from '../../config/constants'
 import { colors } from '../../config/style'
 import { DefaultSpinner } from '../spinner'
+import { CurveManager, CurveMetadata } from "./curve_manager"
 
 type assetListProps = {
     nonWalletProvider: any,
@@ -41,6 +42,7 @@ type CurveInfo = {
     reserveAddress: string,
     ibAssetAddress: string,
     verified: boolean,
+    reserveDecimals: number
 }
 
 export default function AssetList(props: assetListProps) {
@@ -48,7 +50,7 @@ export default function AssetList(props: assetListProps) {
     const [{ wallet }] = useConnectWallet()
 
     const [totalCurveCount, setTotalCurveCount] = useState<number>(0);
-    const [curveMetadataList, setCurveMetadataList] = useState<CurveInfo[]>([]);
+    const [curveMetadataList, setCurveMetadataList] = useState<CurveMetadata[]>([]);
     const [curveList, setCurveList] = useState<CurveInfo[]>();
     const [filteredCurveList, setFilteredCurveList] = useState<CurveInfo[]>();
     const [sortOption, setSortOption] = useState<string>("HIGHEST STAKING APR");
@@ -60,92 +62,117 @@ export default function AssetList(props: assetListProps) {
 
     const fetchCurvesAddress = async () => {
         setIsLoading(true);
-        let curveMetaList = [ ...curveMetadataList || []];
-        if (curveMetaList.length == 0) {
-            curveMetaList = _.map(curves, curve => {
-                return {
-                    ...curve,
-                    price: 0,
-                    reserves: 0,
-                    stakingApr: 0,
-                    lpApr: 0,
-                    image: '',
-                    verified: false
-                }
-            })
-        }
-
+        let curveMetaList = CurveManager.getCurveList();
 
         const abiCoder = ethers.utils.defaultAbiCoder;
-        let multicallQueries = [
-            composeMulticallQuery(contracts.default.ibcFactoryContract, "allCurvesLength", [], [])
-        ]
-        // Try to get 10 curves, will get 0 if not that many curves
-        //TODO: improve code below to fetch the actual curve which is not in current list
-        for(let i = 0; i < 10; i++){
-            multicallQueries.push(composeMulticallQuery(contracts.default.ibcFactoryContract, "curves", ["uint256"], [i+ (curveList? curveList.length : 0)]));
-        }
-        let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
-        let multicallBytes = await getProvider().call(multicallQuery)
-        let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
-        const totalCurveCountBytes = multicallResults[0][0] ? multicallResults[0][1] : [0];
-        const totalCurveCnt = (abiCoder.decode(["uint"], totalCurveCountBytes)[0]).toNumber();
-        // if(totalCurveCnt <= curveMetaList.length){
-        //     return;
-        // }
+
+        let query = composeQuery(contracts.default.ibcFactoryContract, "allCurvesLength", [], [])
+        const callResultBytes = await getProvider().call(query);
+        const totalCurveCnt = (abiCoder.decode(["uint256"], callResultBytes)[0]).toNumber();
         console.log("totalCurveCount", totalCurveCnt);
         setTotalCurveCount(totalCurveCnt);
 
-        const curveAddressList = [];
-        for (let i = 0; i < 10; i++) {
-            if (multicallResults[i + 1][0]) {
-                const curveAddress = abiCoder.decode(["address"], multicallResults[i + 1][1])[0];
-                if (curveAddress != ethers.constants.AddressZero) {
-                    curveAddressList.push(curveAddress);
+        if(totalCurveCnt > curveMetaList.length){
+            let multicallQueries = []
+            let loadCnt = Math.floor((curveMetaList.length + 10) / 10) * 10;
+            if(loadCnt > totalCurveCnt ){
+                loadCnt = totalCurveCnt;            
+            }
+            for(let i = 0; i < loadCnt; i++){
+                multicallQueries.push(composeMulticallQuery(contracts.default.ibcFactoryContract, "curves", ["uint256"], [i]));
+            }
+            let multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
+            let multicallBytes = await getProvider().call(multicallQuery)
+            let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+        
+            const curveAddressList = [];
+            for (let i = 0; i < loadCnt; i++) {
+                if (multicallResults[i][0]) {
+                    const curveAddress = abiCoder.decode(["address"], multicallResults[i][1])[0];
+                    if (curveAddress != ethers.constants.AddressZero) {
+                        curveAddressList.push(curveAddress);
+                    }
                 }
             }
-        }
-
-        const curvesUnlisted = _.difference(curveAddressList, _.map(curveMetaList, 'curveAddress'));
-        let curveQueries = _.map(curvesUnlisted, (curveAddress) => {
-            return [
-                composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
-                composeMulticallQuery(curveAddress, "reserveTokenAddress", [], []),
-            ]
-        });
-
-        const multicallCurveQueries = _.flattenDepth(curveQueries, 1);
-
-        const multicallCurveQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallCurveQueries])
-        multicallBytes = await getProvider().call(multicallCurveQuery)
-        multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
-
-
-        for (let i = 0; i < curvesUnlisted.length; i++) {
-            const inverseTokenAddressBytes = multicallResults[i * 2][0] ? multicallResults[i * 2][1] : [""];
-            const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0];
-
-            const reserveTokenAddressBytes = multicallResults[i * 2 + 1][0] ? multicallResults[i * 2 + 1][1] : [""];
-            const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0];
-
-            const curveMeta = {
-                ibAsset: '',
-                reserveSymbol: "",
-                icon: 'ib_asset_logo.svg',
-                curveAddress: curvesUnlisted[i],
-                reserveAddress: reserveTokenAddress,
-                ibAssetAddress: inverseTokenAddress,
-                price: 0,
-                reserves: 0,
-                stakingApr: 0,
-                lpApr: 0,
-                image: '',
-                verified: false
+    
+            const curvesWithoutMetadata = _.difference(curveAddressList, _.map(curveMetaList, 'curveAddress'));
+            let curveQueries = _.map(curvesWithoutMetadata, (curveAddress) => {
+                return [
+                    composeMulticallQuery(curveAddress, "inverseTokenAddress", [], []),
+                    composeMulticallQuery(curveAddress, "reserveTokenAddress", [], []),
+                ]
+            });
+    
+            let multicallCurveQueries = _.flattenDepth(curveQueries, 1);
+    
+            let multicallCurveQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallCurveQueries])
+            multicallBytes = await getProvider().call(multicallCurveQuery)
+            multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+    
+            const fetchedCurveMetadataList = [];
+            for (let i = 0; i < curvesWithoutMetadata.length; i++) {
+                const inverseTokenAddressBytes = multicallResults[i * 2][0] ? multicallResults[i * 2][1] : [""];
+                const inverseTokenAddress = abiCoder.decode(["address"], inverseTokenAddressBytes)[0];
+    
+                const reserveTokenAddressBytes = multicallResults[i * 2 + 1][0] ? multicallResults[i * 2 + 1][1] : [""];
+                const reserveTokenAddress = abiCoder.decode(["address"], reserveTokenAddressBytes)[0];
+    
+                const curveMeta = {
+                    ibAsset: '',
+                    reserveSymbol: "",
+                    icon: 'ib_asset_logo.svg',
+                    curveAddress: curvesWithoutMetadata[i],
+                    reserveAddress: reserveTokenAddress,
+                    ibAssetAddress: inverseTokenAddress,
+                    reserveDecimals: 0,
+                    verified: false
+                }
+    
+                fetchedCurveMetadataList.push(curveMeta);    
             }
 
-            curveMetaList.push(curveMeta);
+            let tokenDecimalsQueries = _.map(fetchedCurveMetadataList, (curve) => {
+                return [
+                    composeMulticallQuery(curve.reserveAddress, "decimals", [], []),
+                    composeMulticallQuery(curve.reserveAddress, "symbol", [], []),
+                    composeMulticallQuery(curve.ibAssetAddress, "symbol", [], [])
+                ]
+            });
+    
+            multicallCurveQueries = _.flattenDepth(tokenDecimalsQueries, 1);
 
-        }
+            multicallCurveQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallCurveQueries])
+            multicallBytes = await getProvider().call(multicallCurveQuery)
+            multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
+    
+    
+            for (let i = 0; i < fetchedCurveMetadataList.length; i++) {
+                const tokenDecimalsBytes = multicallResults[i*3][0] ? multicallResults[i*3][1] : [""];
+                const tokenDecimals = (abiCoder.decode(["uint256"], tokenDecimalsBytes)[0]).toNumber();
+                fetchedCurveMetadataList[i].reserveDecimals = tokenDecimals;
+
+                const reserveTokenSymbolBytes = multicallResults[i * 3 + 1][0] ? multicallResults[i * 3 + 1][1] : [""];
+                let reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0];
+                if (reserveTokenSymbol == 'WETH') {
+                    reserveTokenSymbol = 'ETH';
+                }
+
+                const inverseTokenSymbolBytes = multicallResults[i * 3 + 2][0] ? multicallResults[i * 3 + 2][1] : [""];
+                const inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0];
+
+                fetchedCurveMetadataList[i].reserveSymbol = reserveTokenSymbol;
+                fetchedCurveMetadataList[i].ibAsset = inverseTokenSymbol;
+            }
+
+            let currentCurveMetaList = CurveManager.getCurveList();
+            if(currentCurveMetaList.length > curveMetaList.length){
+                return;
+            }
+            curveMetaList = [...curveMetaList, ...fetchedCurveMetadataList];
+
+            CurveManager.updateCurveList(curveMetaList);
+        }    
+        
         setCurveMetadataList(curveMetaList);
         parentSetters.setCurveList(curveMetaList);
         setIsLoading(false);
@@ -179,8 +206,8 @@ export default function AssetList(props: assetListProps) {
                     composeMulticallQuery(curve.curveAddress, "totalStaked", [], []),
                     composeMulticallQuery(curve.curveAddress, "rewardEMAPerSecond", ["uint8"], [0]),
                     composeMulticallQuery(curve.curveAddress, "rewardEMAPerSecond", ["uint8"], [1]),
-                    composeMulticallQuery(curve.reserveAddress, "symbol", [], []),
-                    composeMulticallQuery(curve.ibAssetAddress, "symbol", [], [])
+                    // composeMulticallQuery(curve.reserveAddress, "symbol", [], []),
+                    // composeMulticallQuery(curve.ibAssetAddress, "symbol", [], [])
                 ]
             });
 
@@ -191,7 +218,7 @@ export default function AssetList(props: assetListProps) {
             let multicallBytes = await getProvider().call(multicallQuery)
             let multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
 
-            const requestCountPerCurve = 6;
+            const requestCountPerCurve = 4;
 
             for (let i = 0; i < curvesMissingInfo.length; i++) {
                 const bondingCurveParamsBytes = multicallResults[i * requestCountPerCurve][0] ? multicallResults[i * requestCountPerCurve][1] : [[0, 0, 0, 0, 0]]
@@ -206,19 +233,9 @@ export default function AssetList(props: assetListProps) {
                 const stakingRewardEmaBytes = multicallResults[i * requestCountPerCurve + 3][0] ? multicallResults[i * requestCountPerCurve + 3][1] : [0, 0]
                 const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
-                const reserveTokenSymbolBytes = multicallResults[i * requestCountPerCurve + 4][0] ? multicallResults[i * requestCountPerCurve + 4][1] : [""];
-                let reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0];
-                if (reserveTokenSymbol == 'WETH') {
-                    reserveTokenSymbol = 'ETH';
-                }
 
-                const inverseTokenSymbolBytes = multicallResults[i * requestCountPerCurve + 5][0] ? multicallResults[i * requestCountPerCurve + 5][1] : [""];
-                const inverseTokenSymbol = abiCoder.decode(["string"], inverseTokenSymbolBytes)[0];
 
-                curveStates[i].reserveSymbol = reserveTokenSymbol;
-                curveStates[i].ibAsset = inverseTokenSymbol;
-
-                bondingCurveParams[0][0].toString()
+                //bondingCurveParams[0][0].toString()
                 curveStates[i].price = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][3].toString())));
                 curveStates[i].reserves = Number(ethers.utils.formatEther(ethers.BigNumber.from(bondingCurveParams[0][0].toString())));
 
@@ -258,8 +275,7 @@ export default function AssetList(props: assetListProps) {
 
     useEffect(() => {
         fetchCurvesAddress().then(() => { }).catch((err) => { console.log(err) });
-
-    }, [nonWalletProvider, wallet?.provider])
+    }, [wallet?.provider])
 
     const fectchCurveInfo = async (curveAddress: string) => {
         const abiCoder = ethers.utils.defaultAbiCoder;
@@ -276,7 +292,8 @@ export default function AssetList(props: assetListProps) {
             stakingApr: 0,
             lpApr: 0,
             image: '',
-            verified: false
+            verified: false,
+            reserveDecimals: 0
         }
 
         let multicallQueries =
@@ -340,7 +357,8 @@ export default function AssetList(props: assetListProps) {
             multicallQueries =
                 [
                     composeMulticallQuery(curveInfo.ibAssetAddress, "symbol", [], []),
-                    composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], [])
+                    composeMulticallQuery(curveInfo.reserveAddress, "symbol", [], []),
+                    composeMulticallQuery(curveInfo.reserveAddress, "decimals", [], []),
                 ]
 
             multicallQuery = composeQuery(contracts.default.multicallContract, "aggregate3", ["(address,bool,bytes)[]"], [multicallQueries])
@@ -349,6 +367,7 @@ export default function AssetList(props: assetListProps) {
             multicallResults = abiCoder.decode(["(bool,bytes)[]"], multicallBytes)[0]
             curveInfo.ibAsset = abiCoder.decode(["string"], multicallResults[0][1])[0].toString();
             curveInfo.reserveSymbol = abiCoder.decode(["string"], multicallResults[1][1])[0].toString();
+            curveInfo.reserveDecimals = abiCoder.decode(["uint256"], multicallResults[2][1])[0].toNumber();
             curveInfo.image = require('../../assets/' + curveInfo.icon);
 
             return [curveInfo];
@@ -375,6 +394,21 @@ export default function AssetList(props: assetListProps) {
             setFilteredCurveList(filterResult);
             if (filterResult.length === 0) {
                 filterResult = await fectchCurveInfo(search);
+                if(filterResult.length == 1){
+                    let curveMeta = _.pick(filterResult[0], [
+                        'curveAddress',
+                        'reserveSymbol',
+                        'reserveAddress',
+                        'reserveDecimals',
+                        'ibAsset',    
+                        'ibAssetAddress', 
+                        'verified',
+                        'icon',
+                    ])
+
+                    CurveManager.updateCurve(curveMeta);
+                }
+
                 setFilteredCurveList(filterResult);
             }
 

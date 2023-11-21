@@ -40,8 +40,8 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot, parseUnitsBnJs, } from '../../util/ethers_utils'
+import { formatBalanceNumber, format, parse, sanitizeNumberInput, formatReceiveNumber } from '../../util/display_formatting'
+import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs, } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -49,9 +49,12 @@ type mintProps = {
 }
 
 export default function MintTokens(props: mintProps) {
-	const [{ wallet }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
+
+	const notInTestContext: boolean = (!(global.jest || process.env.NODE_ENV === "test"))
+
+	const [{ wallet }] = notInTestContext ? useConnectWallet() : [{wallet: null}]
+	const [provider, setProvider] = notInTestContext ? 
+		useState<ethers.providers.Web3Provider | null>() : [null, null]
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
 	const [amountDisplay, setAmountDisplay] = useState<string>() // tied to display amount
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
@@ -114,7 +117,7 @@ export default function MintTokens(props: mintProps) {
 
 	useEffect(() => {
 		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
+		if (wallet?.provider && setProvider) {
 			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
 		}
 	}, [wallet])
@@ -329,7 +332,7 @@ export default function MintTokens(props: mintProps) {
 
 		setResultPrice(bignumber(newPriceBig.toString()))
 		setMintAmount(newSupplyBig.sub(inverseTokenSupply))
-		setMintAmountDisplay(newSupplyBig.sub(inverseTokenSupply).mul(Number((1-totalFeePercent)*(10**defaultDecimals)).toFixed(0)).div(bigOne).div(bigOne).toString())
+		setMintAmountDisplay(formatReceiveNumber(formatUnitsBnJs(mulPercent(newSupplyBig.sub(inverseTokenSupply), 1-totalFeePercent), inverseTokenDecimals.toNumber()).toString()))
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
@@ -396,6 +399,7 @@ export default function MintTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid="you_pay"
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
@@ -437,6 +441,7 @@ export default function MintTokens(props: mintProps) {
 							placeholder={`0`}
 							pl='0'
 							marginBlockStart={`1rem`}
+							data-testid="you_receive"
 						/>
 					</NumberInput>
 

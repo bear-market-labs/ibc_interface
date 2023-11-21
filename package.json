@@ -34,7 +34,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test -- config=jest.config.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -53,6 +53,7 @@
     ]
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.197"
+    "@types/lodash": "^4.14.197",
+    "ts-jest": "^29.1.1"
   }
 }

@@ -81,9 +81,9 @@ export default function MintTokens(props: mintProps) {
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
 						Number(
-							formatUnits(
+							formatUnitsBnJs(
 								dashboardDataSet.fees[y]['buyTokens'],
-								inverseTokenDecimals
+								inverseTokenDecimals.toNumber()
 							)
 						) + x,
 					0
@@ -337,7 +337,7 @@ export default function MintTokens(props: mintProps) {
 			return
 		}
 
-		const mintAmountBig = BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**inverseTokenDecimals.toNumber())).dividedBy(bignumber(1-totalFeePercent)).toFixed(0))
+		const mintAmountBig = mulPercent(parseUnitsBnJs(Number(parsedAmount).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()), 1/(1-totalFeePercent)) 
 		setMintAmount(mintAmountBig)
 
 		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
@@ -356,10 +356,12 @@ export default function MintTokens(props: mintProps) {
 		setAmount(reserveNeededBig.div(10**(defaultDecimals - reserveTokenDecimals))) // sent to router, needs to be the 'real' decimals
 		setAmountDisplay(bignumber(reserveNeededBig.toString()).dividedBy(bignumber(bigOne.toString())).toFixed(defaultDecimals))
 
+			console.log(mintAmountBig.toString())
+
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).add(reserveNeededBig)
+			BigNumber.from(bondingCurveParams.reserveAmount).add(reserveNeededBig).toString()
 		)
 	}
 

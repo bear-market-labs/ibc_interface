@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { ethers } from 'ethers'
 
 import {
@@ -15,7 +15,6 @@ import {
 	concat,
 	defaultAbiCoder,
 	hexlify,
-	formatUnits,
 	solidityKeccak256,
 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
@@ -37,6 +36,7 @@ import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatNumber, formatReceiveNumber, format, parse } from '../../util/display_formatting'
 import { WalletState } from '@web3-onboard/core'
+import { formatUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
 	dashboardDataSet: any
@@ -91,7 +91,7 @@ export default function RemoveLiquidity(props: mintProps) {
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
-						Number(formatUnits(dashboardDataSet.fees[y]['removeLiquidity'], defaultDecimals)) +
+						Number(formatUnitsBnJs(dashboardDataSet.fees[y]['removeLiquidity'], defaultDecimals)) +
 						x,
 					0
 			  )
@@ -217,9 +217,9 @@ export default function RemoveLiquidity(props: mintProps) {
 
 				if (LiquidityRemovedDetails) {
 					description = `Received ${Number(
-						formatUnits(LiquidityRemovedDetails[1], defaultDecimals)
+						formatUnitsBnJs(LiquidityRemovedDetails[1], defaultDecimals)
 					).toFixed(4)} ${dashboardDataSet.reserveTokenSymbol} for ${Number(
-						formatUnits(LiquidityRemovedDetails[0], lpTokenDecimals)
+						formatUnitsBnJs(LiquidityRemovedDetails[0], lpTokenDecimals.toNumber())
 					).toFixed(4)} LP`
 				} else {
 					// allowance type tx was performed
@@ -296,7 +296,7 @@ export default function RemoveLiquidity(props: mintProps) {
 							minWidth='auto'
 							border='none'
 							fontSize='5xl'
-							placeholder={Number(formatUnits(userLpTokenBalance, lpTokenDecimals)).toFixed(3)}
+							placeholder={Number(formatUnitsBnJs(userLpTokenBalance, lpTokenDecimals.toNumber())).toFixed(3)}
 							pl='0'
 						/>
 					</NumberInput>
@@ -307,7 +307,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				<Stack direction='row' justify='right' fontSize='sm'>
 					<Text align='right'>
 						{
-							userLpIbcPayment.gt(0) ? `+ ${formatNumber(formatUnits(userLpIbcPayment, lpTokenDecimals), dashboardDataSet.reserveTokenSymbol, true, true)} for withdrawal` : ` ` 
+							userLpIbcPayment.gt(0) ? `+ ${formatNumber(formatUnitsBnJs(userLpIbcPayment, lpTokenDecimals.toNumber()), dashboardDataSet.reserveTokenSymbol, true, true)} for withdrawal` : ` ` 
 						}
 					</Text>
 				</Stack>
@@ -329,7 +329,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						userLpIbcPayment.lt(0) ? `+ ${Number(Number(formatUnits(userLpIbcPayment.abs(), lpTokenDecimals)) * (1 - totalFeePercent)).toFixed(3)} ${dashboardDataSet.inverseTokenSymbol} made available` : ` ` 
+						userLpIbcPayment.lt(0) ? `+ ${Number(Number(formatUnitsBnJs(userLpIbcPayment.abs(), lpTokenDecimals.toNumber())) * (1 - totalFeePercent)).toFixed(3)} ${dashboardDataSet.inverseTokenSymbol} made available` : ` ` 
 					}
 				</Text>
 			</Stack>
@@ -343,7 +343,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				>
 					<Text align='left'>Market price</Text>
 					<Text align='right'>
-						{`${Number(formatUnits(currentTokenPrice, defaultDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
+						{`${Number(formatUnitsBnJs(currentTokenPrice, defaultDecimals)).toFixed(3)} ${dashboardDataSet.reserveTokenSymbol}`}
 					</Text>
 				</Stack>
 				<Stack
@@ -374,7 +374,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, Number(formatUnitsBnJs(userLpTokenBalance, lpTokenDecimals.toNumber()))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
 					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? `Insufficient ${dashboardDataSet.inverseTokenSymbol}` : userInverseTokenAllowance.gte(userLpIbcPayment) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>

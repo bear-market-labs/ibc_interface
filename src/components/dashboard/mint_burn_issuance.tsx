@@ -27,7 +27,7 @@ export default function MintBurnIssuance(props: mintProps) {
 
   if ( // math.abs not allowed for bigints
     (
-      newIbcIssuance.gt(inverseTokenSupply)
+      newIbcIssuance.gte(inverseTokenSupply)
       && 
       newIbcIssuance.sub(inverseTokenSupply) < BigNumber.from(Number(diffTolerance * 10**inverseTokenDecimals.toNumber()).toFixed(0)) 
     )

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
-import {  ethers } from 'ethers'
+import { ethers } from 'ethers'
 import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
@@ -13,6 +13,7 @@ import { colors } from '../../config/style'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { sanitizeNumberInput } from '../../util/display_formatting'
 import { WalletState } from '@web3-onboard/core'
+import { formatUnitsBnJs, parseUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -124,7 +125,7 @@ export default function UnstakeIbc(props: mintProps) {
               value={amountDisplay}
               onChange={valueString => {
                 setAmountDisplay(sanitizeNumberInput(valueString))
-                setAmount(parseUnits(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals).toString())
+                setAmount(parseUnitsBnJs(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()).toString())
               }}>
             <NumberInputField
               minWidth="auto"
@@ -141,10 +142,10 @@ export default function UnstakeIbc(props: mintProps) {
         </Stack>
         <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
           <Text>
-            {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
+            {`Staked: ${Number(formatUnitsBnJs(userStakingBalance, inverseTokenDecimals.toNumber())).toFixed(2)}`}
           </Text>
           <Box as='button' color={colors.TEAL} onClick={() => {
-            setAmountDisplay(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())
+            setAmountDisplay(Number(formatUnitsBnJs(userStakingBalance, inverseTokenDecimals.toNumber())).toString())
             setAmount(userStakingBalance.toString())
           }}>MAX</Box>
         </Stack>

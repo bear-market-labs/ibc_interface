@@ -14,6 +14,7 @@ import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatNumber } from '../../util/display_formatting'
 import { WalletState } from '@web3-onboard/core'
+import { formatUnitsBnJs } from '../../util/ethers_utils'
 
 
 type mintProps = {
@@ -137,10 +138,10 @@ export default function ClaimLpRewards(props: mintProps) {
     forceUpdate()
   }, [wallet, dashboardDataSet, ibcRouterAddress]);
 
-  const IBC_rewards = Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))
+  const IBC_rewards = Number(formatUnitsBnJs(userClaimableLpRewards, inverseTokenDecimals.toNumber())) + Number(formatUnitsBnJs(userClaimableStakingRewards, inverseTokenDecimals.toNumber()))
   const IBC_rewards_display = formatNumber(IBC_rewards.toString(), dashboardDataSet.inverseTokenSymbol, false)
 
-  const ETH_rewards = Number(formatUnits(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, defaultDecimals))
+  const ETH_rewards = Number(formatUnitsBnJs(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnitsBnJs(userClaimableStakingReserveRewards, defaultDecimals))
   const ETH_rewards_display = formatNumber(ETH_rewards.toString(), dashboardDataSet.reserveTokenSymbol, false)
   
   return (

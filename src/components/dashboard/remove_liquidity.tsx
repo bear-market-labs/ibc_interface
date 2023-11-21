@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, constants } from 'ethers'
+import { ethers } from 'ethers'
 
 import {
 	Button,
@@ -37,20 +36,19 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatNumber, formatReceiveNumber, format, parse } from '../../util/display_formatting'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
 	parentSetters: any
+	wallet: WalletState | null
 }
 
 export default function RemoveLiquidity(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
 	const [ibcContractAddress] = useState<string>(contracts.default.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 
 	const userInverseTokenAllowance = BigNumber.from(
@@ -111,29 +109,15 @@ export default function RemoveLiquidity(props: mintProps) {
 		: ''
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider) {
+		if (!wallet) {
 			return
-		}
-
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 
@@ -283,7 +267,6 @@ export default function RemoveLiquidity(props: mintProps) {
 		forceUpdate()
 	}, [
 		wallet,
-		provider,
 		ibcContractAddress,
 		maxSlippage,
 		userInverseTokenAllowance,
@@ -391,7 +374,7 @@ export default function RemoveLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, Number(formatUnits(userLpTokenBalance, lpTokenDecimals))) || userLpIbcPayment.gt(userIbcTokenBalance)}
 				>
 					{userLpTokenBalance === '0' ? `Add Required` : userLpIbcPayment.gt(userIbcTokenBalance) ? `Insufficient ${dashboardDataSet.inverseTokenSymbol}` : userInverseTokenAllowance.gte(userLpIbcPayment) ? 'Remove Liquidity' : 'Approve LP'}
 				</Button>

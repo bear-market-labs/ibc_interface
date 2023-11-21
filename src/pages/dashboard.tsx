@@ -749,10 +749,10 @@ export function Dashboard( props: dashboardProps ){
                                 </TabList>
                                 <TabPanels pt='10'>
                                   <TabPanel>
-                                    <StakeIbc dashboardDataSet={dashboardDataSet} />
+                                    <StakeIbc dashboardDataSet={dashboardDataSet} wallet={wallet}/>
                                   </TabPanel>
                                   <TabPanel>
-                                    <UnstakeIbc dashboardDataSet={dashboardDataSet} />
+                                    <UnstakeIbc dashboardDataSet={dashboardDataSet} wallet={wallet}/>
                                   </TabPanel>
                                 </TabPanels>
                               </Tabs>
@@ -763,7 +763,7 @@ export function Dashboard( props: dashboardProps ){
                         {
                           selectedNavItem === "claim" &&
                           <>
-                            <ClaimLpRewards dashboardDataSet={dashboardDataSet} closeParentDialog={handleModalClose}/>
+                            <ClaimLpRewards dashboardDataSet={dashboardDataSet} closeParentDialog={handleModalClose} wallet={wallet}/>
                           </>
                         }
                       </ModalBody>
@@ -983,6 +983,7 @@ export function Dashboard( props: dashboardProps ){
                                   setNewLpIssuance: setNewLpIssuance,
                                   setNewReserve: setNewReserve
                                 }}
+                                wallet={wallet}
                               />
                           </TabPanel>
                         </TabPanels>
@@ -1011,6 +1012,7 @@ export function Dashboard( props: dashboardProps ){
                                 setNewLpIssuance: setNewLpIssuance,
                                 setNewReserve: setNewReserve
                               }}
+                              wallet={wallet}
                             />
                           </TabPanel>
                           <TabPanel>
@@ -1022,6 +1024,7 @@ export function Dashboard( props: dashboardProps ){
                                   setNewLpIssuance: setNewLpIssuance,
                                   setNewReserve: setNewReserve
                                 }}
+                                wallet={wallet}
                               />
                           </TabPanel>
                         </TabPanels>

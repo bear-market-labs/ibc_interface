@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
 import {
 	Box,
@@ -39,19 +38,18 @@ import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
 import { divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
 	parentSetters: any
+	wallet: WalletState | null
 }
 
 export default function AddLiquidity(props: mintProps) {
-	const [{ wallet }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
 	const [ibcCredit, setIbcCredit] = useState<BigNumber>(BigNumber.from('0'))
@@ -101,29 +99,15 @@ export default function AddLiquidity(props: mintProps) {
 
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider || !amount) {
+		if (!wallet || !amount) {
 			return
-		}
-
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 			let description = 'Error details'
@@ -272,7 +256,6 @@ export default function AddLiquidity(props: mintProps) {
 	}, [
 		amount,
 		wallet,
-		provider,
 		dashboardDataSet,
 		maxSlippage,
 		mintAmount,
@@ -403,7 +386,7 @@ export default function AddLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || userLpTokenBalance.gt(0)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amount) || userLpTokenBalance.gt(0)}
 				>
 					{userLpTokenBalance.gt(0) ? `Removal Required` : `Add Liquidity`}
 				</Button>

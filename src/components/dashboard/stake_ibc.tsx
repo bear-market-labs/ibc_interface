@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
+import { useCallback, useState } from 'react'
 import {  ethers } from 'ethers'
 import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
@@ -13,16 +12,16 @@ import { error_message } from '../../config/error'
 import { colors } from '../../config/style'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { sanitizeNumberInput } from '../../util/display_formatting'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
   dashboardDataSet: any;
+  wallet: WalletState | null;
 }
 
 export default function StakeIbc(props: mintProps) {
-  const [{ wallet,  }] = useConnectWallet()
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
-  const {dashboardDataSet} = props
+  const {dashboardDataSet, wallet} = props
   const [amount, setAmount] = useState<string>()
   const [amountDisplay, setAmountDisplay] = useState<string>()
 
@@ -33,30 +32,16 @@ export default function StakeIbc(props: mintProps) {
   const userInverseTokenAllowance = BigNumber.from("userInverseTokenAllowance" in dashboardDataSet ? dashboardDataSet.userInverseTokenAllowance : '0');
   const [isProcessing, setIsProcessing] = useState(false); 
 
-  useEffect(() => {
-    // If the wallet has a provider than the wallet is connected
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-    }
-  }, [wallet])
-
   const sendTransaction = useCallback(async () => {
 
-    if (!wallet || !provider || !amount){
+    if (!wallet || !amount){
       return
-    }
-
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     }
 
     try {
       setIsProcessing(true)
-      const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
       let description = "Error details"
       let txDetails;
@@ -165,7 +150,7 @@ export default function StakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, amount, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress, amountDisplay, forceUpdate]);
+  }, [wallet, dashboardDataSet, amount, userInverseTokenAllowance, inverseTokenAddress, ibcRouterAddress, amountDisplay, forceUpdate]);
 
   return (
       <Stack fontWeight='500'>
@@ -213,7 +198,7 @@ export default function StakeIbc(props: mintProps) {
           w='100%'
           fontSize='lg'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, amountDisplay) || isProcessing}>
+          isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amountDisplay) || isProcessing}>
         {
               userInverseTokenAllowance.gte(BigNumber.from(amount?? 0)) ? "Stake" : "Approve " + dashboardDataSet.inverseTokenSymbol
         }

@@ -971,6 +971,7 @@ export function Dashboard( props: dashboardProps ){
                                 setNewLpIssuance: setNewLpIssuance,
                                 setNewReserve: setNewReserve
                               }}
+                              wallet={wallet}
                             />
                           </TabPanel>
                           <TabPanel>

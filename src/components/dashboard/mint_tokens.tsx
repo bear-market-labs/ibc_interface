@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
+import { useCallback, useState } from 'react'
 import { ethers } from 'ethers'
 import {
 	Box,
@@ -42,23 +41,19 @@ import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, format, parse, sanitizeNumberInput, formatReceiveNumber } from '../../util/display_formatting'
 import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs, } from '../../util/ethers_utils'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
-	parentSetters: any
+	parentSetters: any,
+	wallet: WalletState | null,
 }
 
 export default function MintTokens(props: mintProps) {
-
-	const notInTestContext: boolean = (!(global.jest || process.env.NODE_ENV === "test"))
-
-	const [{ wallet }] = notInTestContext ? useConnectWallet() : [{wallet: null}]
-	const [provider, setProvider] = notInTestContext ? 
-		useState<ethers.providers.Web3Provider | null>() : [null, null]
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
 	const [amountDisplay, setAmountDisplay] = useState<string>() // tied to display amount
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0)) // this is tied to the actual number sent for tx
@@ -115,25 +110,19 @@ export default function MintTokens(props: mintProps) {
 	)
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider && setProvider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider || !amount) {
+		if (!wallet || !amount) {
 			return
 		}
 
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
+		if (!(wallet?.provider)) {
+			return
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 			let description = 'Error details'
@@ -295,7 +284,6 @@ export default function MintTokens(props: mintProps) {
 	}, [
 		amount,
 		wallet,
-		provider,
 		dashboardDataSet,
 		maxSlippage,
 		mintAmount,
@@ -518,7 +506,7 @@ export default function MintTokens(props: mintProps) {
 				</Stack>
 				{isProcessing && <DefaultSpinner />}
 				<Button
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amount)}
 					onClick={sendTransaction}
 				>
 					Mint

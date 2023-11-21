@@ -36,7 +36,7 @@ describe('MintToken YOU PAY handling', () => {
 				}} parentSetters={{                                
 					setNewIbcIssuance: setNewIbcIssuance,
 					setNewPrice: setNewPrice,
-					setNewReserve: setNewReserve}} />
+					setNewReserve: setNewReserve}} wallet={null}/>
 			</ChakraProvider>
 		)
 		const inputElement = getByTestId('you_pay')
@@ -84,7 +84,7 @@ describe('MintToken YOU RECEIVE handling', () => {
 				}} parentSetters={{                                
 					setNewIbcIssuance: setNewIbcIssuance,
 					setNewPrice: setNewPrice,
-					setNewReserve: setNewReserve}} />
+					setNewReserve: setNewReserve}} wallet={null}/>
 			</ChakraProvider>
 		)
 		const inputElement = getByTestId('you_pay')

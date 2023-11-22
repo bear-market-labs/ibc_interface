@@ -309,6 +309,7 @@ export default function AddLiquidity(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid="you_pay"
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>

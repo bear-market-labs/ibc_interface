@@ -39,7 +39,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { computeSquareRoot, divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
 import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
@@ -316,19 +316,20 @@ export default function BurnTokens(props: mintProps) {
 		const liquidityReceivedBig = reserveAmount.sub(mulPercent(reserveAmount, supplyDeltaBig.sqrt().toNumber()))
 
 		// calculate spot price post mint
-		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
-		const newPriceBig = curveInvariantBig.mul(parseUnits(curveUtilization.toString(), defaultDecimals)).div(computeSquareRoot(inverseTokenSupply.sub(burnedAmount))).div(parseUnits("1", defaultDecimals/2))
-
+		const newReserve = reserveAmount.sub(liquidityReceivedBig)
+		const newSupply = inverseTokenSupply.sub(burnedAmount)
+		const newPriceBig = parseUnitsBnJs(curveUtilization.toString(), defaultDecimals).mul(newReserve).div(newSupply)
+		
 		setResultPrice(bignumber(newPriceBig.toString()))
 		setLiquidityReceived(liquidityReceivedBig) 
 		setLiquidityReceivedDisplay(Number(formatReceiveNumber(formatUnitsBnJs(mulPercent(liquidityReceivedBig, 1-totalFeePercent), defaultDecimals))))
 
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(
-			inverseTokenSupply.sub(burnedAmount)
+			newSupply
 		)
 		parentSetters?.setNewReserve(
-			reserveAmount.sub(liquidityReceivedBig).toString()
+			newReserve.toString()
 		)
 	}
 
@@ -363,7 +364,8 @@ export default function BurnTokens(props: mintProps) {
 		const bigTerm = mulPercent(liquidityReceivedBig, k_1/m).div(BigNumber.from(10**9)).sub(computeSquareRoot(currentInverseTokenSupplyBig))
 		const burnAmountBig = mulPercent(currentInverseTokenSupplyBig.sub(bigTerm.pow(2)), 1/(1-totalFeePercent))
 		const newSupplyBig = currentInverseTokenSupplyBig.sub(mulPercent(burnAmountBig, 1-totalFeePercent))
-		const newPriceBig = mBig.div(computeSquareRoot(newSupplyBig))
+		const newReserveBig = BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig)
+		const newPriceBig = parseUnitsBnJs(curveUtilization.toString(), defaultDecimals).mul(newReserveBig).div(newSupplyBig)
 
 		setResultPrice(bignumber(newPriceBig.toString()))
 
@@ -373,7 +375,7 @@ export default function BurnTokens(props: mintProps) {
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig).toString()
+			newReserveBig.toString()
 		)
 	}
 

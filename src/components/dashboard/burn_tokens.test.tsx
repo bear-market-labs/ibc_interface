@@ -46,7 +46,7 @@ describe('Burn Token YOU PAY handling', () => {
 		fireEvent.change(inputElement, {target:{value:'11'}})
 
 		await waitFor(() => {
-			expect(newPrice).toBe('1571890826397969483')
+			expect(newPrice).toBe('1571890826606560941')
 			expect(newIbcIssuance.toString()).toBe(ethers.BigNumber.from('14095447126455587752').sub(ethers.BigNumber.from('10889999999999999999')).toString())
 			expect(newReserve).toBe(ethers.BigNumber.from('21131781542148949646').sub(ethers.BigNumber.from('11054555675653151020')).toString())
 		});
@@ -96,7 +96,7 @@ describe('BurnToken YOU RECEIVE handling', () => {
 		fireEvent.change(inputElement, {target:{value:'10.944'}})
 
 		await waitFor(() => {
-			expect(newPrice).toBe('1571889231955141735')
+			expect(newPrice).toBe('1571889231749905718')
 			expect(newIbcIssuance.toString()).toBe('3205453629956167694')
 			expect(newReserve).toBe(ethers.BigNumber.from('21131781542148949646').sub(ethers.BigNumber.from('11054545454545455629')).toString())
 		});

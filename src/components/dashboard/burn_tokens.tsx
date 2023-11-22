@@ -370,10 +370,10 @@ export default function BurnTokens(props: mintProps) {
 		setAmount(burnAmountBig)
 		setAmountDisplay(formatUnitsBnJs(burnAmountBig, inverseTokenDecimals.toNumber()))
 
-		parentSetters?.setNewPrice(newPriceBig)
+		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig)
+			BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig).toString()
 		)
 	}
 
@@ -402,6 +402,7 @@ export default function BurnTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid='you_pay'
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
@@ -441,6 +442,7 @@ export default function BurnTokens(props: mintProps) {
 							placeholder={`0`}
 							pl='0'
 							marginBlockStart={`1rem`}
+							data-testid='you_receive'
 						/>
 					</NumberInput>
 					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>

@@ -356,8 +356,6 @@ export default function MintTokens(props: mintProps) {
 		setAmount(reserveNeededBig.div(10**(defaultDecimals - reserveTokenDecimals))) // sent to router, needs to be the 'real' decimals
 		setAmountDisplay(bignumber(reserveNeededBig.toString()).dividedBy(bignumber(bigOne.toString())).toFixed(defaultDecimals))
 
-			console.log(mintAmountBig.toString())
-
 		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(

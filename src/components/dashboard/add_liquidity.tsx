@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
 import { ethers, BigNumber } from 'ethers'
 import {
 	Box,
@@ -38,22 +37,22 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
 	parentSetters: any
+	wallet: WalletState | null
 }
 
 export default function AddLiquidity(props: mintProps) {
-	const [{ wallet }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<number>()
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0))
-	const [ibcCredit, setIbcCredit] = useState<number>(0)
+	const [ibcCredit, setIbcCredit] = useState<BigNumber>(BigNumber.from('0'))
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -100,29 +99,15 @@ export default function AddLiquidity(props: mintProps) {
 
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider || !amount) {
+		if (!wallet || !amount) {
 			return
-		}
-
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 			let description = 'Error details'
@@ -271,7 +256,6 @@ export default function AddLiquidity(props: mintProps) {
 	}, [
 		amount,
 		wallet,
-		provider,
 		dashboardDataSet,
 		maxSlippage,
 		mintAmount,
@@ -286,26 +270,19 @@ export default function AddLiquidity(props: mintProps) {
 			return
 		}
 
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : val, defaultDecimals)
-		const feeAdjustedAmount = BigInt(decimaledParsedAmount.toString()) * BigInt(10000 - totalFeePercent*10000) / BigInt(10000)
+		const decimaledParsedAmount = parseUnitsBnJs(val === '' ? '0' : val, defaultDecimals)
+		const feeAdjustedAmountBig = mulPercent(decimaledParsedAmount, 1-totalFeePercent)
 
-		const mintAmount = BigNumber.from(
-			bignumber(Number(lpTokenSupply.toString()) * Number(feeAdjustedAmount))
-				.dividedBy(
-					bignumber(bondingCurveParams.reserveAmount)
-				)
-				.toFixed(0)
-		)
+		const mintAmountBig = mulPercent(feeAdjustedAmountBig, divBnJs(lpTokenSupply, BigNumber.from(bondingCurveParams.reserveAmount)))
+		const lpIbcCreditBig = mulPercent(feeAdjustedAmountBig, divBnJs(BigNumber.from(bondingCurveParams.inverseTokenSupply), BigNumber.from(bondingCurveParams.reserveAmount)))
 
 		//calculate ibc credit
-		const lpIbcCredit = Number(formatUnits(feeAdjustedAmount, defaultDecimals)) * Number(formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals)) / Number(formatUnits(bondingCurveParams.reserveAmount, defaultDecimals))
+		setMintAmount(mintAmountBig)
+		setIbcCredit(lpIbcCreditBig)
 
-		setMintAmount(mintAmount)
-		setIbcCredit(lpIbcCredit)
-
-		parentSetters?.setNewLpIssuance(mintAmount.add(lpTokenSupply).toString())
+		parentSetters?.setNewLpIssuance(mintAmountBig.add(lpTokenSupply).toString())
 		parentSetters?.setNewReserve(
-			Number(Number(feeAdjustedAmount) + Number(bondingCurveParams.reserveAmount)).toString()
+			BigNumber.from(bondingCurveParams.reserveAmount).add(feeAdjustedAmountBig).toString()
 		)
 	}
 
@@ -332,6 +309,7 @@ export default function AddLiquidity(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid="you_pay"
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
@@ -364,7 +342,7 @@ export default function AddLiquidity(props: mintProps) {
 				</Stack>
 				<Text align='right' fontSize='sm'>
 					{
-						`+ ${formatNumber(ibcCredit.toString(), dashboardDataSet.reserveTokenSymbol, true, true)} bound to position`
+						`+ ${formatNumber(formatUnitsBnJs(ibcCredit, defaultDecimals).toString(), dashboardDataSet.reserveTokenSymbol, true, true)} bound to position`
 					}
 				</Text>
 			</Stack>
@@ -409,7 +387,7 @@ export default function AddLiquidity(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount) || userLpTokenBalance.gt(0)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amount) || userLpTokenBalance.gt(0)}
 				>
 					{userLpTokenBalance.gt(0) ? `Removal Required` : `Add Liquidity`}
 				</Button>

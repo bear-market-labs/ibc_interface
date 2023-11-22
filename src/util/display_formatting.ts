@@ -1,4 +1,5 @@
 import { ethers, BigNumber } from "ethers";
+import {BigNumber as bignumber} from "bignumber.js"
 
 export const maxTickerLength = 5
 export const targetNumCharacters = 9
@@ -76,7 +77,7 @@ export function formatBalanceNumber(number: string){
 
 export function formatReceiveNumber(number: string){
   // "you receive" box always has sufficient space to assume smaller ticker length
-  return Number(number).toFixed(3)
+  return bignumber(number).toFixed(3)
 }
 
 export function formatPriceNumber(priceUnformatted: BigNumber, decimals: number, symbol: string, showSymbol=false){

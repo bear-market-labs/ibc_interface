@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, constants } from 'ethers'
+import { useCallback, useState } from 'react'
+import { ethers } from 'ethers'
 import {
 	Box,
 	Button,
@@ -40,20 +39,20 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { computeSquareRoot, divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
 	parentSetters: any
+	wallet: WalletState | null
 }
 
 export default function BurnTokens(props: mintProps) {
-	const [{ wallet, connecting }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>()
-	const [amountDisplay, setAmountDisplay] = useState<number>()
+	const [amountDisplay, setAmountDisplay] = useState<string>()
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
 	const [liquidityReceived, setLiquidityReceived] = useState<BigNumber>(
@@ -113,29 +112,15 @@ export default function BurnTokens(props: mintProps) {
 	)
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider) {
+		if (!wallet || !amount) {
 			return
-		}
-
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-			// if using ethers v6 this is:
-			// ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 			let description = 'Error details'
@@ -292,7 +277,6 @@ export default function BurnTokens(props: mintProps) {
 	}, [
 		amount,
 		wallet,
-		provider,
 		dashboardDataSet,
 		maxSlippage,
 		liquidityReceived,
@@ -310,58 +294,42 @@ export default function BurnTokens(props: mintProps) {
 			return
 		}
 
-		setAmount(parseUnits(parsedAmount, inverseTokenDecimals.toNumber()))
+		setAmount(parseUnitsBnJs(parsedAmount, inverseTokenDecimals.toNumber()))
 
-		const decimaledParsedAmount = parseUnits(parsedAmount,
+		const decimaledParsedAmount = parseUnitsBnJs(parsedAmount,
 			inverseTokenDecimals.toNumber()
 		)
 		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
 		// this should be a non-under/overflow number between 0,1
-		const fee = parseUnits(
+		const fee = parseUnitsBnJs(
 			Number(
 				Number(formatUnits(decimaledParsedAmount, inverseTokenDecimals)) *
 					totalFeePercent
 			).toFixed(Number(inverseTokenDecimals)),
-			inverseTokenDecimals
+			inverseTokenDecimals.toNumber()
 		)
 		const burnedAmount = decimaledParsedAmount.sub(fee)
-		const supplyDelta =
-			Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)) /
-			Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
 
-		// this will be a negative number
-		const logSupplyDeltaTimesUtilization =
-			Math.log(supplyDelta) * curveUtilization
-
-		const liquidityReceived = parseUnits(
-			Number(
-				-1 *
-					(Math.exp(logSupplyDeltaTimesUtilization) - 1) *
-					Number(formatUnits(reserveAmount, defaultDecimals))
-			).toFixed(defaultDecimals)
-			,
-			defaultDecimals
-		)
+		const supplyDeltaBig = bignumber(inverseTokenSupply.sub(burnedAmount).toString()).dividedBy(bignumber(inverseTokenSupply.toString()))
+		const liquidityReceivedBig = reserveAmount.sub(mulPercent(reserveAmount, supplyDeltaBig.sqrt().toNumber()))
 
 		// calculate spot price post mint
-		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
-		const newPrice = curveInvariant * curveUtilization
-		/
-		Math.pow(Number(formatUnits(inverseTokenSupply.sub(burnedAmount), inverseTokenDecimals)), 1 - curveUtilization)
+		const newReserve = reserveAmount.sub(liquidityReceivedBig)
+		const newSupply = inverseTokenSupply.sub(burnedAmount)
+		const newPriceBig = parseUnitsBnJs(curveUtilization.toString(), defaultDecimals).mul(newReserve).div(newSupply)
+		
+		setResultPrice(bignumber(newPriceBig.toString()))
+		setLiquidityReceived(liquidityReceivedBig) 
+		setLiquidityReceivedDisplay(Number(formatReceiveNumber(formatUnitsBnJs(mulPercent(liquidityReceivedBig, 1-totalFeePercent), defaultDecimals))))
 
-		setResultPrice(bignumber(parseUnits(newPrice.toString(), inverseTokenDecimals).toString()))
-		setLiquidityReceived(liquidityReceived) 
-		setLiquidityReceivedDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(liquidityReceived, defaultDecimals)) *
-		(1 - totalFeePercent)).toString())))
-
-		parentSetters?.setNewPrice(parseUnits(newPrice.toString(), inverseTokenDecimals).toString())
+		parentSetters?.setNewPrice(newPriceBig.toString())
 		parentSetters?.setNewIbcIssuance(
-			BigInt(inverseTokenSupply.sub(burnedAmount).toString())
+			newSupply
 		)
 		parentSetters?.setNewReserve(
-			reserveAmount.sub(liquidityReceived).toString()
+			newReserve.toString()
 		)
 	}
 
@@ -372,14 +340,18 @@ export default function BurnTokens(props: mintProps) {
 		if (isNaN(val) || val.trim() === '' || Number(val) > maxWithdraw) {
 			return
 		}
-
-		const liquidityReceived = parsedAmount / (1 - totalFeePercent) // full mint-amount
-
-		setLiquidityReceived(parseUnits(liquidityReceived.toFixed(defaultDecimals), defaultDecimals)) 
+		const liquidityReceivedBig = mulPercent(parseUnitsBnJs(parsedAmount, defaultDecimals), 1/(1-totalFeePercent))
+		setLiquidityReceived(liquidityReceivedBig) 
 
 		// calculate ibc burn amount
+		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
+
+		const mBig = BigNumber.from(bondingCurveParams.currentTokenPrice).mul(
+			computeSquareRoot(currentInverseTokenSupplyBig)
+		)
+
 		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
 		* 
 		Math.pow(
@@ -389,30 +361,22 @@ export default function BurnTokens(props: mintProps) {
 		const k_1 = 1 - k
 
 		//solve for burn amount
-		const burnAmount = (
-			currentInverseTokenSupply
-			-
-			Math.pow(
-				liquidityReceived * k_1 / m - currentInverseTokenSupply**k_1,
-				1/k_1
-			)
-		)
-		/
-		(1 - totalFeePercent)
+		const bigTerm = mulPercent(liquidityReceivedBig, k_1/m).div(BigNumber.from(10**9)).sub(computeSquareRoot(currentInverseTokenSupplyBig))
+		const burnAmountBig = mulPercent(currentInverseTokenSupplyBig.sub(bigTerm.pow(2)), 1/(1-totalFeePercent))
+		const newSupplyBig = currentInverseTokenSupplyBig.sub(mulPercent(burnAmountBig, 1-totalFeePercent))
+		const newReserveBig = BigNumber.from(bondingCurveParams.reserveAmount).sub(liquidityReceivedBig)
+		const newPriceBig = parseUnitsBnJs(curveUtilization.toString(), defaultDecimals).mul(newReserveBig).div(newSupplyBig)
 
-		const newSupply = currentInverseTokenSupply - burnAmount * (1 - totalFeePercent)
-		const newPrice = Number(m * newSupply ** (-k)).toFixed(defaultDecimals)
+		setResultPrice(bignumber(newPriceBig.toString()))
 
-		setResultPrice(bignumber(parseUnits(newPrice, defaultDecimals).toString()))
+		setAmount(burnAmountBig)
+		setAmountDisplay(formatUnitsBnJs(burnAmountBig, inverseTokenDecimals.toNumber()))
 
-		setAmount(parseUnits(burnAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
-		setAmountDisplay(burnAmount)
-
-		parentSetters?.setNewPrice(parseUnits(newPrice, defaultDecimals).toString())
-		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply - burnAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig.toString())
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).sub(parseUnits(Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals).toString()
-		))
+			newReserveBig.toString()
+		)
 	}
 
 
@@ -440,6 +404,7 @@ export default function BurnTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid='you_pay'
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
@@ -479,6 +444,7 @@ export default function BurnTokens(props: mintProps) {
 							placeholder={`0`}
 							pl='0'
 							marginBlockStart={`1rem`}
+							data-testid='you_receive'
 						/>
 					</NumberInput>
 					<Text align='right'>{dashboardDataSet.reserveTokenSymbol}</Text>
@@ -556,7 +522,7 @@ export default function BurnTokens(props: mintProps) {
 				{isProcessing && <DefaultSpinner />}
 				<Button
 					onClick={sendTransaction}
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amount)}
 				>
 					{userInverseTokenAllowance.gte(amount ?? BigNumber.from(0)) ? 'Burn' : 'Approve ' + dashboardDataSet.inverseTokenSymbol}
 				</Button>

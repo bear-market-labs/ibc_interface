@@ -5,6 +5,7 @@ import { HiOutlineArrowRight} from "react-icons/hi"
 import { formatNumber } from '../../util/display_formatting'
 import { defaultDecimals } from '../../config/constants'
 import { font_sizes } from '../../config/style'
+import { formatUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
   dashboardDataSet: any;
@@ -21,25 +22,27 @@ export default function MintBurnIssuance(props: mintProps) {
   const inverseTokenSupply = "inverseTokenSupply" in bondingCurveParams ? BigNumber.from(bondingCurveParams.inverseTokenSupply) : BigNumber.from('0'); 
   const inverseTokenDecimals = BigNumber.from("inverseTokenDecimals" in dashboardDataSet ? dashboardDataSet.inverseTokenDecimals : '0'); 
 
-  let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance: BigInt(0)
+  let newIbcIssuance = parentInputDynamicData?.newIbcIssuance ? parentInputDynamicData.newIbcIssuance: BigNumber.from('0')
   let newReserve = parentInputDynamicData?.newReserve ? BigNumber.from(parentInputDynamicData.newReserve) : BigNumber.from('0')
 
   if ( // math.abs not allowed for bigints
     (
-      newIbcIssuance > BigInt(inverseTokenSupply.toString()) 
+      newIbcIssuance.gte(inverseTokenSupply)
       && 
-      newIbcIssuance - BigInt(inverseTokenSupply.toString()) < diffTolerance * 10**inverseTokenDecimals.toNumber() 
+      newIbcIssuance.sub(inverseTokenSupply) < BigNumber.from(Number(diffTolerance * 10**inverseTokenDecimals.toNumber()).toFixed(0)) 
     )
     ||
     (
-      BigInt(inverseTokenSupply.toString()) > newIbcIssuance
+      inverseTokenSupply.gt(newIbcIssuance)
       &&
-      BigInt(inverseTokenSupply.toString()) - newIbcIssuance < diffTolerance * 10**inverseTokenDecimals.toNumber()
+      inverseTokenSupply.sub(newIbcIssuance) < BigNumber.from(Number(diffTolerance * 10**inverseTokenDecimals.toNumber()).toFixed(0)) 
     )
   ){
-    newIbcIssuance = BigInt(inverseTokenSupply.toString())
+    newIbcIssuance = inverseTokenSupply
   }
-  const newIbcIssuanceSaneFormat = Number(newIbcIssuance) / Number(10**inverseTokenDecimals.toNumber())
+
+  // div and mod
+  const newIbcIssuanceSaneFormat = formatUnitsBnJs(newIbcIssuance, inverseTokenDecimals.toNumber())
 
   if (Math.abs(Number(ethers.utils.formatUnits(reserveAmount.sub(newReserve), defaultDecimals))) < diffTolerance){
     newReserve = reserveAmount
@@ -53,12 +56,12 @@ export default function MintBurnIssuance(props: mintProps) {
         <Stack direction="row" fontSize={font_sizes.MAIN_VALUES} fontWeight='700'>
           <Text ml={7} align="left">{`${formatNumber(ethers.utils.formatUnits(inverseTokenSupply, inverseTokenDecimals), dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
           {
-            newIbcIssuance > BigInt(0) && newIbcIssuance !== BigInt(inverseTokenSupply.toString()) &&
+            newIbcIssuance.gt(0) && !newIbcIssuance.eq(inverseTokenSupply) &&
             <>
               <Box ml='7' mr='7'>
                 <Icon as={HiOutlineArrowRight} h='100%'/>
               </Box>
-              <Text>{`${formatNumber(newIbcIssuanceSaneFormat.toString(), dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
+              <Text>{`${formatNumber(newIbcIssuanceSaneFormat, dashboardDataSet.reserveTokenSymbol, true, true)}`}</Text>
             </>
           }
         </Stack>

@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
-import {  ethers } from 'ethers'
+import { useCallback, useState } from 'react'
+import { ethers } from 'ethers'
 import { Box, Button, Link, NumberInput, NumberInputField, Stack, Text } from '@chakra-ui/react'
-import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, parseUnits, solidityKeccak256 } from 'ethers/lib/utils'
+import { arrayify, concat, defaultAbiCoder, hexlify, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 import { DefaultSpinner } from '../spinner'
@@ -13,16 +12,17 @@ import { error_message } from '../../config/error'
 import { colors } from '../../config/style'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { sanitizeNumberInput } from '../../util/display_formatting'
+import { WalletState } from '@web3-onboard/core'
+import { formatUnitsBnJs, parseUnitsBnJs } from '../../util/ethers_utils'
 
 type mintProps = {
   dashboardDataSet: any;
+  wallet: WalletState | null;
 }
 
 export default function UnstakeIbc(props: mintProps) {
-  const [{ wallet,  }] = useConnectWallet()
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
-  const {dashboardDataSet} = props
+  const {dashboardDataSet, wallet} = props
   const [amount, setAmount] = useState<string>()
   const [amountDisplay, setAmountDisplay] = useState<string>()
 
@@ -31,30 +31,16 @@ export default function UnstakeIbc(props: mintProps) {
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // If the wallet has a provider than the wallet is connected
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-    }
-  }, [wallet])
-
   const sendTransaction = useCallback(async () => {
 
-    if (!wallet || !provider || !amount){
+    if (!wallet || !amount){
       return
-    }
-
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     }
 
     try {
       setIsProcessing(true)
-      const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
       const functionDescriptorBytes = arrayify(
@@ -129,7 +115,7 @@ export default function UnstakeIbc(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, amount, ibcRouterAddress, amountDisplay, forceUpdate]);
+  }, [wallet, dashboardDataSet, amount, ibcRouterAddress, amountDisplay, forceUpdate]);
 
   return (
       <Stack fontWeight='500'>
@@ -139,7 +125,7 @@ export default function UnstakeIbc(props: mintProps) {
               value={amountDisplay}
               onChange={valueString => {
                 setAmountDisplay(sanitizeNumberInput(valueString))
-                setAmount(parseUnits(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals).toString())
+                setAmount(parseUnitsBnJs(Number(sanitizeNumberInput(valueString)).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()).toString())
               }}>
             <NumberInputField
               minWidth="auto"
@@ -156,10 +142,10 @@ export default function UnstakeIbc(props: mintProps) {
         </Stack>
         <Stack direction={`row`} justifyContent={`flex-end`} pb='5' fontSize={'sm'}>
           <Text>
-            {`Staked: ${Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toFixed(2)}`}
+            {`Staked: ${Number(formatUnitsBnJs(userStakingBalance, inverseTokenDecimals.toNumber())).toFixed(2)}`}
           </Text>
           <Box as='button' color={colors.TEAL} onClick={() => {
-            setAmountDisplay(Number(formatUnits(userStakingBalance, inverseTokenDecimals)).toString())
+            setAmountDisplay(Number(formatUnitsBnJs(userStakingBalance, inverseTokenDecimals.toNumber())).toString())
             setAmount(userStakingBalance.toString())
           }}>MAX</Box>
         </Stack>
@@ -174,7 +160,7 @@ export default function UnstakeIbc(props: mintProps) {
           w='100%'
           fontSize='lg'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, amountDisplay) || isProcessing}
+          isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amountDisplay) || isProcessing}
           >
             Unstake
           </Button>

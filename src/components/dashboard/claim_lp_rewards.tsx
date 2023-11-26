@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
+import { useCallback, useState } from 'react'
 import {  ethers } from 'ethers'
-import { Box, Button, Divider, Input, Link, Spacer, Stack, Text } from '@chakra-ui/react'
+import {  Button, Link, Stack, Text } from '@chakra-ui/react'
 import { arrayify, concat, defaultAbiCoder, hexlify, formatUnits, solidityKeccak256 } from 'ethers/lib/utils'
 import { BigNumber } from 'ethers'
 import { contracts } from '../../config/contracts'
 
 
-import { BigNumber as bignumber } from 'bignumber.js'
 import { DefaultSpinner } from '../spinner'
 import { commandTypes, defaultDecimals, explorerUrl } from '../../config/constants'
 import { BiLinkExternal } from 'react-icons/bi'
@@ -15,19 +13,19 @@ import { Toast } from '../toast'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatNumber } from '../../util/display_formatting'
+import { WalletState } from '@web3-onboard/core'
+import { formatUnitsBnJs } from '../../util/ethers_utils'
 
 
 type mintProps = {
   dashboardDataSet: any;
   closeParentDialog: any;
+  wallet: WalletState | null;
 }
 
 export default function ClaimLpRewards(props: mintProps) {
-  const [{ wallet, connecting }] = useConnectWallet()
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)
-  const {dashboardDataSet} = props
-  let closeParentDialog = props.closeParentDialog;
+  const {dashboardDataSet, closeParentDialog, wallet} = props
 
   const userClaimableLpRewards = BigNumber.from("userClaimableLpRewards" in dashboardDataSet ? dashboardDataSet.userClaimableLpRewards : '0')
   const userClaimableLpReserveRewards = BigNumber.from("userClaimableLpReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableLpReserveRewards : '0')
@@ -39,30 +37,17 @@ export default function ClaimLpRewards(props: mintProps) {
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // If the wallet has a provider than the wallet is connected
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
-    }
-  }, [wallet])
 
   const sendTransaction = useCallback(async () => {
 
-    if (!wallet || !provider){
+    if (!wallet){
       return
-    }
-
-    if (wallet?.provider) {
-      setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-      // if using ethers v6 this is:
-      // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     }
 
     try {
       setIsProcessing(true)
-      const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
       const abiCoder = defaultAbiCoder
 
 			const functionDescriptorBytes = arrayify(
@@ -151,12 +136,12 @@ export default function ClaimLpRewards(props: mintProps) {
     }
     setIsProcessing(false)
     forceUpdate()
-  }, [wallet, provider, dashboardDataSet, ibcRouterAddress]);
+  }, [wallet, dashboardDataSet, ibcRouterAddress]);
 
-  const IBC_rewards = Number(formatUnits(userClaimableLpRewards, inverseTokenDecimals)) + Number(formatUnits(userClaimableStakingRewards, inverseTokenDecimals))
+  const IBC_rewards = Number(formatUnitsBnJs(userClaimableLpRewards, inverseTokenDecimals.toNumber())) + Number(formatUnitsBnJs(userClaimableStakingRewards, inverseTokenDecimals.toNumber()))
   const IBC_rewards_display = formatNumber(IBC_rewards.toString(), dashboardDataSet.inverseTokenSymbol, false)
 
-  const ETH_rewards = Number(formatUnits(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnits(userClaimableStakingReserveRewards, defaultDecimals))
+  const ETH_rewards = Number(formatUnitsBnJs(userClaimableLpReserveRewards, defaultDecimals)) + Number(formatUnitsBnJs(userClaimableStakingReserveRewards, defaultDecimals))
   const ETH_rewards_display = formatNumber(ETH_rewards.toString(), dashboardDataSet.reserveTokenSymbol, false)
   
   return (
@@ -182,7 +167,7 @@ export default function ClaimLpRewards(props: mintProps) {
           w='100%'
           fontSize='lg'
           onClick={sendTransaction}
-          isDisabled={!isAbleToSendTransaction(wallet, provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
+          isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, Math.max(Number(IBC_rewards), Number(ETH_rewards))) || isProcessing}
           >
             Claim
           </Button>

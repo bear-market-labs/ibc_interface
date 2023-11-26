@@ -1,3 +1,5 @@
+import { ethers } from 'ethers'
+
 export const lpTokenDecimals = 18
 export const defaultDecimals = 18
 export const maxSlippagePercent = 1
@@ -5,6 +7,8 @@ export const maxReserveChangePercent = 1
 export const explorerUrl = "https://etherscan.io/tx/"
 export const curveUtilization = 0.5
 export const providerPollingIntervalMilliSeconds = 30000
+export const bigOne = ethers.utils.parseUnits('1', defaultDecimals)
+
 
 export const actionTypes = [
   "buyTokens",

@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useConnectWallet } from '@web3-onboard/react'
+import { useCallback, useState } from 'react'
 import { ethers } from 'ethers'
 import {
 	Box,
@@ -29,6 +28,7 @@ import {
   commandTypes,
 	curveUtilization,
 	defaultDecimals,
+	bigOne,
 } from '../../config/constants'
 import { CgArrowDownR } from 'react-icons/cg'
 
@@ -39,25 +39,25 @@ import { Link } from '@chakra-ui/react'
 import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
-import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
+import { formatBalanceNumber, format, parse, sanitizeNumberInput, formatReceiveNumber } from '../../util/display_formatting'
+import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs, } from '../../util/ethers_utils'
+import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
 	dashboardDataSet: any
-	parentSetters: any
+	parentSetters: any,
+	wallet: WalletState | null,
 }
 
 export default function MintTokens(props: mintProps) {
-	const [{ wallet }] = useConnectWallet()
-	const [provider, setProvider] =
-		useState<ethers.providers.Web3Provider | null>()
 	const [amount, setAmount] = useState<BigNumber>(BigNumber.from(0)) // tied to actual number for tx
-	const [amountDisplay, setAmountDisplay] = useState<number>() // tied to display amount
+	const [amountDisplay, setAmountDisplay] = useState<string>() // tied to display amount
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters } = props
+	const { dashboardDataSet, parentSetters, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 	const [maxReserve, setMaxReserve] = useState<number>(maxReserveChangePercent)
 	const [mintAmount, setMintAmount] = useState<BigNumber>(BigNumber.from(0)) // this is tied to the actual number sent for tx
-	const [mintAmountDisplay, setMintAmountDisplay] = useState<number>() // this is tied to the numberinput of the received assets
+	const [mintAmountDisplay, setMintAmountDisplay] = useState<string>() // this is tied to the numberinput of the received assets
 
 	const bondingCurveParams =
 		'bondingCurveParams' in dashboardDataSet
@@ -81,9 +81,9 @@ export default function MintTokens(props: mintProps) {
 			? Object.keys(dashboardDataSet.fees).reduce(
 					(x, y) =>
 						Number(
-							formatUnits(
+							formatUnitsBnJs(
 								dashboardDataSet.fees[y]['buyTokens'],
-								inverseTokenDecimals
+								inverseTokenDecimals.toNumber()
 							)
 						) + x,
 					0
@@ -110,25 +110,19 @@ export default function MintTokens(props: mintProps) {
 	)
 	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		// If the wallet has a provider than the wallet is connected
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
-		}
-	}, [wallet])
-
 	const sendTransaction = useCallback(async () => {
-		if (!wallet || !provider || !amount) {
+		if (!wallet || !amount) {
 			return
 		}
 
-		if (wallet?.provider) {
-			setProvider(new ethers.providers.Web3Provider(wallet.provider, 'any'))
+		if (!(wallet?.provider)) {
+			return
 		}
 
 		try {
 			setIsProcessing(true)
-			const signer = provider?.getUncheckedSigner()
+			const provider = new ethers.providers.Web3Provider(wallet.provider, 'any') 
+			const signer = provider.getUncheckedSigner()
 			const abiCoder = defaultAbiCoder
 			let txDetails
 			let description = 'Error details'
@@ -290,7 +284,6 @@ export default function MintTokens(props: mintProps) {
 	}, [
 		amount,
 		wallet,
-		provider,
 		dashboardDataSet,
 		maxSlippage,
 		mintAmount,
@@ -309,51 +302,28 @@ export default function MintTokens(props: mintProps) {
 		if (isNaN(val) || val.trim() === '') {
 			return
 		}
+		setAmount(BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**reserveTokenDecimals)).toFixed(0))) // will be fed into router; needs to reflect "real" decimals
 
-		setAmount(parseUnits(Number(parsedAmount).toFixed(reserveTokenDecimals), reserveTokenDecimals)) // will be fed into router; needs to reflect "real" decimals
-
-		const decimaledParsedAmount = parseUnits(val === '' ? '0' : Number(parsedAmount).toFixed(defaultDecimals), defaultDecimals) // for all calcs, stay in default decimals (all curve params are in default decimals)
+		const decimaledParsedAmount = val === '' ? BigNumber.from('0') : BigNumber.from(bignumber(parsedAmount).multipliedBy(bignumber(10**defaultDecimals)).toFixed(0)) // for all calcs, stay in default decimals (all curve params are in default decimals)
 		const reserveAmount = BigNumber.from(bondingCurveParams.reserveAmount)
 		const inverseTokenSupply = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 
 		// this should be a non-under/overflow number
-		const reserveDelta =
-			Number(formatUnits(decimaledParsedAmount, defaultDecimals)) /
-			Number(formatUnits(reserveAmount, defaultDecimals))
+		const reserveDeltaBig = decimaledParsedAmount.mul(bigOne).div(reserveAmount)
 
-		// keep calc in non-under/overflow numeric domains
-		const logMintedTokensPlusSupply =
-			Math.log(1 + reserveDelta) / curveUtilization +
-			Math.log(
-				Number(formatUnits(inverseTokenSupply, inverseTokenDecimals))
-			)
-			
-		const newSupplySaneFormat = Math.exp(logMintedTokensPlusSupply)
-		const newSupply = BigInt(Math.floor(Math.exp(logMintedTokensPlusSupply) * 10**(inverseTokenDecimals.toNumber())))
-		const mintAmount = newSupply - BigInt(inverseTokenSupply.toString()) // wei format
+		// updated_supply = supply * (1+reserve_delta)**(1/u)
+		const newSupplyBig = inverseTokenSupply.mul((reserveDeltaBig.add(bigOne)).pow(2)).div(bigOne.pow(2))
 
 		// calculate spot price post mint
-		const curveInvariant = Number(formatUnits(reserveAmount, defaultDecimals)) / Math.pow(Number(formatUnits(inverseTokenSupply, inverseTokenDecimals)), curveUtilization) 
+		const curveInvariantBig = BigNumber.from(bondingCurveParams.invariant)
+		const newPriceBig = curveInvariantBig.mul(parseUnits(curveUtilization.toString(), defaultDecimals)).div(computeSquareRoot(newSupplyBig)).div(parseUnits("1", defaultDecimals/2))
 
-		const newPrice = Number(
-			curveInvariant 
-			* 
-			curveUtilization 
-			/
-			Math.pow(
-				newSupplySaneFormat // this is in sane format
-				, 
-				1 - curveUtilization
-			)
-		).toFixed(defaultDecimals) 
+		setResultPrice(bignumber(newPriceBig.toString()))
+		setMintAmount(newSupplyBig.sub(inverseTokenSupply))
+		setMintAmountDisplay(formatReceiveNumber(formatUnitsBnJs(mulPercent(newSupplyBig.sub(inverseTokenSupply), 1-totalFeePercent), inverseTokenDecimals.toNumber()).toString()))
 
-		setResultPrice(bignumber(parseUnits(newPrice, defaultDecimals).toString()))
-		setMintAmount(BigNumber.from(mintAmount))
-		setMintAmountDisplay(Number(formatReceiveNumber(Number(Number(formatUnits(mintAmount.toString(), inverseTokenDecimals)) *
-		(1 - totalFeePercent)).toString())))
-
-		parentSetters?.setNewPrice(Number(Number(newPrice) * 10**defaultDecimals).toFixed(0))
-		parentSetters?.setNewIbcIssuance(newSupply) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig.toString())
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
 			reserveAmount.add(decimaledParsedAmount).toString()
 		)
@@ -367,34 +337,30 @@ export default function MintTokens(props: mintProps) {
 			return
 		}
 
-		const mintAmount = parsedAmount / (1 - totalFeePercent) // full mint-amount
+		const mintAmountBig = mulPercent(parseUnitsBnJs(Number(parsedAmount).toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()), 1/(1-totalFeePercent)) 
+		setMintAmount(mintAmountBig)
 
-		setMintAmount(parseUnits(mintAmount.toFixed(inverseTokenDecimals.toNumber()), inverseTokenDecimals.toNumber()))
+		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
+		const newSupplyBig = currentInverseTokenSupplyBig.add(mintAmountBig)
 
 		// calculate ETH payment
-		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
-		const k = 1 - curveUtilization
-		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
-		* 
-		Math.pow(
-			currentInverseTokenSupply,
-			k
+
+		const mBig = BigNumber.from(bondingCurveParams.currentTokenPrice).mul(
+			computeSquareRoot(currentInverseTokenSupplyBig)
 		)
+		const newPriceBig = mBig.div(computeSquareRoot(newSupplyBig))
+		const diffRootSupply = computeSquareRoot(newSupplyBig).sub(computeSquareRoot(currentInverseTokenSupplyBig))
+		const reserveNeededBig = mBig.mul(diffRootSupply).mul(2).div(bigOne)
 
-		const newPrice = Number(m * (currentInverseTokenSupply + mintAmount) ** (-k)).toFixed(inverseTokenDecimals.toNumber())
-		const k_1 = 1 - k
-		const reserveNeeded = (m/k_1)*((currentInverseTokenSupply + mintAmount)**k_1 - currentInverseTokenSupply**k_1)
+		setResultPrice(bignumber(newPriceBig.toString()))
+		setAmount(reserveNeededBig.div(10**(defaultDecimals - reserveTokenDecimals))) // sent to router, needs to be the 'real' decimals
+		setAmountDisplay(bignumber(reserveNeededBig.toString()).dividedBy(bignumber(bigOne.toString())).toFixed(defaultDecimals))
 
-		setResultPrice(bignumber(parseUnits(newPrice, inverseTokenDecimals).toString()))
-
-		setAmount(parseUnits(reserveNeeded.toFixed(reserveTokenDecimals), reserveTokenDecimals)) // sent to router, needs to be the 'real' decimals
-		setAmountDisplay(reserveNeeded)
-
-		parentSetters?.setNewPrice(parseUnits(newPrice, inverseTokenDecimals).toString())
-		parentSetters?.setNewIbcIssuance(BigInt((currentInverseTokenSupply + mintAmount)*10**inverseTokenDecimals.toNumber())) // this is wei format
+		parentSetters?.setNewPrice(newPriceBig.toString())
+		parentSetters?.setNewIbcIssuance(newSupplyBig) // this is wei format
 		parentSetters?.setNewReserve(
-			BigNumber.from(bondingCurveParams.reserveAmount).add(parseUnits(reserveNeeded.toFixed(defaultDecimals), defaultDecimals).toString()
-		))
+			BigNumber.from(bondingCurveParams.reserveAmount).add(reserveNeededBig).toString()
+		)
 	}
 
 
@@ -421,6 +387,7 @@ export default function MintTokens(props: mintProps) {
 							fontSize='5xl'
 							placeholder={`0`}
 							pl='0'
+							data-testid="you_pay"
 						/>
 					</NumberInput>
 					<Text align='right' fontSize='5xl'>
@@ -462,6 +429,7 @@ export default function MintTokens(props: mintProps) {
 							placeholder={`0`}
 							pl='0'
 							marginBlockStart={`1rem`}
+							data-testid="you_receive"
 						/>
 					</NumberInput>
 
@@ -538,7 +506,7 @@ export default function MintTokens(props: mintProps) {
 				</Stack>
 				{isProcessing && <DefaultSpinner />}
 				<Button
-					isDisabled={!isAbleToSendTransaction(wallet, provider, amount)}
+					isDisabled={!isAbleToSendTransaction(wallet, wallet?.provider, amount)}
 					onClick={sendTransaction}
 				>
 					Mint

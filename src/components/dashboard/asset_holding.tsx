@@ -116,7 +116,7 @@ export default function AssetHolding(props: assetListProps) {
                                                         <Box boxSize='28px' mr='4'>
                                                             <Image src={balance.image} alt={balance.ibAsset} />
                                                         </Box>
-                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + balance.reserveAddress} isExternal>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "/#/" + balance.reserveAddress} isExternal>
                                                             {balance.ibAsset}
                                                         </Link>
                                                     </Stack>
@@ -134,7 +134,7 @@ export default function AssetHolding(props: assetListProps) {
                                                     <Box boxSize='28px' mr='4'>
                                                         <Image src={balance.image} alt={balance.ibAsset} />
                                                     </Box>
-                                                    <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + balance.reserveAddress} isExternal>
+                                                    <Link fontWeight={'700'} href={window.location.origin + "/#/" + balance.reserveAddress} isExternal>
                                                         {balance.ibAsset}
                                                     </Link>
                                                 </Stack>

@@ -43,7 +43,7 @@ export class CurveManager {
 
         return curvesWithPreload.map(curve => ({
             ...curve,   
-            verified: curve.icon != '' && curve.icon !== "ib_asset_logo.svg"
+            verified: curve.icon !== '' && curve.icon !== "ib_asset_logo.svg"
         }));
     }
 

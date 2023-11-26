@@ -1,21 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
-import { ethers, BigNumber } from 'ethers'
-import { Box, Button, Divider, Icon, Input, Link, Stack, Text, Image, Tooltip } from '@chakra-ui/react'
+import { ethers } from 'ethers'
+import { Box,Link, Stack, Image, Tooltip } from '@chakra-ui/react'
 
 import {
     Table,
-    Thead,
     Tbody,
-    Tfoot,
     Tr,
-    Th,
     Td,
     TableContainer,
 } from '@chakra-ui/react'
 import * as _ from "lodash";
 import { composeMulticallQuery, composeQuery } from '../../util/ethers_utils'
-import { curves } from '../../config/curves'
 import { contracts } from '../../config/contracts'
 
 type CurveInfo = {
@@ -112,7 +108,7 @@ export default function LpPosition(props: assetListProps) {
                                                         <Box boxSize='28px' mr='4'>
                                                             <Image src={position.image} alt={position.reserveAddress} />
                                                         </Box>
-                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "/#/" + position.reserveAddress} isExternal>
                                                             {position.ibAsset}
                                                         </Link>
                                                     </Stack>
@@ -129,7 +125,7 @@ export default function LpPosition(props: assetListProps) {
                                                         <Box boxSize='28px' mr='4'>
                                                             <Image src={position.image} alt={position.reserveAddress} />
                                                         </Box>
-                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + position.reserveAddress} isExternal>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "/#/" + position.reserveAddress} isExternal>
                                                             {position.ibAsset}
                                                         </Link>
                                                     </Stack>

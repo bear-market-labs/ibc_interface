@@ -1,9 +1,8 @@
 import React from 'react';
 import * as d3 from 'd3';
 import * as _ from "lodash";
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { curveUtilization } from '../../config/constants';
-import { RiNewspaperLine } from 'react-icons/ri';
 
 interface ICurveParam {
     parameterK: number;
@@ -59,9 +58,6 @@ export default function BondingCurveChart(props: IProps) {
     const MIN_SUPPLY_FACTOE = 0.2;
     const GRID_LINE_COUNT = 7;
 
-    const MAX_PARAMETER_K = [0.55, 0.9];
-    const MIN_PARAMETER_K = [0.35, 0.45];
-
     useEffect(() => {
 
         if (props && props.chartParam && props.chartParam.currentSupply) {
@@ -71,9 +67,9 @@ export default function BondingCurveChart(props: IProps) {
                     return;
                 }
     
-                refreshArea = chartParam.targetSupplyChange != props.chartParam.targetSupplyChange;
+                refreshArea = chartParam.targetSupplyChange !== props.chartParam.targetSupplyChange;
     
-                refreshNewCurve = chartParam.targetLiquidityChange != props.chartParam.targetLiquidityChange;
+                refreshNewCurve = chartParam.targetLiquidityChange !== props.chartParam.targetLiquidityChange;
             }else{
                 forceRefresh = true;
             }
@@ -86,7 +82,7 @@ export default function BondingCurveChart(props: IProps) {
                 height: 0
             }
             const resizeObserver = new ResizeObserver(entries => {                
-                if(entries[0].contentRect.width != previousSize.width || entries[0].contentRect.height != previousSize.height){
+                if(entries[0].contentRect.width !== previousSize.width || entries[0].contentRect.height !== previousSize.height){
                     previousSize.width = entries[0].contentRect.width;
                     previousSize.height = entries[0].contentRect.height;
                     if (curChartParam && curChartParam.currentSupply) {
@@ -234,7 +230,6 @@ export default function BondingCurveChart(props: IProps) {
                 setInitialized(true);
             } else {
                 getRectRange();
-                let supplyRange = chartState.supplyRange;
                 let curChartState = chartState;
 
                 curChartState = updateChartData(curChartParam);
@@ -324,10 +319,6 @@ export default function BondingCurveChart(props: IProps) {
                 drawDot(curChartState, curChartParam.curveParameter, curChartParam.currentSupply, 'dot-from');
             }
         }
-    }
-
-    function inDataRange(dataRange: number[], data: number) {
-        return data >= dataRange[0] && data <= dataRange[dataRange.length - 1];
     }
 
     function drawLiquidityArea(curChartParam: IChartParam, curChartState: IChartState) {

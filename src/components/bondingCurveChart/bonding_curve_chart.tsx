@@ -293,11 +293,10 @@ export default function BondingCurveChart(props: IProps) {
         }      
     }
     function drawBondingCurve(curChartParam: IChartParam, curChartState: IChartState, refreshCurve: boolean, refreshArea: boolean, refreshNewCurve: boolean) {
-        let currentCurvePainted = false, liquidityAreaPainted = false, newCurvePainted = false;
+        let liquidityAreaPainted = false
         if(curChartParam){
             if (refreshCurve) {
                 drawCurve(curChartState, curChartParam.curveParameter, 'line');
-                currentCurvePainted = true;
                 
             }
     
@@ -305,7 +304,6 @@ export default function BondingCurveChart(props: IProps) {
                 let newChartParam = getProperParameter(curChartState, curChartParam);                
                 drawCurve(curChartState, newChartParam.curveParameter, 'target-line');
                 drawDot(curChartState, newChartParam.curveParameter, newChartParam.currentSupply, 'dot-target');
-                newCurvePainted = true;                
             }
     
             if(refreshArea){
@@ -466,51 +464,51 @@ export default function BondingCurveChart(props: IProps) {
         }
     }
 
-    function handleMouseOver(event: any) {
-        if (chartState && chartState.chart) {
-            const chart = chartState?.chart;
-            const xScale = chartState?.xScale;
+    // function handleMouseOver(event: any) {
+    //     if (chartState && chartState.chart) {
+    //         const chart = chartState?.chart;
+    //         const xScale = chartState?.xScale;
 
-            const [x, y] = d3.pointer(event);
-            const value = xScale.invert(x).toFixed(2);
+    //         const [x, y] = d3.pointer(event);
+    //         const value = xScale.invert(x).toFixed(2);
 
-            const tooltipGroup = chart.append('g')
-                .attr('class', 'tooltip-group')
-                .style('pointer-events', 'none');
+    //         const tooltipGroup = chart.append('g')
+    //             .attr('class', 'tooltip-group')
+    //             .style('pointer-events', 'none');
 
-            tooltipGroup.append('rect')
-                .attr('class', 'tooltip-bg')
-                .attr('x', x - 30)
-                .attr('y', y - 60)
-                .attr('width', 100)
-                .attr('height', 20)
+    //         tooltipGroup.append('rect')
+    //             .attr('class', 'tooltip-bg')
+    //             .attr('x', x - 30)
+    //             .attr('y', y - 60)
+    //             .attr('width', 100)
+    //             .attr('height', 20)
 
-            // TODO: What to show on tooltip?
-            // tooltipGroup.append('text')
-            //     .attr('class', 'tooltip-text')
-            //     .attr('x', x - 25)
-            //     .attr('y', y - 45)
-            //     .attr('text-anchor', 'left')
-            //     .style('font-size', '10px')
-            //     .style('white-space', 'pre')
-            //     .text(`Supply   : ${param.currentSupply} -> ${param.targetSupply}`);
-            // tooltipGroup.append('text')
-            //     .attr('class', 'tooltip-text')
-            //     .attr('x', x - 25)
-            //     .attr('y', y - 30)
-            //     .attr('text-anchor', 'left')
-            //     .style('font-size', '10px')
-            //     .style('white-space', 'pre')
-            //     .text("Reserve : 178.56 -> 192.39");
-        }
-    }
+    //         // TODO: What to show on tooltip?
+    //         // tooltipGroup.append('text')
+    //         //     .attr('class', 'tooltip-text')
+    //         //     .attr('x', x - 25)
+    //         //     .attr('y', y - 45)
+    //         //     .attr('text-anchor', 'left')
+    //         //     .style('font-size', '10px')
+    //         //     .style('white-space', 'pre')
+    //         //     .text(`Supply   : ${param.currentSupply} -> ${param.targetSupply}`);
+    //         // tooltipGroup.append('text')
+    //         //     .attr('class', 'tooltip-text')
+    //         //     .attr('x', x - 25)
+    //         //     .attr('y', y - 30)
+    //         //     .attr('text-anchor', 'left')
+    //         //     .style('font-size', '10px')
+    //         //     .style('white-space', 'pre')
+    //         //     .text("Reserve : 178.56 -> 192.39");
+    //     }
+    // }
 
-    function handleMouseOut() {
-        if (chartState && chartState.chart) {
-            const chart = chartState?.chart;
-            chart.select('.tooltip-group').remove();
-        }
-    }
+    // function handleMouseOut() {
+    //     if (chartState && chartState.chart) {
+    //         const chart = chartState?.chart;
+    //         chart.select('.tooltip-group').remove();
+    //     }
+    // }
 
     function drawArea(curChartState: IChartState, param: IChartParam, supplyRange: number[]) {
 

@@ -45,10 +45,10 @@ type mintProps = {
 }
 
 export default function RemoveLiquidity(props: mintProps) {
-	const [amount, setAmount] = useState<number>()
+	const [amount] = useState<number>()
 	const [ibcContractAddress] = useState<string>(contracts.default.ibcETHCurveContract)
 	const [ibcRouterAddress] = useState<string>(contracts.default.ibcRouterContract)
-	const { dashboardDataSet, parentSetters, wallet } = props
+	const { dashboardDataSet, wallet } = props
 	const [maxSlippage, setMaxSlippage] = useState<number>(maxSlippagePercent)
 
 	const userInverseTokenAllowance = BigNumber.from(
@@ -65,10 +65,7 @@ export default function RemoveLiquidity(props: mintProps) {
 			? dashboardDataSet.lpTokenDecimals
 			: '0'
 	)
-  const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals : BigNumber.from('0'); 
-	const userBalance = BigNumber.from(
-		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
-	) 
+
 	const userLpTokenBalance = 'userLpTokenBalance' in dashboardDataSet ? dashboardDataSet.userLpTokenBalance : '0'
 	const userIbcTokenBalance = 'userIbcTokenBalance' in dashboardDataSet ? BigNumber.from(dashboardDataSet.userIbcTokenBalance) : BigNumber.from(0)
 
@@ -84,9 +81,6 @@ export default function RemoveLiquidity(props: mintProps) {
 
 	const userLpRedeemableReserves = 'userLpRedeemableReserves' in dashboardDataSet ? dashboardDataSet.userLpRedeemableReserves : '0'
 	
-	const lpTokenSupply = BigNumber.from(
-		'lpTokenSupply' in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'
-	)
 	const totalFeePercent =
 		'fees' in dashboardDataSet
 			? Object.keys(dashboardDataSet.fees).reduce(

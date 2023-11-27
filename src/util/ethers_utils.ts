@@ -1,5 +1,5 @@
-import { arrayify, concat, defaultAbiCoder, hexlify, Interface, parseEther, solidityKeccak256 } from 'ethers/lib/utils'
-import { bigOne, multicallContinueOnErrorFlag } from '../config/constants'
+import { arrayify, concat, defaultAbiCoder, hexlify, solidityKeccak256 } from 'ethers/lib/utils'
+import { multicallContinueOnErrorFlag } from '../config/constants'
 import { BigNumber } from "ethers";
 import { BigNumber as bignumber } from "bignumber.js"
 

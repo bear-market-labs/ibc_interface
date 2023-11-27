@@ -39,8 +39,8 @@ type holdingBalance = {
 }
 
 export default function AssetHolding(props: assetListProps) {
-    const [{ wallet, }] = useConnectWallet()
-    const [provider, setProvider] =
+    const [{ wallet }] = useConnectWallet()
+    const [, setProvider] =
         useState<ethers.providers.Web3Provider | null>()
     const [holdingBalance, setHoldingBalance] = useState<holdingBalance[]>();
 

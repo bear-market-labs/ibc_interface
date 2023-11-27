@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { ethers, BigNumber } from 'ethers'
 import {
 	Box,
@@ -58,16 +58,12 @@ export default function AddLiquidity(props: mintProps) {
 		'bondingCurveParams' in dashboardDataSet
 			? dashboardDataSet.bondingCurveParams
 			: {}
-	const inverseTokenDecimals = BigNumber.from(
-		'inverseTokenDecimals' in dashboardDataSet
-			? dashboardDataSet.inverseTokenDecimals
-			: '0'
-	)
+
   const reserveTokenDecimals = "reserveTokenDecimals" in dashboardDataSet ? dashboardDataSet.reserveTokenDecimals.toNumber() : 0; 
 	const lpTokenSupply = BigNumber.from(
 		'lpTokenSupply' in dashboardDataSet ? dashboardDataSet.lpTokenSupply : '0'
 	)
-	const userBalance = dashboardDataSet.reserveTokenSymbol == "ETH" ? BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol === "ETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userLpTokenBalance = bignumber(

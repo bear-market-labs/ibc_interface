@@ -39,7 +39,7 @@ type lpPosition = {
 
 export default function LpPosition(props: assetListProps) {
     const [{ wallet, }] = useConnectWallet()
-    const [provider, setProvider] =
+    const [, setProvider] =
         useState<ethers.providers.Web3Provider | null>()
     const [lpPosition, setLpPosition] = useState<lpPosition[]>();
 

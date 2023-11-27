@@ -33,7 +33,6 @@ export default function ClaimLpRewards(props: mintProps) {
   const userClaimableStakingReserveRewards = BigNumber.from("userClaimableStakingReserveRewards" in dashboardDataSet ? dashboardDataSet.userClaimableStakingReserveRewards : '0')
 
   const inverseTokenDecimals = BigNumber.from("lpTokenDecimals" in dashboardDataSet ? dashboardDataSet.lpTokenDecimals : '0');
-  const totalStakingBalance = 'totalStakingBalance' in dashboardDataSet ? dashboardDataSet.totalStakingBalance : '0'
   const forceUpdate = dashboardDataSet.forceUpdate;
   const [isProcessing, setIsProcessing] = useState(false);
 

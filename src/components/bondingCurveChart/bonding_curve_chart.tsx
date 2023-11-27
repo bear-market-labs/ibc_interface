@@ -386,7 +386,6 @@ export default function BondingCurveChart(props: IProps) {
             const chart = curChartState?.chart;
             const xScale = curChartState?.xScale;
             const yScale = curChartState?.yScale;
-            const supplyRange = curChartState?.supplyRange;
 
             const parameterK = param.parameterK;
             const parameterM = param.parameterM;

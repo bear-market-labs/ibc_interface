@@ -121,14 +121,14 @@ export default function CreateIBAssetList(props: assetListProps) {
         if (search.startsWith("0x")) {
             setFilteredCurveList(_.filter(curveList, curve => curve.reserveAddress.toLowerCase() === search.toLowerCase()));
 
-            if (search.length == 42) {
+            if (search.length === 42) {
                 const provider = getProvider();
                 if (provider) {
                     try {
                         let query = composeQuery(ibcFactoryAddress, "getCurve", ["address"], [search])
                         let callResultBytes = await provider.call(query)
                         let callResult = defaultAbiCoder.decode(["address"], callResultBytes)[0]
-                        if (callResult == ethers.constants.AddressZero) {
+                        if (callResult === ethers.constants.AddressZero) {
                             reserveAddress = search;
                         } else {
                             let curveInfo = {
@@ -209,7 +209,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                         <Box boxSize='28px' mr='4'>
                                                             <Image src={item.image} alt={item.reserveSymbol} />
                                                         </Box>
-                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "/#/" + item.reserveAddress} isExternal>
                                                             {item.reserveSymbol}
                                                         </Link>
                                                     </Stack>
@@ -225,7 +225,7 @@ export default function CreateIBAssetList(props: assetListProps) {
                                                     <Box boxSize='28px' mr='4'>
                                                         <Image src={item.image} alt={item.reserveSymbol} />
                                                     </Box>
-                                                    <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                    <Link fontWeight={'700'} href={window.location.origin + "/#/" + item.reserveAddress} isExternal>
                                                         {item.reserveSymbol}
                                                     </Link>
                                                 </Stack>

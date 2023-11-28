@@ -89,7 +89,7 @@ export default function AssetList(props: assetListProps) {
             for (let i = 0; i < loadCnt; i++) {
                 if (multicallResults[i][0]) {
                     const curveAddress = abiCoder.decode(["address"], multicallResults[i][1])[0];
-                    if (curveAddress != ethers.constants.AddressZero) {
+                    if (curveAddress !== ethers.constants.AddressZero) {
                         curveAddressList.push(curveAddress);
                     }
                 }
@@ -153,7 +153,7 @@ export default function AssetList(props: assetListProps) {
 
                 const reserveTokenSymbolBytes = multicallResults[i * 3 + 1][0] ? multicallResults[i * 3 + 1][1] : [""];
                 let reserveTokenSymbol = abiCoder.decode(["string"], reserveTokenSymbolBytes)[0];
-                if (reserveTokenSymbol == 'WETH') {
+                if (reserveTokenSymbol === 'WETH') {
                     reserveTokenSymbol = 'ETH';
                 }
 
@@ -184,7 +184,7 @@ export default function AssetList(props: assetListProps) {
 
             const curvesMissingInfo = _.differenceBy(curveMetadataList, curveList || [], 'curveAddress');
 
-            if (curvesMissingInfo.length == 0) {
+            if (curvesMissingInfo.length === 0) {
                 return;
             }
             setIsLoading(true);
@@ -394,7 +394,7 @@ export default function AssetList(props: assetListProps) {
             setFilteredCurveList(filterResult);
             if (filterResult.length === 0) {
                 filterResult = await fectchCurveInfo(search);
-                if(filterResult.length == 1){
+                if(filterResult.length === 1){
                     let curveMeta = _.pick(filterResult[0], [
                         'curveAddress',
                         'reserveSymbol',
@@ -486,7 +486,7 @@ export default function AssetList(props: assetListProps) {
                                                             <Box boxSize='28px' mr='4'>
                                                                 <Image src={item.image} alt={item.ibAsset} />
                                                             </Box>
-                                                            <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                            <Link fontWeight={'700'} href={window.location.origin + "/#/" + item.reserveAddress} isExternal>
                                                                 {item.ibAsset}
                                                             </Link>
                                                         </Stack>
@@ -498,7 +498,7 @@ export default function AssetList(props: assetListProps) {
                                                         <Box boxSize='28px' mr='4'>
                                                             <Image src={item.image} alt={item.ibAsset} />
                                                         </Box>
-                                                        <Link fontWeight={'700'} href={window.location.origin + "\/#\/" + item.reserveAddress} isExternal>
+                                                        <Link fontWeight={'700'} href={window.location.origin + "/#/" + item.reserveAddress} isExternal>
                                                             {item.ibAsset}
                                                         </Link>
                                                     </Stack>

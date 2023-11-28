@@ -3,7 +3,7 @@ import {
   Box,
 } from "@chakra-ui/react"
 
-import { init, useConnectWallet } from '@web3-onboard/react';
+import { init } from '@web3-onboard/react';
 import injectedModule from '@web3-onboard/injected-wallets';
 import { ethers } from 'ethers'
 import { Route, Routes } from "react-router-dom";
@@ -13,7 +13,6 @@ import { contracts, } from "./config/contracts";
 import { useState } from "react";
 import { Analytics } from '@vercel/analytics/react';
 import { providerPollingIntervalMilliSeconds } from "./config/constants";
-import { CgNametag } from "react-icons/cg";
 
 const injected = injectedModule();
 

@@ -1,7 +1,6 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useConnectWallet } from '@web3-onboard/react'
 import { Box, Image } from '@chakra-ui/react'
-import { contracts } from '../../config/contracts'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { curves } from '../../config/curves'
 import * as _ from "lodash";

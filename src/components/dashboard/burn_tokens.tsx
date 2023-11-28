@@ -39,7 +39,7 @@ import { BiLinkExternal } from 'react-icons/bi'
 import { error_message } from '../../config/error'
 import { isAbleToSendTransaction } from '../../config/validation'
 import { formatBalanceNumber, formatReceiveNumber, format, parse, sanitizeNumberInput } from '../../util/display_formatting'
-import { computeSquareRoot, divBnJs, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
+import { computeSquareRoot, formatUnitsBnJs, mulPercent, parseUnitsBnJs } from '../../util/ethers_utils'
 import { WalletState } from '@web3-onboard/core'
 
 type mintProps = {
@@ -78,7 +78,7 @@ export default function BurnTokens(props: mintProps) {
 			? dashboardDataSet.inverseTokenDecimals
 			: '0'
 	)
-	const userBalance = dashboardDataSet.reserveTokenSymbol == "ETH" ? BigNumber.from(
+	const userBalance = dashboardDataSet.reserveTokenSymbol === "ETH" ? BigNumber.from(
 		'userEthBalance' in dashboardDataSet ? dashboardDataSet.userEthBalance : '0'
 	) : BigNumber.from('userReserveTokenBalance' in dashboardDataSet ? dashboardDataSet.userReserveTokenBalance : '0')
 	const userIbcBalance ='userIbcTokenBalance' in dashboardDataSet
@@ -347,10 +347,6 @@ export default function BurnTokens(props: mintProps) {
 		const currentInverseTokenSupplyBig = BigNumber.from(bondingCurveParams.inverseTokenSupply)
 		const currentInverseTokenSupply = Number(ethers.utils.formatUnits(bondingCurveParams.inverseTokenSupply, inverseTokenDecimals.toString()))
 		const k = 1 - curveUtilization
-
-		const mBig = BigNumber.from(bondingCurveParams.currentTokenPrice).mul(
-			computeSquareRoot(currentInverseTokenSupplyBig)
-		)
 
 		const m = Number(ethers.utils.formatUnits(bondingCurveParams.currentTokenPrice, defaultDecimals)) 
 		* 

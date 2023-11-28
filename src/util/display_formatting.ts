@@ -121,7 +121,7 @@ export function logBigInt(number: String){
 }
 
 export const format = (val: any) => val + `%`
-export const parse = (val: any) => val.replace(/^\%/, '')
+export const parse = (val: any) => val.replace(/^%/, '')
 export function sanitizeNumberInput(input: any){
   const sanitizedValue = input
   .replace(/[-+e]/g, "")

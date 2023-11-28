@@ -14,7 +14,7 @@ interface Account {
 
 export default function ConnectWallet() {
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
-  const [ethersProvider, setProvider] = useState<ethers.providers.Web3Provider | null>()
+  const [, setProvider] = useState<ethers.providers.Web3Provider | null>()
   const [account, setAccount] = useState<Account | null>(null)
 
   useEffect(() => {
@@ -36,8 +36,6 @@ export default function ConnectWallet() {
       // ethersProvider = new ethers.BrowserProvider(wallet.provider, 'any')
     }
   }, [wallet])
-
-  const bal = wallet?.accounts[0]?.balance
 
   if(wallet?.provider && account) {
     return (

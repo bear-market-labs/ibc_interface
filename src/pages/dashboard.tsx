@@ -34,7 +34,7 @@ import AssetHolding from "../components/dashboard/asset_holding";
 import LpPosition from "../components/dashboard/lp_position";
 import CreateIBAsset from "../components/dashboard/create_ibasset";
 import CreateIBAssetList from "../components/dashboard/create_ibasset_list";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { curves } from "../config/curves";
 import { cacheToLocal, fetchFromLocal, getStorageKey } from "../util/caching";
 
@@ -128,7 +128,7 @@ export function Dashboard( props: dashboardProps ){
 
   const [selectedNavItem, setSelectedNavItem] = useState<string>(navOptions[!isExplorePage && !isTermsPage ? 1 : 0].value);
   const [headerTitle, setHeaderTitle] = useState<string>(navOptions[0].displayText.toUpperCase());
-  const [{ wallet,  }] = useConnectWallet()
+  const [{ wallet }] = useConnectWallet()
   const [ibcContractAddress, setIbcContractAddress] = useState<string>()
   const [ibcAdminAddress, ] = useState<string>(contracts.default.ibcAdminContract)
   const [ibcRouterAddress, ] = useState<string>(contracts.default.ibcRouterContract)

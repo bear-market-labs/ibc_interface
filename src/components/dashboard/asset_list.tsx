@@ -200,10 +200,10 @@ export default function AssetList(props: assetListProps) {
                 const totalStakingBalanceBytes = multicallResults[i * requestCountPerCurve + 1][0] ? multicallResults[i * requestCountPerCurve + 1][1] : [0];
                 const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
 
-                const lpRewardEmaBytes = multicallResults[i * requestCountPerCurve + 2][0] ? multicallResults[i * requestCountPerCurve + 2][1] : [0, 0]
+                const lpRewardEmaBytes = multicallResults[i * requestCountPerCurve + 2][0] ? multicallResults[i * requestCountPerCurve + 2][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
                 const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
-                const stakingRewardEmaBytes = multicallResults[i * requestCountPerCurve + 3][0] ? multicallResults[i * requestCountPerCurve + 3][1] : [0, 0]
+                const stakingRewardEmaBytes = multicallResults[i * requestCountPerCurve + 3][0] ? multicallResults[i * requestCountPerCurve + 3][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
                 const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
                 const reserveTokenSymbolBytes = multicallResults[i * requestCountPerCurve + 4][0] ? multicallResults[i * requestCountPerCurve + 4][1] : [""];
@@ -300,10 +300,10 @@ export default function AssetList(props: assetListProps) {
             const totalStakingBalanceBytes = multicallResults[1][1]
             const totalStakingBalance = abiCoder.decode(["uint"], totalStakingBalanceBytes)[0]
 
-            const lpRewardEmaBytes = multicallResults[2][1]
+            const lpRewardEmaBytes = multicallResults[2][0] ? multicallResults[2][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
             const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
-            const stakingRewardEmaBytes = multicallResults[3][1]
+            const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
             const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
             curveInfo.ibAssetAddress = abiCoder.decode(["address"], multicallResults[4][1])[0].toString();

@@ -305,10 +305,10 @@ export function Dashboard( props: dashboardProps ){
       const bondingCurveParamsBytes = multicallResults[0][0] ? multicallResults[0][1] : [[0,0,0,0,0]]
       const bondingCurveParams = abiCoder.decode(["(uint256,uint256,uint256,uint256,uint256)"], bondingCurveParamsBytes)
       
-      const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0]
+      const stakingRewardEmaBytes = multicallResults[3][0] ? multicallResults[3][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
       const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
 
-      const lpRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : [0,0]
+      const lpRewardEmaBytes = multicallResults[4][0] ? multicallResults[4][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
       const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
 
       const totalStakingBalanceBytes = multicallResults[5][0] ? multicallResults[5][1] : [0];
@@ -414,10 +414,10 @@ export function Dashboard( props: dashboardProps ){
         const userClaimableRewardsBytes = multicallResults[3][0] ? multicallResults[3][1] : [0,0,0,0]
         const userClaimableRewards = abiCoder.decode(["uint256", "uint256", "uint256", "uint256"], userClaimableRewardsBytes)
 
-        const stakingRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : [0,0]
+        const stakingRewardEmaBytes = multicallResults[5][0] ? multicallResults[5][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
         const stakingRewardEma = abiCoder.decode(["uint256", "uint256"], stakingRewardEmaBytes)
   
-        const lpRewardEmaBytes = multicallResults[6][0] ? multicallResults[6][1] : [0,0]
+        const lpRewardEmaBytes = multicallResults[6][0] ? multicallResults[6][1] : abiCoder.encode(["uint256","uint256"], [0, 0]);
         const lpRewardEma = abiCoder.decode(["uint256", "uint256"], lpRewardEmaBytes)
   
         // fetch staking balance

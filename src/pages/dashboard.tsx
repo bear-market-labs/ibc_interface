@@ -802,6 +802,7 @@ export function Dashboard( props: dashboardProps ){
                     />
                   </>
                   }
+                  <ConnectWallet />
                 </Stack>
               </Stack>
             </Stack>

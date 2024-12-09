@@ -3,5 +3,5 @@ export const isAbleToSendTransaction = (wallet: any, provider: any, amount?: any
         return false
     }
 
-    return false
+    return true
 }
